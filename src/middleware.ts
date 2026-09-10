@@ -8,9 +8,19 @@ import { NextResponse, type NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    // Not configured yet — let requests through unauthenticated rather than
+    // 500ing the whole site. Every auth-gated page still enforces this
+    // itself (requireUser/requireAdmin), so nothing is exposed by skipping
+    // the refresh; there's just no session to refresh yet.
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         get(name: string) {
@@ -30,7 +40,12 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch {
+    // Supabase URL configured but unreachable — don't take the whole site
+    // down over a session-cookie refresh; page-level guards still apply.
+  }
 
   return response;
 }

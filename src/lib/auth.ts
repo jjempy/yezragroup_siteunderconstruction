@@ -5,22 +5,28 @@ import type { Profile } from '@/types/database';
 
 /**
  * Returns the signed-in user and their profile (role/blocked/etc), or null
- * if no one is signed in. Safe to call from any server component/action.
+ * if no one is signed in — or if Supabase isn't configured/reachable yet,
+ * so the public homepage can still render (see getSiteData's fallback) for
+ * a local preview before a real Supabase project exists.
  */
 export async function getSessionUser() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle<Profile>();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle<Profile>();
 
-  return { user, profile: profile ?? null };
+    return { user, profile: profile ?? null };
+  } catch {
+    return null;
+  }
 }
 
 /** Redirects to /login unless someone is signed in (and not blocked). */

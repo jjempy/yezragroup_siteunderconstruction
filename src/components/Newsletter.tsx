@@ -1,7 +1,12 @@
+'use client';
+
 // Beehiiv (or any) embed placeholder — unchanged behavior from the original:
 // paste a real embed snippet here once one exists. Not currently CMS-editable
 // since CONFIG never exposed it as a field either (it was a raw HTML comment
 // instructing manual replacement).
+// Client Component only because the placeholder form needs an onSubmit
+// handler to no-op instead of navigating; swap in a real embed (which won't
+// need this) once Beehiiv is wired up.
 export function Newsletter() {
   return (
     <section className="dark" id="newsletter">
