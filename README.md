@@ -10,6 +10,7 @@ that was missing.
 - [x] Supabase project created, migration applied
 - [x] Deployed to Vercel (preview URL, tracking `main`)
 - [x] Supabase env vars confirmed correct (this commit forces a rebuild to bake them in)
+- [x] paid_videos table (Extended Videos) migrated
 - [ ] Stripe Payment Links + webhook wired in
 - [ ] Custom domain (`orchemet.com`) cut over from Cloudflare Pages
 
