@@ -6,6 +6,21 @@
 -- that used to live in the static CONFIG object.
 -- ============================================================
 
+-- ---------- profiles ----------
+-- Created before is_admin() below, which references this table — SQL-
+-- language functions are validated against existing objects at creation
+-- time, so the table has to exist first.
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  phone text,
+  role text not null default 'standard' check (role in ('standard', 'admin')),
+  blocked boolean not null default false,
+  marketing_opt_in boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- ---------- helper: is_admin() ----------
 -- security definer so it can read profiles regardless of the caller's
 -- own row visibility, without causing recursive RLS evaluation.
@@ -21,18 +36,6 @@ as $$
     false
   );
 $$;
-
--- ---------- profiles ----------
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  full_name text,
-  phone text,
-  role text not null default 'standard' check (role in ('standard', 'admin')),
-  blocked boolean not null default false,
-  marketing_opt_in boolean not null default true,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
 
 alter table public.profiles enable row level security;
 
