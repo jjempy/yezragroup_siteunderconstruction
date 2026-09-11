@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { AuthHeader } from '@/components/AuthHeader';
 import { signOutAction } from './actions';
 
 export default async function AccountPage() {
@@ -14,7 +15,9 @@ export default async function AccountPage() {
     .maybeSingle();
 
   return (
-    <div className="auth-shell" style={{ alignItems: 'flex-start', paddingTop: 140 }}>
+    <>
+      <AuthHeader />
+      <div className="auth-shell" style={{ alignItems: 'flex-start', paddingTop: 140 }}>
       <div className="auth-card" style={{ maxWidth: 480 }}>
         <h1>Your Account</h1>
         <p className="sub">{user.email}</p>
@@ -65,6 +68,7 @@ export default async function AccountPage() {
           </form>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

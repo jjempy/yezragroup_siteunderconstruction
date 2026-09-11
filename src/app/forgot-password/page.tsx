@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { AuthHeader } from '@/components/AuthHeader';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -38,7 +39,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="auth-shell">
+    <>
+      <AuthHeader />
+      <div className="auth-shell">
       <div className="auth-card">
         <h1>Reset Password</h1>
         <p className="sub">Enter your email and we&apos;ll send you a link to reset your password.</p>
@@ -63,6 +66,7 @@ export default function ForgotPasswordPage() {
           <Link href="/login">Back to sign in</Link>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

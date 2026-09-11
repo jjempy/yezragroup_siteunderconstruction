@@ -75,6 +75,9 @@ export interface LadderTier {
   updated_at: string;
 }
 
+// The always-free, publicly-released edited masterclass recap episodes —
+// same ones hosted on YouTube, shown unlocked on the homepage. No gating,
+// no preview clipping; this table is never behind a paywall.
 export interface VideoRow {
   id: string;
   sort_order: number;
@@ -82,7 +85,21 @@ export interface VideoRow {
   youtube_id: string;
   duration: string;
   is_visible: boolean;
+  created_at: string;
+}
+
+// The paid-only "Early Access" bonus cut of each session — longer, less
+// edited, with additional insights. This is what the $147 tier actually
+// unlocks; non-buyers get a short clipped preview (preview_seconds) of
+// this exclusive content, not of the free videos above.
+export interface PaidVideoRow {
+  id: string;
+  sort_order: number;
+  title: string;
+  youtube_id: string;
+  duration: string;
   preview_seconds: number;
+  is_visible: boolean;
   created_at: string;
 }
 

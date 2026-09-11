@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { AuthHeader } from '@/components/AuthHeader';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -66,7 +67,9 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="auth-shell">
+    <>
+      <AuthHeader />
+      <div className="auth-shell">
       <div className="auth-card">
         <h1>Set New Password</h1>
         <p className="sub">Choose a new password for your account.</p>
@@ -110,6 +113,7 @@ export default function ResetPasswordPage() {
           </form>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

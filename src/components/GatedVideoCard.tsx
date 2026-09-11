@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import type { VideoRow } from '@/types/database';
+import type { PaidVideoRow } from '@/types/database';
 
-/** Same click-to-play behavior as the public VideoCard, but without the
- * "Watch on YouTube" outbound link — this is the paid Early Access view,
- * so members watch it here rather than being routed to the public copy. */
-export function GatedVideoCard({ video, index }: { video: VideoRow; index: number }) {
+/** Full, unlocked playback of the paid-only extended cut — same
+ * click-to-play behavior as the public VideoCard, but without the "Watch
+ * on YouTube" outbound link, since this content isn't public. */
+export function GatedVideoCard({ video, index }: { video: PaidVideoRow; index: number }) {
   const [playing, setPlaying] = useState(false);
   const thumbUrl = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`;
 

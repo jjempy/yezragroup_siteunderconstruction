@@ -132,20 +132,23 @@ export).
   browser. Blocking a user calls `auth.admin.updateUserById(..., {
   ban_duration })`, which actually prevents sign-in, not just a UI flag.
 
-## A judgment call worth knowing about
+## Two separate video libraries — don't confuse them
 
-The original page had one `videos` array feeding a single public
-"Workshop Library" section that links out to YouTube — those look like
-already-released episodes used as free proof/marketing, distinct from
-the $147 "Early Access" tier's promise of workshops *before* they reach
-YouTube. Rather than invent a second content model that CONFIG never
-had, this build keeps the public homepage section exactly as before
-(unchanged design, still public, still linking to YouTube) and adds
-`/library` as the actual gated "Early Access" hub — same underlying
-`videos` table, entitlement-checked, without the outbound YouTube link.
-If the founder wants two distinct video lists (a public teaser reel vs.
-a separate early-access set), that's a follow-up: add a `visibility`
-enum to `videos` rather than reusing `is_visible` for both purposes.
+- **`videos` table / Admin → Workshop Videos** — the always-free, edited
+  masterclass recap episodes, hosted on YouTube, shown unlocked on the
+  homepage exactly as in the original CONFIG. Never gated, no preview
+  logic, nothing to buy to see these.
+- **`paid_videos` table / Admin → Extended Videos** — the actual $147
+  "Early Access" product: a longer, less-edited cut of each session with
+  additional insights, exclusive to buyers. This is what `/library`
+  shows. Non-buyers see every episode's title/thumbnail plus a short
+  admin-configurable preview clip (`preview_seconds`, via YouTube's
+  start/end embed params) with a persistent "Unlock Full Access — $147"
+  button; buyers get full unrestricted playback.
+
+These are intentionally separate tables, not one table with a visibility
+flag — the paid tier isn't "the same free video, restricted," it's
+genuinely different (longer, unlisted) footage.
 
 ## Project structure
 

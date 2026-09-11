@@ -1,8 +1,9 @@
 import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import type { VideoRow } from '@/types/database';
+import type { PaidVideoRow } from '@/types/database';
 import { GatedVideoCard } from '@/components/GatedVideoCard';
 import { LockedVideoCard } from '@/components/LockedVideoCard';
+import { AuthHeader } from '@/components/AuthHeader';
 
 export default async function LibraryPage() {
   const { user } = await requireUser();
@@ -15,22 +16,24 @@ export default async function LibraryPage() {
       .eq('user_id', user.id)
       .eq('product', 'workshop_library')
       .maybeSingle(),
-    supabase.from('videos').select('*').eq('is_visible', true).order('sort_order'),
+    supabase.from('paid_videos').select('*').eq('is_visible', true).order('sort_order'),
   ]);
 
   const isEntitled = Boolean(entitlement);
-  const list = (videos as VideoRow[]) ?? [];
+  const list = (videos as PaidVideoRow[]) ?? [];
 
   return (
-    <div style={{ background: 'var(--cream)', minHeight: '100vh', paddingTop: 60 }}>
+    <>
+      <AuthHeader />
+      <div style={{ background: 'var(--cream)', minHeight: '100vh', paddingTop: 60 }}>
       <div className="wrap" style={{ paddingTop: 60, paddingBottom: 100 }}>
         <div className="section-head">
           <div className="eyebrow">Early Access</div>
           <h2>The Workshop Library.</h2>
           <p>
             {isEntitled
-              ? 'Everything, unlocked. New episodes appear here first, before they ever reach YouTube.'
-              : "Preview every episode below. Unlock full access — $147, one time — to watch the whole library, before any of it reaches YouTube."}
+              ? "The full, uncut version of every session — longer than the free edit, with the parts and insights that didn't make the public cut."
+              : 'A short preview of every session below. Unlock full access — $147, one time — for the longer, less-edited cut with additional insights, on top of everything already free on the homepage.'}
           </p>
           {!isEntitled && (
             <a
@@ -58,6 +61,7 @@ export default async function LibraryPage() {
           </p>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

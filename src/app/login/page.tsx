@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { AuthHeader } from '@/components/AuthHeader';
 
 function LoginForm() {
   const router = useRouter();
@@ -39,7 +40,9 @@ function LoginForm() {
   }
 
   return (
-    <div className="auth-shell">
+    <>
+      <AuthHeader />
+      <div className="auth-shell">
       <div className="auth-card">
         <h1>Sign In</h1>
         <p className="sub">Welcome back. Sign in to access your Workshop Library and account.</p>
@@ -76,7 +79,8 @@ function LoginForm() {
           <Link href={`/signup${redirect ? `?redirect=${redirect}` : ''}`}>Need an account? Sign up</Link>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

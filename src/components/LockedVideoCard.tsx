@@ -1,16 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import type { VideoRow } from '@/types/database';
+import type { PaidVideoRow } from '@/types/database';
 
 /**
  * Shown to signed-in-but-unpaid visitors: thumbnail, title, and a "Preview"
- * button that plays only the first `preview_seconds` of the episode (via
- * YouTube's start/end embed params) before a persistent "Unlock Full
- * Access" prompt — the hook, not the whole thing, always paired with a
- * path straight to checkout.
+ * button that plays only the first `preview_seconds` of the paid-only
+ * extended cut (via YouTube's start/end embed params) before a persistent
+ * "Unlock Full Access" prompt — a hook for the exclusive bonus content,
+ * not a restricted view of the free episodes (those are never gated at
+ * all — see the homepage).
  */
-export function LockedVideoCard({ video, index }: { video: VideoRow; index: number }) {
+export function LockedVideoCard({ video, index }: { video: PaidVideoRow; index: number }) {
   const [playing, setPlaying] = useState(false);
   const thumbUrl = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`;
 

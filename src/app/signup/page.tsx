@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { normalizePhone } from '@/lib/phone';
+import { AuthHeader } from '@/components/AuthHeader';
 
 function SignupForm() {
   const params = useSearchParams();
@@ -95,7 +96,9 @@ function SignupForm() {
 
   if (awaitingConfirmation) {
     return (
-      <div className="auth-shell">
+      <>
+        <AuthHeader />
+        <div className="auth-shell">
         <div className="auth-card">
           <h1>Check Your Email</h1>
           <p className="sub">
@@ -106,12 +109,15 @@ function SignupForm() {
             <Link href={`/login${redirect ? `?redirect=${redirect}` : ''}`}>Back to sign in</Link>
           </div>
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="auth-shell">
+    <>
+      <AuthHeader />
+      <div className="auth-shell">
       <div className="auth-card">
         <h1>Create Account</h1>
         <p className="sub">Sign up to access purchases and manage your account.</p>
@@ -167,7 +173,8 @@ function SignupForm() {
           <Link href={`/login${redirect ? `?redirect=${redirect}` : ''}`}>Already have an account? Sign in</Link>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
