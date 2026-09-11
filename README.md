@@ -5,6 +5,13 @@ on top of what used to be a single static HTML file. The original design,
 copy, and layout are preserved exactly; this is the backend/infrastructure
 that was missing.
 
+## Status
+
+- [x] Supabase project created, migration applied
+- [x] Deployed to Vercel (preview URL, tracking `main`)
+- [ ] Stripe Payment Links + webhook wired in
+- [ ] Custom domain (`orchemet.com`) cut over from Cloudflare Pages
+
 ## Stack
 
 - **Next.js 14** (App Router) on Vercel
