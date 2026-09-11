@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { normalizePhone } from '@/lib/phone';
 
 function SignupForm() {
   const params = useSearchParams();
@@ -22,6 +23,17 @@ function SignupForm() {
     e.preventDefault();
     setError(null);
     setNotice(null);
+
+    // Normalize to E.164 (+18438043080) so every phone number in the
+    // database is in the one format SMS/marketing tools actually expect —
+    // regardless of whether autofill/the visitor typed "(843) 804-3080",
+    // "18438043080", or a real international number with its own "+".
+    const { value: normalizedPhone, valid: phoneValid } = normalizePhone(phone);
+    if (!phoneValid) {
+      setError('That phone number doesn\'t look right — check the digits and country code.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -36,7 +48,7 @@ function SignupForm() {
         password,
         options: {
           emailRedirectTo,
-          data: { full_name: fullName, phone, marketing_opt_in: marketingOptIn },
+          data: { full_name: fullName, phone: normalizedPhone, marketing_opt_in: marketingOptIn },
         },
       });
 
