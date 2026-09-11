@@ -75,7 +75,10 @@ function SignupForm() {
       }
 
       if (data.session) {
-        window.location.href = redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account';
+        // .replace, not .href — same reasoning as login: the filled-out
+        // signup form shouldn't be a back-button stop once the account
+        // exists and is signed in.
+        window.location.replace(redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account');
         return;
       }
 

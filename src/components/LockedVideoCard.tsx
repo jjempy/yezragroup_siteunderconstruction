@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { PaidVideoRow } from '@/types/database';
+import { useBackToClose } from '@/lib/useBackToClose';
 
 /**
  * Shown to signed-in-but-unpaid visitors: thumbnail, title, and a "Preview"
@@ -13,6 +14,7 @@ import type { PaidVideoRow } from '@/types/database';
  */
 export function LockedVideoCard({ video, index }: { video: PaidVideoRow; index: number }) {
   const [playing, setPlaying] = useState(false);
+  useBackToClose(playing, () => setPlaying(false));
   const thumbUrl = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`;
 
   return (

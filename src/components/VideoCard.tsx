@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import type { VideoRow } from '@/types/database';
+import { useBackToClose } from '@/lib/useBackToClose';
 
 export function VideoCard({ video, index }: { video: VideoRow; index: number }) {
   const [playing, setPlaying] = useState(false);
+  useBackToClose(playing, () => setPlaying(false));
   const thumbUrl = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`;
 
   return (

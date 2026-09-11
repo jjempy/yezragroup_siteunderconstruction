@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import type { PaidVideoRow } from '@/types/database';
+import { useBackToClose } from '@/lib/useBackToClose';
 
 /** Full, unlocked playback of the paid-only extended cut — same
  * click-to-play behavior as the public VideoCard, but without the "Watch
  * on YouTube" outbound link, since this content isn't public. */
 export function GatedVideoCard({ video, index }: { video: PaidVideoRow; index: number }) {
   const [playing, setPlaying] = useState(false);
+  useBackToClose(playing, () => setPlaying(false));
   const thumbUrl = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`;
 
   return (

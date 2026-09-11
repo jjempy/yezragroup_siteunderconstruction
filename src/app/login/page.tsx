@@ -26,7 +26,10 @@ function LoginForm() {
         setError(error.message);
         return;
       }
-      router.push(redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account');
+      // replace, not push — the login form itself shouldn't become a back-
+      // button stop once signed in; back should skip past it to wherever
+      // the visitor was before they opened /login.
+      router.replace(redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account');
       router.refresh();
     } catch (err) {
       setError(
