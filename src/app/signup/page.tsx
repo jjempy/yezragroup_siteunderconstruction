@@ -22,50 +22,62 @@ function SignupForm() {
     setError(null);
     setNotice(null);
     setLoading(true);
-    const supabase = createClient();
 
-    const emailRedirectTo = `${window.location.origin}/auth/callback${
-      redirect ? `?redirect=${redirect}` : ''
-    }`;
+    try {
+      const supabase = createClient();
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo,
-        data: { full_name: fullName, phone, marketing_opt_in: marketingOptIn },
-      },
-    });
+      const emailRedirectTo = `${window.location.origin}/auth/callback${
+        redirect ? `?redirect=${redirect}` : ''
+      }`;
 
-    setLoading(false);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo,
+          data: { full_name: fullName, phone, marketing_opt_in: marketingOptIn },
+        },
+      });
 
-    if (error) {
-      if (/already registered|already exists|user already/i.test(error.message)) {
+      if (error) {
+        if (/already registered|already exists|user already/i.test(error.message)) {
+          setNotice(
+            "That email is already registered. Try signing in instead — or if you don't remember your password, use the reset link."
+          );
+        } else {
+          setError(error.message);
+        }
+        return;
+      }
+
+      // Supabase returns a user with an empty `identities` array (no error)
+      // when the email is already registered and confirmed, to avoid leaking
+      // which emails exist. Treat that the same as the explicit-error case.
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
         setNotice(
           "That email is already registered. Try signing in instead — or if you don't remember your password, use the reset link."
         );
-      } else {
-        setError(error.message);
+        return;
       }
-      return;
-    }
 
-    // Supabase returns a user with an empty `identities` array (no error)
-    // when the email is already registered and confirmed, to avoid leaking
-    // which emails exist. Treat that the same as the explicit-error case.
-    if (data.user && data.user.identities && data.user.identities.length === 0) {
-      setNotice(
-        "That email is already registered. Try signing in instead — or if you don't remember your password, use the reset link."
+      if (data.session) {
+        window.location.href = redirect === 'checkout' ? '/api/checkout/workshop-library' : '/';
+        return;
+      }
+
+      setNotice('Check your email for a confirmation link to finish creating your account.');
+    } catch (err) {
+      // A thrown error (bad Supabase URL/key, network failure, etc.) would
+      // otherwise leave the button stuck on "Creating account…" forever
+      // with no feedback — always surface something instead.
+      setError(
+        err instanceof Error
+          ? `Couldn't reach the server: ${err.message}`
+          : "Couldn't reach the server. Check your connection and try again."
       );
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    if (data.session) {
-      window.location.href = redirect === 'checkout' ? '/api/checkout/workshop-library' : '/';
-      return;
-    }
-
-    setNotice('Check your email for a confirmation link to finish creating your account.');
   }
 
   return (

@@ -45,15 +45,24 @@ export default function ResetPasswordPage() {
       return;
     }
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      setDone(true);
+      setTimeout(() => router.push('/login'), 1800);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Couldn't reach the server: ${err.message}`
+          : "Couldn't reach the server. Check your connection and try again."
+      );
+    } finally {
+      setLoading(false);
     }
-    setDone(true);
-    setTimeout(() => router.push('/login'), 1800);
   }
 
   return (

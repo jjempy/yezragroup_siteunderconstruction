@@ -14,18 +14,27 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setLoading(false);
-    // Always show the same success state, whether or not the email exists —
-    // don't leak which addresses are registered.
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      // Always show the same success state, whether or not the email exists —
+      // don't leak which addresses are registered.
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      setSent(true);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Couldn't reach the server: ${err.message}`
+          : "Couldn't reach the server. Check your connection and try again."
+      );
+    } finally {
+      setLoading(false);
     }
-    setSent(true);
   }
 
   return (

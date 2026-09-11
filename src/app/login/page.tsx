@@ -18,15 +18,24 @@ function LoginForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      router.push(redirect === 'checkout' ? '/api/checkout/workshop-library' : '/');
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Couldn't reach the server: ${err.message}`
+          : "Couldn't reach the server. Check your connection and try again."
+      );
+    } finally {
+      setLoading(false);
     }
-    router.push(redirect === 'checkout' ? '/api/checkout/workshop-library' : '/');
-    router.refresh();
   }
 
   return (
