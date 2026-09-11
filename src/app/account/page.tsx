@@ -35,10 +35,18 @@ export default async function AccountPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
-          {entitlement && (
+          {entitlement ? (
             <Link href="/library" className="btn-primary" style={{ textAlign: 'center' }}>
               Go to Workshop Library
             </Link>
+          ) : (
+            <a
+              href="/api/checkout/workshop-library"
+              className="btn-primary"
+              style={{ textAlign: 'center' }}
+            >
+              Get Access — $147
+            </a>
           )}
           {/* Only shown once there's an actual purchase — a Stripe customer
               only exists after checkout, so this button was guaranteed to

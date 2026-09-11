@@ -24,6 +24,7 @@ export async function addVideo(formData: FormData) {
     title: (formData.get('title') as string) ?? '',
     youtube_id: (formData.get('youtube_id') as string) ?? '',
     duration: (formData.get('duration') as string) ?? '',
+    preview_seconds: Number(formData.get('preview_seconds')) || 45,
     sort_order: nextOrder,
     is_visible: true,
   });
@@ -40,6 +41,7 @@ export async function updateVideo(videoId: string, formData: FormData) {
       title: (formData.get('title') as string) ?? '',
       youtube_id: (formData.get('youtube_id') as string) ?? '',
       duration: (formData.get('duration') as string) ?? '',
+      preview_seconds: Number(formData.get('preview_seconds')) || 45,
       is_visible: formData.get('is_visible') === 'on',
     })
     .eq('id', videoId);

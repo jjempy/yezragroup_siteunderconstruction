@@ -82,6 +82,7 @@ export interface VideoRow {
   youtube_id: string;
   duration: string;
   is_visible: boolean;
+  preview_seconds: number;
   created_at: string;
 }
 

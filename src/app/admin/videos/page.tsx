@@ -16,7 +16,8 @@ export default async function VideosAdminPage({
       <h1>Workshop Videos</h1>
       <p className="sub">
         Add, edit, reorder, or remove episodes. Leave this list empty and the Workshop Library section
-        disappears from the homepage entirely.
+        disappears from the homepage entirely. Non-buyers see a short locked preview clip of each
+        episode (the "Preview Length" below) with an unlock prompt — full playback is buyers-only.
       </p>
       {searchParams.saved && <p className="admin-toast ok">Saved.</p>}
 
@@ -35,6 +36,10 @@ export default async function VideosAdminPage({
             <div className="admin-field">
               <label htmlFor="duration">Duration</label>
               <input id="duration" name="duration" type="text" placeholder="24:10" />
+            </div>
+            <div className="admin-field">
+              <label htmlFor="preview_seconds">Preview Length (seconds)</label>
+              <input id="preview_seconds" name="preview_seconds" type="number" min={5} defaultValue={45} />
             </div>
           </div>
           <button className="admin-btn" type="submit">
@@ -58,6 +63,16 @@ export default async function VideosAdminPage({
               <div className="admin-field">
                 <label htmlFor={`duration-${video.id}`}>Duration</label>
                 <input id={`duration-${video.id}`} name="duration" type="text" defaultValue={video.duration} />
+              </div>
+              <div className="admin-field">
+                <label htmlFor={`preview_seconds-${video.id}`}>Preview Length (seconds)</label>
+                <input
+                  id={`preview_seconds-${video.id}`}
+                  name="preview_seconds"
+                  type="number"
+                  min={5}
+                  defaultValue={video.preview_seconds}
+                />
               </div>
             </div>
             <label className="admin-checkbox">
