@@ -16,6 +16,7 @@ function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,7 +66,7 @@ function SignupForm() {
         return;
       }
 
-      setNotice('Check your email for a confirmation link to finish creating your account.');
+      setAwaitingConfirmation(true);
     } catch (err) {
       // A thrown error (bad Supabase URL/key, network failure, etc.) would
       // otherwise leave the button stuck on "Creating account…" forever
@@ -78,6 +79,23 @@ function SignupForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (awaitingConfirmation) {
+    return (
+      <div className="auth-shell">
+        <div className="auth-card">
+          <h1>Check Your Email</h1>
+          <p className="sub">
+            We sent a confirmation link to <strong>{email}</strong>. Click it to finish creating your
+            account — you can close this tab.
+          </p>
+          <div className="auth-links">
+            <Link href={`/login${redirect ? `?redirect=${redirect}` : ''}`}>Back to sign in</Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
