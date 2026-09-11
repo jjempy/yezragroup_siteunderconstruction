@@ -40,11 +40,16 @@ export default async function AccountPage() {
               Go to Workshop Library
             </Link>
           )}
-          <form action="/api/stripe/portal" method="POST">
-            <button className="btn-ghost" type="submit" style={{ width: '100%', cursor: 'pointer' }}>
-              Manage Billing
-            </button>
-          </form>
+          {/* Only shown once there's an actual purchase — a Stripe customer
+              only exists after checkout, so this button was guaranteed to
+              error for anyone who'd never bought anything. */}
+          {entitlement && (
+            <form action="/api/stripe/portal" method="POST">
+              <button className="btn-ghost" type="submit" style={{ width: '100%' }}>
+                Manage Billing
+              </button>
+            </form>
+          )}
           <form action={signOutAction}>
             <button className="btn-ghost" type="submit" style={{ width: '100%', cursor: 'pointer' }}>
               Sign Out

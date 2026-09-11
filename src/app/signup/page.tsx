@@ -74,7 +74,7 @@ function SignupForm() {
       }
 
       if (data.session) {
-        window.location.href = redirect === 'checkout' ? '/api/checkout/workshop-library' : '/';
+        window.location.href = redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account';
         return;
       }
 

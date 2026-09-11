@@ -25,7 +25,7 @@ function LoginForm() {
         setError(error.message);
         return;
       }
-      router.push(redirect === 'checkout' ? '/api/checkout/workshop-library' : '/');
+      router.push(redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account');
       router.refresh();
     } catch (err) {
       setError(

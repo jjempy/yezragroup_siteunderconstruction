@@ -16,6 +16,6 @@ export async function GET(req: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  const target = redirect === 'checkout' ? '/api/checkout/workshop-library' : '/';
+  const target = redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account';
   return NextResponse.redirect(new URL(target, req.url));
 }

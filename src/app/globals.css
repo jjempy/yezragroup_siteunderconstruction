@@ -89,6 +89,11 @@ nav{
 .btn-ghost{
   border:1px solid rgba(243,238,227,.3); color:var(--cream); padding:16px 30px; font-weight:500; font-size:14px;
   border-radius:2px; transition:border-color .2s, background .2s;
+  /* Originally only ever used on <a> tags (transparent by default). Now
+     also used on real <button> elements (account page), which get an
+     opaque native background unless told otherwise — without this, the
+     cream text was invisible against the browser's default button chrome. */
+  background:transparent; font-family:inherit; cursor:pointer;
 }
 .btn-ghost:hover{border-color:var(--gold); background:rgba(198,160,69,.08);}
 
