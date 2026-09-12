@@ -7,12 +7,19 @@ import { signOutAction } from './actions';
 export default async function AccountPage() {
   const { user, profile } = await requireUser();
   const supabase = createClient();
-  const { data: entitlement } = await supabase
-    .from('entitlements')
-    .select('product, granted_at')
-    .eq('user_id', user.id)
-    .eq('product', 'workshop_library')
-    .maybeSingle();
+  const [{ data: entitlement }, { data: tier }] = await Promise.all([
+    supabase
+      .from('entitlements')
+      .select('product, granted_at')
+      .eq('user_id', user.id)
+      .eq('product', 'workshop_library')
+      .maybeSingle(),
+    supabase
+      .from('ladder_tiers')
+      .select('is_visible, price_label, cta_label')
+      .eq('slug', 'workshop_library')
+      .maybeSingle(),
+  ]);
 
   return (
     <>
@@ -42,14 +49,22 @@ export default async function AccountPage() {
             <Link href="/library" className="btn-primary" style={{ textAlign: 'center' }}>
               Go to Workshop Library
             </Link>
-          ) : (
+          ) : tier?.is_visible ? (
+            // Reactive to Admin -> Ladder Tiers: reflects whatever price/
+            // label is actually configured there, and disappears the
+            // moment that tier is toggled off — never a stale hardcoded
+            // price or a button pointing at something no longer for sale.
             <a
               href="/api/checkout/workshop-library"
               className="btn-primary"
               style={{ textAlign: 'center' }}
             >
-              Get Access — $147
+              {tier.cta_label || 'Get Access'} — {tier.price_label}
             </a>
+          ) : (
+            <Link href="/#ladder" className="btn-ghost" style={{ textAlign: 'center' }}>
+              See Ways to Work Together
+            </Link>
           )}
           {/* Only shown once there's an actual purchase — a Stripe customer
               only exists after checkout, so this button was guaranteed to

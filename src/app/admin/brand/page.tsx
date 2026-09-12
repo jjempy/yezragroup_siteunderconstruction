@@ -29,13 +29,22 @@ export default async function BrandAdminPage({
           <input id="brand_name" name="brand_name" type="text" defaultValue={settings.brand_name} required />
         </div>
         <div className="admin-field">
-          <label htmlFor="logo_url">Logo URL</label>
+          <label htmlFor="logo_file">Logo</label>
+          {settings.logo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={settings.logo_url}
+              alt="Current logo"
+              style={{ height: 40, marginBottom: 10, display: 'block' }}
+            />
+          )}
+          <input id="logo_file" name="logo_file" type="file" accept="image/*" />
+          <div className="hint">Upload an image to replace the wordmark/circle icon in the nav and footer.</div>
+        </div>
+        <div className="admin-field">
+          <label htmlFor="logo_url">Or paste an image URL instead</label>
           <input id="logo_url" name="logo_url" type="url" defaultValue={settings.logo_url} placeholder="https://…/logo.svg" />
-          <div className="hint">
-            Replaces the wordmark/circle icon in the nav and footer once set. Must be a direct link to
-            the image file itself (right-click the image → "Copy image address"), not a page that
-            contains it — a Google Images result page won't work.
-          </div>
+          <div className="hint">Only used if you don&apos;t upload a file above. Leave as-is otherwise.</div>
         </div>
         <div className="admin-row">
           <div className="admin-field">

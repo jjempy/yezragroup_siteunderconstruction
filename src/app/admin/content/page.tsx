@@ -41,13 +41,22 @@ export default async function ContentAdminPage({
 
         <h2 style={{ marginTop: 32 }}>About</h2>
         <div className="admin-field">
-          <label htmlFor="founder_photo_url">Founder Photo URL</label>
+          <label htmlFor="founder_photo_file">Founder Photo</label>
+          {settings.founder_photo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={settings.founder_photo_url}
+              alt="Current founder photo"
+              style={{ height: 100, borderRadius: 6, marginBottom: 10, display: 'block' }}
+            />
+          )}
+          <input id="founder_photo_file" name="founder_photo_file" type="file" accept="image/*" />
+          <div className="hint">Upload a photo, or leave blank to keep the current one / show the soft brand-colored panel.</div>
+        </div>
+        <div className="admin-field">
+          <label htmlFor="founder_photo_url">Or paste an image URL instead</label>
           <input id="founder_photo_url" name="founder_photo_url" type="url" defaultValue={settings.founder_photo_url} placeholder="https://…/joseph.jpg" />
-          <div className="hint">
-            Leave blank to show the soft brand-colored panel instead of a photo. Must be a direct link
-            to the image file itself (right-click the photo → "Copy image address"), not a page that
-            contains it — a Google Images result page or a LinkedIn profile URL won't work.
-          </div>
+          <div className="hint">Only used if you don&apos;t upload a file above.</div>
         </div>
         <div className="admin-field">
           <label htmlFor="about_body">About Paragraphs</label>
