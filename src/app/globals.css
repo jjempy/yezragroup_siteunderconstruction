@@ -52,7 +52,7 @@ header{
   background:rgba(15,20,22,.86); backdrop-filter:blur(10px);
   border-bottom:1px solid rgba(198,160,69,.18);
 }
-nav{
+header nav{
   max-width:var(--max); margin:0 auto; padding:16px 32px;
   display:flex; align-items:center; justify-content:space-between;
 }
@@ -341,6 +341,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 @media(max-width:800px){.admin-layout{grid-template-columns:1fr;}}
 .admin-side{background:var(--ink); padding:32px 0; border-right:1px solid var(--line-d);}
 .admin-nav-toggle{display:none;}
+.admin-nav-list{display:block; max-width:none; margin:0; padding:0;}
 .admin-side a{
   display:block; padding:11px 28px; font-size:13.5px; color:var(--muted-d); transition:color .2s, background .2s;
 }
@@ -387,6 +388,16 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .admin-table th{text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-l); padding:10px 12px; border-bottom:1px solid var(--line-l);}
 .admin-table td{padding:12px; border-bottom:1px solid var(--line-l); vertical-align:middle;}
 .admin-table tr:last-child td{border-bottom:none;}
+.users-card-list{display:none;}
+@media(max-width:750px){
+  .users-table-wrap{display:none;}
+  .users-card-list{display:flex; flex-direction:column; gap:12px;}
+  .user-card{border:1px solid var(--line-l); border-radius:6px; padding:14px;}
+  .user-card-row{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
+  .user-card-line{font-size:13px; color:var(--muted-l); margin-top:4px; word-break:break-word;}
+  .user-card-actions{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .user-card-actions .admin-btn{flex:1; min-width:120px;}
+}
 .pill{display:inline-block; font-size:11px; padding:3px 9px; border-radius:20px; font-weight:600;}
 .pill.role-admin{background:rgba(198,160,69,.18); color:var(--gold-deep);}
 .pill.role-standard{background:var(--card); color:var(--muted-l);}

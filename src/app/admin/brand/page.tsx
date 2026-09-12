@@ -31,7 +31,11 @@ export default async function BrandAdminPage({
         <div className="admin-field">
           <label htmlFor="logo_url">Logo URL</label>
           <input id="logo_url" name="logo_url" type="url" defaultValue={settings.logo_url} placeholder="https://…/logo.svg" />
-          <div className="hint">Replaces the text wordmark in the nav and footer once set.</div>
+          <div className="hint">
+            Replaces the wordmark/circle icon in the nav and footer once set. Must be a direct link to
+            the image file itself (right-click the image → "Copy image address"), not a page that
+            contains it — a Google Images result page won't work.
+          </div>
         </div>
         <div className="admin-row">
           <div className="admin-field">

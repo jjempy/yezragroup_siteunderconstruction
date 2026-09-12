@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import type { PaidVideoRow } from '@/types/database';
+import { extractYouTubeId } from '@/lib/youtube';
 
 function done() {
   revalidatePath('/library');
@@ -25,7 +26,7 @@ export async function addPaidVideo(formData: FormData) {
 
   const { error } = await supabase.from('paid_videos').insert({
     title: (formData.get('title') as string) ?? '',
-    youtube_id: (formData.get('youtube_id') as string) ?? '',
+    youtube_id: extractYouTubeId((formData.get('youtube_id') as string) ?? ''),
     duration: (formData.get('duration') as string) ?? '',
     preview_seconds: Number(formData.get('preview_seconds')) || 45,
     sort_order: nextOrder,
@@ -42,7 +43,7 @@ export async function updatePaidVideo(videoId: string, formData: FormData) {
     .from('paid_videos')
     .update({
       title: (formData.get('title') as string) ?? '',
-      youtube_id: (formData.get('youtube_id') as string) ?? '',
+      youtube_id: extractYouTubeId((formData.get('youtube_id') as string) ?? ''),
       duration: (formData.get('duration') as string) ?? '',
       preview_seconds: Number(formData.get('preview_seconds')) || 45,
       is_visible: formData.get('is_visible') === 'on',

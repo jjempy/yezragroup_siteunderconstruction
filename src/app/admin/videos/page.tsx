@@ -29,7 +29,7 @@ export default async function VideosAdminPage({
               <input id="title" name="title" type="text" required />
             </div>
             <div className="admin-field">
-              <label htmlFor="youtube_id">YouTube ID</label>
+              <label htmlFor="youtube_id">YouTube ID or URL</label>
               <input id="youtube_id" name="youtube_id" type="text" required placeholder="dQw4w9WgXcQ" />
             </div>
             <div className="admin-field">
@@ -52,7 +52,7 @@ export default async function VideosAdminPage({
                 <input id={`title-${video.id}`} name="title" type="text" defaultValue={video.title} required />
               </div>
               <div className="admin-field">
-                <label htmlFor={`youtube_id-${video.id}`}>YouTube ID</label>
+                <label htmlFor={`youtube_id-${video.id}`}>YouTube ID or URL</label>
                 <input id={`youtube_id-${video.id}`} name="youtube_id" type="text" defaultValue={video.youtube_id} required />
               </div>
               <div className="admin-field">

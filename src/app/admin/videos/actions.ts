@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import type { VideoRow } from '@/types/database';
+import { extractYouTubeId } from '@/lib/youtube';
 
 function done() {
   revalidatePath('/');
@@ -22,7 +23,7 @@ export async function addVideo(formData: FormData) {
 
   const { error } = await supabase.from('videos').insert({
     title: (formData.get('title') as string) ?? '',
-    youtube_id: (formData.get('youtube_id') as string) ?? '',
+    youtube_id: extractYouTubeId((formData.get('youtube_id') as string) ?? ''),
     duration: (formData.get('duration') as string) ?? '',
     sort_order: nextOrder,
     is_visible: true,
@@ -38,7 +39,7 @@ export async function updateVideo(videoId: string, formData: FormData) {
     .from('videos')
     .update({
       title: (formData.get('title') as string) ?? '',
-      youtube_id: (formData.get('youtube_id') as string) ?? '',
+      youtube_id: extractYouTubeId((formData.get('youtube_id') as string) ?? ''),
       duration: (formData.get('duration') as string) ?? '',
       is_visible: formData.get('is_visible') === 'on',
     })

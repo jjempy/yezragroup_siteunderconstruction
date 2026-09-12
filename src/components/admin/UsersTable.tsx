@@ -47,7 +47,13 @@ export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; cu
   return (
     <div className="admin-card">
       {error && <p className="admin-toast err">{error}</p>}
-      <div style={{ overflowX: 'auto' }}>
+
+      {/* Desktop: a normal table. Below ~750px this is hidden entirely in
+          favor of the stacked cards further down — a wide multi-column
+          table has no good way to fit a phone screen without either
+          horizontal scroll or unreadably tiny text, so it gets its own
+          narrow layout instead of trying to force the table to comply. */}
+      <div className="users-table-wrap">
         <table className="admin-table">
           <thead>
             <tr>
@@ -98,6 +104,47 @@ export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; cu
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: one stacked card per user, no horizontal scroll ever. */}
+      <div className="users-card-list">
+        {rows.map((user) => (
+          <div className="user-card" key={user.id}>
+            <div className="user-card-row">
+              <strong>{user.full_name || '—'}</strong>
+              <span className={`pill role-${user.role}`}>{user.role}</span>
+            </div>
+            <div className="user-card-line">{user.email}</div>
+            {user.phone && <div className="user-card-line">{user.phone}</div>}
+            <div className="user-card-line">
+              Last login: {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}
+            </div>
+            <div className="user-card-row" style={{ marginTop: 6 }}>
+              <span className={`pill ${user.blocked ? 'blocked' : 'active'}`}>
+                {user.blocked ? 'Blocked' : 'Active'}
+              </span>
+              <span style={{ fontSize: 12, color: 'var(--muted-l)' }}>
+                Marketing: {user.marketing_opt_in ? 'Yes' : 'No'}
+              </span>
+            </div>
+            <div className="user-card-actions">
+              <button
+                className="admin-btn secondary"
+                disabled={isPending || user.id === currentUserId}
+                onClick={() => toggleRole(user)}
+              >
+                Make {user.role === 'admin' ? 'Standard' : 'Admin'}
+              </button>
+              <button
+                className={`admin-btn ${user.blocked ? 'secondary' : 'danger'}`}
+                disabled={isPending || user.id === currentUserId}
+                onClick={() => toggleBlocked(user)}
+              >
+                {user.blocked ? 'Unblock' : 'Block'}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
