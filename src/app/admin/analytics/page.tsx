@@ -114,11 +114,10 @@ export default async function AnalyticsAdminPage({
       </div>
 
       {kind !== 'all' && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 24 }}>
           <Link href={hrefFor(kind, offset - 1)} className="admin-btn secondary" style={{ padding: '6px 14px' }}>
             ← Previous
           </Link>
-          <strong style={{ fontSize: 15 }}>{range.label}</strong>
           {offset < 0 ? (
             <Link href={hrefFor(kind, offset + 1)} className="admin-btn secondary" style={{ padding: '6px 14px' }}>
               Next →
@@ -128,25 +127,26 @@ export default async function AnalyticsAdminPage({
               Next →
             </span>
           )}
+          <strong style={{ fontSize: 15 }}>{range.label}</strong>
         </div>
       )}
       {kind === 'all' && <p style={{ marginBottom: 24, fontWeight: 600 }}>{range.label}</p>}
 
-      <div className="admin-row" style={{ marginBottom: 20 }}>
-        <div className="admin-card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--charcoal)' }}>{signups.length}</div>
+      <div className="kpi-grid" style={{ marginBottom: 20 }}>
+        <div className="admin-card kpi-tile">
+          <div className="kpi-value">{signups.length}</div>
           <div className="hint">New Accounts</div>
         </div>
-        <div className="admin-card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--charcoal)' }}>{newsletterSignups.length}</div>
+        <div className="admin-card kpi-tile">
+          <div className="kpi-value">{newsletterSignups.length}</div>
           <div className="hint">Newsletter Signups</div>
         </div>
-        <div className="admin-card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--charcoal)' }}>{purchases.length}</div>
+        <div className="admin-card kpi-tile">
+          <div className="kpi-value">{purchases.length}</div>
           <div className="hint">Purchases</div>
         </div>
-        <div className="admin-card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--gold-deep)' }}>{money(totalRevenueCents)}</div>
+        <div className="admin-card kpi-tile">
+          <div className="kpi-value" style={{ color: 'var(--gold-deep)' }}>{money(totalRevenueCents)}</div>
           <div className="hint">Total Revenue</div>
         </div>
       </div>
@@ -161,13 +161,13 @@ export default async function AnalyticsAdminPage({
 
       <div className="admin-card">
         <h2>New Accounts</h2>
-        <BarChart data={buckets.map((b, i) => ({ label: b.label, value: signupSeries[i] }))} />
+        <BarChart data={buckets.map((b, i) => ({ label: b.label, title: b.title, value: signupSeries[i] }))} />
       </div>
 
       <div className="admin-card">
         <h2>Revenue</h2>
         <BarChart
-          data={buckets.map((b, i) => ({ label: b.label, value: revenueSeries[i] }))}
+          data={buckets.map((b, i) => ({ label: b.label, title: b.title, value: revenueSeries[i] }))}
           formatValue={(v) => `$${v.toFixed(0)}`}
           color="var(--gold-deep)"
         />

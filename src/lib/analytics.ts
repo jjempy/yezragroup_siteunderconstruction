@@ -63,13 +63,29 @@ export function computeRange(kind: RangeKind, offset: number, minYear: number): 
 
 export interface Bucket {
   label: string;
+  /** Full date/range for a title/tooltip — the bar label itself stays
+   * short (a weekday, "Week 2", a month) so the chart never has to cram
+   * dozens of full dates onto one axis. */
+  title?: string;
   start: Date;
   end: Date;
 }
 
-/** Splits a range into the buckets its chart should show — daily for
- * day/week/month, monthly for ytd, yearly for all-time. Keeps the chart
- * legible instead of e.g. 365 daily bars for "all time". */
+const SHORT_DATE = { month: 'short', day: 'numeric' } as const;
+
+/** Splits a range into the buckets its chart should show:
+ *  - day: a single bucket (no chart, just the summary numbers)
+ *  - week: 7 daily bars, labeled Mon/Tue/... only — the exact dates are
+ *    already in the range header above, so repeating them on every bar
+ *    is just noise.
+ *  - month: weekly bars (Week 1, Week 2, ...) rather than 28-31 individual
+ *    daily bars — a full month of unlabeled-but-crowded daily bars was
+ *    both unreadable and the direct cause of the chart overflowing on
+ *    mobile.
+ *  - ytd: monthly bars (max 12)
+ *  - all: yearly bars
+ * Every kind tops out at a small, fixed-ish number of bars, which is what
+ * actually keeps this from ever needing to scroll. */
 export function bucketsFor(kind: RangeKind, range: DateRange, minYear: number): Bucket[] {
   const buckets: Bucket[] = [];
 
@@ -77,17 +93,37 @@ export function bucketsFor(kind: RangeKind, range: DateRange, minYear: number): 
     return [{ label: 'Today', start: range.start, end: range.end }];
   }
 
-  if (kind === 'week' || kind === 'month') {
+  if (kind === 'week') {
     const cursor = new Date(range.start);
     while (cursor < range.end) {
       const bStart = new Date(cursor);
       const bEnd = new Date(cursor.getTime() + DAY_MS);
       buckets.push({
-        label: bStart.toLocaleDateString('en-US', { weekday: kind === 'week' ? 'short' : undefined, month: 'short', day: 'numeric' }),
+        label: bStart.toLocaleDateString('en-US', { weekday: 'short' }),
+        title: bStart.toLocaleDateString('en-US', SHORT_DATE),
         start: bStart,
         end: bEnd,
       });
       cursor.setDate(cursor.getDate() + 1);
+    }
+    return buckets;
+  }
+
+  if (kind === 'month') {
+    const cursor = new Date(range.start);
+    let week = 1;
+    while (cursor < range.end) {
+      const bStart = new Date(cursor);
+      cursor.setDate(cursor.getDate() + 7);
+      const bEnd = new Date(Math.min(cursor.getTime(), range.end.getTime()));
+      const lastDay = new Date(bEnd.getTime() - DAY_MS);
+      buckets.push({
+        label: `Wk ${week}`,
+        title: `${bStart.toLocaleDateString('en-US', SHORT_DATE)} – ${lastDay.toLocaleDateString('en-US', SHORT_DATE)}`,
+        start: bStart,
+        end: bEnd,
+      });
+      week += 1;
     }
     return buckets;
   }
