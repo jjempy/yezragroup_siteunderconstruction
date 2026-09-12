@@ -41,10 +41,11 @@ export async function updateBrandSettings(formData: FormData) {
   await requireAdmin();
   const supabase = createClient();
 
-  const update: Record<string, string> = {};
+  const update: Record<string, unknown> = {};
   for (const key of BRAND_TEXT_FIELDS) {
     update[key] = (formData.get(key) as string | null) ?? '';
   }
+  update.hero_logo_watermark = formData.get('hero_logo_watermark') === 'on';
 
   // An uploaded file always wins over whatever's in the URL text field —
   // that field stays as a manual/advanced fallback (e.g. pasting a link

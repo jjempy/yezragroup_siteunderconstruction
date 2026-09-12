@@ -40,12 +40,23 @@ export default async function BrandAdminPage({
             />
           )}
           <input id="logo_file" name="logo_file" type="file" accept="image/*" />
-          <div className="hint">Upload an image to replace the wordmark/circle icon in the nav and footer.</div>
+          <div className="hint">Replaces the small circle icon in the nav (top-left) and footer.</div>
         </div>
         <div className="admin-field">
           <label htmlFor="logo_url">Or paste an image URL instead</label>
           <input id="logo_url" name="logo_url" type="url" defaultValue={settings.logo_url} placeholder="https://…/logo.svg" />
           <div className="hint">Only used if you don&apos;t upload a file above. Leave as-is otherwise.</div>
+        </div>
+        <label className="admin-checkbox" style={{ marginBottom: 16 }}>
+          <input type="checkbox" name="hero_logo_watermark" defaultChecked={settings.hero_logo_watermark} />
+          Also use this logo as the large faded background mark behind the homepage headline
+        </label>
+        <div className="hint" style={{ marginTop: -10, marginBottom: 20 }}>
+          Off by default — a detailed or non-transparent logo (most photo/PNG exports) looks like a hard
+          box when blown up large and faded behind text. Only turn this on with a logo that has a
+          transparent background (a real vector/SVG mark or a PNG exported with no background) and is
+          simple enough to read faded at low opacity. If it looks wrong after saving, just uncheck this —
+          the headline background will fall back to the default mark.
         </div>
         <div className="admin-row">
           <div className="admin-field">

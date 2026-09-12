@@ -13,6 +13,7 @@ const FALLBACK_SETTINGS: SiteSettings = {
   id: 'default',
   brand_name: 'Orchemet',
   logo_url: '',
+  hero_logo_watermark: false,
   color_gold: '',
   color_gold_deep: '',
   color_ink: '',
