@@ -3,11 +3,34 @@ import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { AuthHeader } from '@/components/AuthHeader';
 import { signOutAction } from './actions';
+import type { Entitlement } from '@/types/database';
+
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
+const PRODUCT_LABELS: Record<string, string> = {
+  workshop_library: 'Workshop Library — Lifetime Access',
+};
+
+function formatOrderDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatMoney(amountTotal: number | null, currency: string | null) {
+  if (amountTotal == null || !currency) return null;
+  try {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(
+      amountTotal / 100
+    );
+  } catch {
+    return null;
+  }
+}
 
 export default async function AccountPage() {
   const { user, profile } = await requireUser();
   const supabase = createClient();
-  const [{ data: entitlement }, { data: tier }] = await Promise.all([
+  const [{ data: entitlement }, { data: tier }, { data: orders }] = await Promise.all([
     supabase
       .from('entitlements')
       .select('product, granted_at')
@@ -19,7 +42,13 @@ export default async function AccountPage() {
       .select('is_visible, price_label, cta_label')
       .eq('slug', 'workshop_library')
       .maybeSingle(),
+    supabase
+      .from('entitlements')
+      .select('id, product, granted_at, amount_total, currency')
+      .eq('user_id', user.id)
+      .order('granted_at', { ascending: false }),
   ]);
+  const orderList = (orders as Pick<Entitlement, 'id' | 'product' | 'granted_at' | 'amount_total' | 'currency'>[]) ?? [];
 
   return (
     <>
@@ -81,6 +110,50 @@ export default async function AccountPage() {
               Sign Out
             </button>
           </form>
+        </div>
+
+        <div id="orders" style={{ marginTop: 36, paddingTop: 24, borderTop: '1px solid rgba(243,238,227,.12)' }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--muted-d)', marginBottom: 12 }}>
+            Order History
+          </label>
+          {orderList.length === 0 ? (
+            <p className="sub" style={{ margin: 0 }}>No purchases yet.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {orderList.map((order) => {
+                const amount = formatMoney(order.amount_total, order.currency);
+                return (
+                  <div
+                    key={order.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 14px',
+                      background: 'rgba(243,238,227,.05)',
+                      border: '1px solid rgba(243,238,227,.1)',
+                      borderRadius: 4,
+                    }}
+                  >
+                    <div>
+                      <div style={{ color: 'var(--cream)', fontSize: 14, fontWeight: 600 }}>
+                        {PRODUCT_LABELS[order.product] ?? order.product}
+                      </div>
+                      <div style={{ color: 'var(--muted-d)', fontSize: 12.5, marginTop: 2 }}>
+                        {formatOrderDate(order.granted_at)}
+                      </div>
+                    </div>
+                    {amount && (
+                      <div style={{ color: 'var(--gold-bright)', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                        {amount}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
       </div>

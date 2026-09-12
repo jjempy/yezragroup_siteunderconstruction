@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
       client_reference_id: string | null;
       customer: string | null;
       payment_status: string;
+      amount_total: number | null;
+      currency: string | null;
       line_items?: { data: Array<{ price?: { id: string } | null }> };
     };
 
@@ -66,6 +68,8 @@ export async function POST(req: NextRequest) {
         product: 'workshop_library',
         stripe_checkout_session_id: session.id,
         stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
+        amount_total: session.amount_total ?? null,
+        currency: session.currency ?? null,
         source: 'stripe_webhook',
       },
       { onConflict: 'user_id,product' }

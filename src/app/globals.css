@@ -20,7 +20,14 @@
   --line-d:#2A3234;
   --serif:'Fraunces', Georgia, serif;
   --sans:'Inter', -apple-system, sans-serif;
-  --max:1180px;
+  /* 1180px was a fixed desktop-mockup width. Top-performing responsive
+     sites don't jump between two or three fixed breakpoints for their main
+     content column — they let it breathe fluidly with viewport size,
+     floored so text never gets cramped and capped so lines never run too
+     long to read comfortably on an ultrawide monitor. clamp() gives that:
+     unchanged on a typical laptop (~1180-1280px viewport), visibly wider
+     on big desktop displays and landscape tablets, capped at 1440px. */
+  --max: clamp(1180px, 90vw, 1440px);
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 html{scroll-behavior:smooth;}
@@ -67,7 +74,42 @@ header nav{
   font-size:13px; font-weight:600; letter-spacing:.02em; transition:background .2s;
 }
 .nav-cta:hover{background:var(--gold-bright);}
-@media(max-width:800px){.nav-links a:not(.nav-cta){display:none;}}
+
+/* Signed-in nav is deliberately just two items — no hamburger needed at
+   any width. */
+.nav-links-member{gap:22px;}
+.nav-admin-link{
+  font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;
+  border:1px solid rgba(243,238,227,.25); padding:8px 14px; border-radius:2px;
+}
+.nav-admin-link:hover{border-color:var(--gold); color:var(--cream) !important;}
+.nav-cta-ghost{background:transparent; border:1px solid rgba(198,160,69,.6); color:var(--gold-bright) !important;}
+.nav-cta-ghost:hover{background:rgba(198,160,69,.12);}
+
+/* Hamburger — hidden on desktop, only shown once the signed-out marketing
+   links would otherwise get cramped. */
+.nav-burger{
+  display:none; flex-direction:column; justify-content:center; gap:5px;
+  width:34px; height:34px; background:none; border:none; cursor:pointer; padding:0;
+}
+.nav-burger span{display:block; width:100%; height:2px; background:var(--cream); border-radius:2px;}
+
+@media(max-width:800px){
+  .nav-burger{display:flex;}
+  header nav{position:relative;}
+  .nav-links:not(.nav-links-member){
+    position:absolute; top:100%; left:0; right:0;
+    flex-direction:column; align-items:flex-start; gap:18px;
+    background:var(--ink); border-bottom:1px solid rgba(198,160,69,.18);
+    padding:0 32px; max-height:0; overflow:hidden; opacity:0; pointer-events:none;
+    transition:max-height .25s ease, opacity .2s ease, padding .25s ease;
+  }
+  .nav-links.open:not(.nav-links-member){
+    max-height:360px; opacity:1; pointer-events:auto; padding:22px 32px 26px;
+  }
+  .nav-links:not(.nav-links-member) a{font-size:15px;}
+  .nav-links-signin{color:var(--gold-bright) !important; font-weight:600;}
+}
 
 /* ---------- HERO ---------- */
 .hero{
@@ -408,3 +450,48 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .admin-toast.err{color:#B4573F;}
 @media(max-width:700px){.admin-toast{font-size:15px;}}
 .drag-handle{cursor:grab; color:var(--muted-l); font-size:16px; padding-right:8px;}
+
+/* ---------- ADMIN CALENDAR — agenda view ---------- */
+.agenda-jump{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px;}
+.agenda-jump-pill{
+  background:#fff; border:1px solid var(--line-l); border-radius:20px; padding:8px 16px;
+  font-size:13px; font-weight:600; color:var(--charcoal); transition:border-color .15s, color .15s;
+}
+.agenda-jump-pill:hover{border-color:var(--gold); color:var(--gold-deep);}
+.agenda-jump-pill span{color:var(--muted-l); font-weight:500;}
+.agenda-add-summary{cursor:pointer; font-weight:600; color:var(--gold-deep); font-size:14px; list-style:none;}
+.agenda-add-summary::-webkit-details-marker{display:none;}
+.agenda-group{margin-bottom:36px; scroll-margin-top:20px;}
+.agenda-group-title{
+  font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--muted-l); padding-bottom:8px; margin-bottom:14px; border-bottom:2px solid var(--line-l);
+}
+.agenda-group-title.agenda-today{color:var(--gold-deep); border-bottom-color:var(--gold);}
+.agenda-item{
+  background:#fff; border:1px solid var(--line-l); border-left:4px solid var(--line-l);
+  border-radius:6px; margin-bottom:10px; padding:0;
+}
+.agenda-item.agenda-today{border-left-color:var(--gold);}
+.agenda-item.agenda-upcoming{border-left-color:#3f7a4a;}
+.agenda-item.agenda-past{opacity:.72;}
+.agenda-item summary{
+  cursor:pointer; list-style:none; padding:14px 18px; display:flex; align-items:center;
+  gap:16px; flex-wrap:wrap; font-size:14px;
+}
+.agenda-item summary::-webkit-details-marker{display:none;}
+.agenda-item summary::before{content:'▸'; color:var(--muted-l); font-size:11px; margin-right:2px;}
+.agenda-item[open] summary::before{content:'▾';}
+.agenda-item-date{font-weight:700; color:var(--charcoal); min-width:150px;}
+.agenda-item-topic{color:var(--muted-l); flex:1; min-width:140px;}
+.agenda-item-status{
+  font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
+  color:var(--gold-deep); background:rgba(198,160,69,.12); padding:3px 10px; border-radius:20px;
+}
+.agenda-item-hidden{
+  font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
+  color:#B4573F; background:rgba(180,87,63,.12); padding:3px 10px; border-radius:20px;
+}
+.agenda-item-body{padding:0 18px 20px; border-top:1px solid var(--line-l); padding-top:18px;}
+@media(max-width:600px){
+  .agenda-item-date{min-width:0; width:100%;}
+}

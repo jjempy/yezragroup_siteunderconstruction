@@ -134,6 +134,7 @@ const FALLBACK_CALENDAR_SESSIONS: CalendarSession[] = [
     status: 'Open',
     is_visible: true,
     created_at: '',
+    session_date: null,
   },
 ];
 

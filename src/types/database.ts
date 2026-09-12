@@ -24,6 +24,8 @@ export interface Entitlement {
   stripe_customer_id: string | null;
   granted_at: string;
   source: string;
+  amount_total: number | null;
+  currency: string | null;
 }
 
 export interface SiteSettings {
@@ -113,6 +115,9 @@ export interface CalendarSession {
   status: string;
   is_visible: boolean;
   created_at: string;
+  // Admin-only sorting/tracking aid — see 0008 migration. The public site
+  // keeps showing date_text as-is; this never renders on the homepage.
+  session_date: string | null;
 }
 
 export interface Testimonial {

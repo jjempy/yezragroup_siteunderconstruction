@@ -28,6 +28,7 @@ export async function addSession(formData: FormData) {
     topic: (formData.get('topic') as string) ?? '',
     location: (formData.get('location') as string) ?? '',
     date_text: (formData.get('date_text') as string) ?? '',
+    session_date: (formData.get('session_date') as string) || null,
     status: (formData.get('status') as string) || 'Open',
     sort_order: nextOrder,
     is_visible: true,
@@ -46,6 +47,7 @@ export async function updateSession(sessionId: string, formData: FormData) {
       topic: (formData.get('topic') as string) ?? '',
       location: (formData.get('location') as string) ?? '',
       date_text: (formData.get('date_text') as string) ?? '',
+      session_date: (formData.get('session_date') as string) || null,
       status: (formData.get('status') as string) || 'Open',
       is_visible: formData.get('is_visible') === 'on',
     })
