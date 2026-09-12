@@ -52,8 +52,12 @@ create policy "profiles_admin_insert"
   on public.profiles for insert
   with check (public.is_admin(auth.uid()));
 
--- Defense in depth: even if a policy or client bug lets a non-admin
--- reach this row, they can never move their own role/blocked flag.
+-- Defense in depth: even if a policy or client bug lets a non-admin app
+-- user reach this row, they can never move their own role/blocked flag.
+-- auth.uid() is only ever null for direct SQL (the SQL Editor, migrations,
+-- the service-role client) — never for a request that came through the
+-- app — so those are deliberately exempt; that's the trusted path an
+-- admin uses to bootstrap the very first admin account.
 create or replace function public.enforce_profile_self_update()
 returns trigger
 language plpgsql
@@ -61,7 +65,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if not public.is_admin(auth.uid()) then
+  if auth.uid() is not null and not public.is_admin(auth.uid()) then
     new.role := old.role;
     new.blocked := old.blocked;
   end if;
