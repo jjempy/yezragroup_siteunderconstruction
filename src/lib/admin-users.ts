@@ -2,6 +2,16 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Profile } from '@/types/database';
 
+export interface AdminUserEntitlement {
+  product: string;
+  status: string;
+  amount_total: number | null;
+  currency: string | null;
+  source: string;
+  note: string | null;
+  granted_at: string;
+}
+
 export interface AdminUserRow {
   id: string;
   email: string;
@@ -12,11 +22,13 @@ export interface AdminUserRow {
   marketing_opt_in: boolean;
   last_sign_in_at: string | null;
   created_at: string;
+  entitlements: AdminUserEntitlement[];
 }
 
 /** Combines auth.users (email, last sign-in) with public.profiles
- * (name/phone/role/blocked/marketing) for the admin Users page. Walks every
- * page of auth.admin.listUsers() so it covers the whole user base. */
+ * (name/phone/role/blocked/marketing) and entitlements (purchases/manual
+ * grants) for the admin Users page. Walks every page of
+ * auth.admin.listUsers() so it covers the whole user base. */
 export async function getUsersForAdmin(): Promise<AdminUserRow[]> {
   const admin = createAdminClient();
 
@@ -35,7 +47,27 @@ export async function getUsersForAdmin(): Promise<AdminUserRow[]> {
   const { data: profiles, error: profileError } = await admin.from('profiles').select('*');
   if (profileError) throw new Error(profileError.message);
 
+  // select('*') rather than naming status/note explicitly: this keeps
+  // working (just without those two fields) if the 0010 migration hasn't
+  // been run against this Supabase project yet, instead of a hard error.
+  const { data: entitlementRows } = await admin.from('entitlements').select('*');
+
   const profileById = new Map<string, Profile>((profiles as Profile[]).map((p) => [p.id, p]));
+  const entitlementsByUser = new Map<string, AdminUserEntitlement[]>();
+  for (const row of (entitlementRows as Record<string, unknown>[] | null) ?? []) {
+    const userId = row.user_id as string;
+    const list = entitlementsByUser.get(userId) ?? [];
+    list.push({
+      product: row.product as string,
+      status: (row.status as string) ?? 'active',
+      amount_total: (row.amount_total as number | null) ?? null,
+      currency: (row.currency as string | null) ?? null,
+      source: row.source as string,
+      note: (row.note as string | null) ?? null,
+      granted_at: row.granted_at as string,
+    });
+    entitlementsByUser.set(userId, list);
+  }
 
   return authUsers.map((u) => {
     const profile = profileById.get(u.id);
@@ -49,6 +81,7 @@ export async function getUsersForAdmin(): Promise<AdminUserRow[]> {
       marketing_opt_in: profile?.marketing_opt_in ?? true,
       last_sign_in_at: u.last_sign_in_at,
       created_at: profile?.created_at ?? '',
+      entitlements: entitlementsByUser.get(u.id) ?? [],
     };
   });
 }

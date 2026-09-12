@@ -1,12 +1,23 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { Fragment, useState, useTransition } from 'react';
 import type { AdminUserRow } from '@/lib/admin-users';
+import { UserAccessPanel } from './UserAccessPanel';
 
 export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; currentUserId: string }) {
   const [rows, setRows] = useState(users);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  function toggleExpanded(id: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   async function toggleRole(user: AdminUserRow) {
     setError(null);
@@ -69,38 +80,52 @@ export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; cu
           </thead>
           <tbody>
             {rows.map((user) => (
-              <tr key={user.id}>
-                <td>{user.full_name || '—'}</td>
-                <td>{user.email}</td>
-                <td>{user.phone || '—'}</td>
-                <td>{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}</td>
-                <td>
-                  <span className={`pill role-${user.role}`}>{user.role}</span>
-                </td>
-                <td>
-                  <span className={`pill ${user.blocked ? 'blocked' : 'active'}`}>
-                    {user.blocked ? 'Blocked' : 'Active'}
-                  </span>
-                </td>
-                <td>{user.marketing_opt_in ? 'Yes' : 'No'}</td>
-                <td style={{ whiteSpace: 'nowrap' }}>
-                  <button
-                    className="admin-btn secondary"
-                    disabled={isPending || user.id === currentUserId}
-                    onClick={() => toggleRole(user)}
-                    style={{ marginRight: 8 }}
-                  >
-                    Make {user.role === 'admin' ? 'Standard' : 'Admin'}
-                  </button>
-                  <button
-                    className={`admin-btn ${user.blocked ? 'secondary' : 'danger'}`}
-                    disabled={isPending || user.id === currentUserId}
-                    onClick={() => toggleBlocked(user)}
-                  >
-                    {user.blocked ? 'Unblock' : 'Block'}
-                  </button>
-                </td>
-              </tr>
+              <Fragment key={user.id}>
+                <tr>
+                  <td>{user.full_name || '—'}</td>
+                  <td>{user.email}</td>
+                  <td>{user.phone || '—'}</td>
+                  <td>{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}</td>
+                  <td>
+                    <span className={`pill role-${user.role}`}>{user.role}</span>
+                  </td>
+                  <td>
+                    <span className={`pill ${user.blocked ? 'blocked' : 'active'}`}>
+                      {user.blocked ? 'Blocked' : 'Active'}
+                    </span>
+                  </td>
+                  <td>{user.marketing_opt_in ? 'Yes' : 'No'}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <button
+                      className="admin-btn secondary"
+                      disabled={isPending || user.id === currentUserId}
+                      onClick={() => toggleRole(user)}
+                      style={{ marginRight: 8 }}
+                    >
+                      Make {user.role === 'admin' ? 'Standard' : 'Admin'}
+                    </button>
+                    <button
+                      className={`admin-btn ${user.blocked ? 'secondary' : 'danger'}`}
+                      disabled={isPending || user.id === currentUserId}
+                      onClick={() => toggleBlocked(user)}
+                      style={{ marginRight: 8 }}
+                    >
+                      {user.blocked ? 'Unblock' : 'Block'}
+                    </button>
+                    <button className="admin-btn secondary" onClick={() => toggleExpanded(user.id)}>
+                      {expanded.has(user.id) ? 'Hide Access' : 'Access'}
+                      {user.entitlements.some((e) => e.status === 'active') ? ' ●' : ''}
+                    </button>
+                  </td>
+                </tr>
+                {expanded.has(user.id) && (
+                  <tr>
+                    <td colSpan={8}>
+                      <UserAccessPanel userId={user.id} entitlements={user.entitlements} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -142,7 +167,12 @@ export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; cu
               >
                 {user.blocked ? 'Unblock' : 'Block'}
               </button>
+              <button className="admin-btn secondary" onClick={() => toggleExpanded(user.id)}>
+                {expanded.has(user.id) ? 'Hide Access' : 'Access'}
+                {user.entitlements.some((e) => e.status === 'active') ? ' ●' : ''}
+              </button>
             </div>
+            {expanded.has(user.id) && <UserAccessPanel userId={user.id} entitlements={user.entitlements} />}
           </div>
         ))}
       </div>

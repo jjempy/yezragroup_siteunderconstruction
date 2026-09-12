@@ -5,22 +5,30 @@ import { GatedVideoCard } from '@/components/GatedVideoCard';
 import { LockedVideoCard } from '@/components/LockedVideoCard';
 import { AuthHeader } from '@/components/AuthHeader';
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 export default async function LibraryPage() {
   const { user } = await requireUser();
   const supabase = createClient();
 
-  const [{ data: entitlement }, { data: videos }] = await Promise.all([
+  const [{ data: entitlement }, { data: videos }, { data: views }] = await Promise.all([
     supabase
       .from('entitlements')
-      .select('product')
+      .select('product, status')
       .eq('user_id', user.id)
       .eq('product', 'workshop_library')
       .maybeSingle(),
     supabase.from('paid_videos').select('*').eq('is_visible', true).order('sort_order'),
+    supabase.from('paid_video_views').select('paid_video_id').eq('user_id', user.id),
   ]);
 
-  const isEntitled = Boolean(entitlement);
+  // A missing `status` column (0010 migration not yet run) reads as
+  // undefined here, not 'revoked' — so this stays safely permissive
+  // rather than accidentally locking out a real buyer.
+  const isEntitled = Boolean(entitlement) && entitlement?.status !== 'revoked';
   const list = (videos as PaidVideoRow[]) ?? [];
+  const viewedIds = new Set(((views as { paid_video_id: string }[]) ?? []).map((v) => v.paid_video_id));
 
   return (
     <>
@@ -49,7 +57,7 @@ export default async function LibraryPage() {
           <div className="lib-grid">
             {list.map((v, i) =>
               isEntitled ? (
-                <GatedVideoCard key={v.id} video={v} index={i} />
+                <GatedVideoCard key={v.id} video={v} index={i} viewed={viewedIds.has(v.id)} />
               ) : (
                 <LockedVideoCard key={v.id} video={v} index={i} />
               )

@@ -2,23 +2,20 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { AuthHeader } from '@/components/AuthHeader';
-import { signOutAction } from './actions';
-import type { Entitlement } from '@/types/database';
+import { signOutAction, updateProfileAction } from './actions';
+import type { Entitlement, LadderTier, PaidVideoRow } from '@/types/database';
 import { formatPhoneDisplay } from '@/lib/phone';
+import { PRODUCT_LABELS } from '@/lib/entitlements';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
-
-const PRODUCT_LABELS: Record<string, string> = {
-  workshop_library: 'Workshop Library — Lifetime Access',
-};
 
 function formatOrderDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function formatMoney(amountTotal: number | null, currency: string | null) {
-  if (amountTotal == null || !currency) return null;
+  if (amountTotal == null || !currency) return 'Free / comped';
   try {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(
       amountTotal / 100
@@ -28,124 +25,229 @@ function formatMoney(amountTotal: number | null, currency: string | null) {
   }
 }
 
-export default async function AccountPage() {
+// A row counts as active if it exists and its status isn't 'revoked' — a
+// missing `status` column (0010 migration not yet run) reads as
+// undefined, which stays on the permissive side rather than accidentally
+// locking out a real buyer.
+function isActive(e: { status?: string } | null | undefined) {
+  return Boolean(e) && e?.status !== 'revoked';
+}
+
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: { saved?: string; error?: string };
+}) {
   const { user, profile } = await requireUser();
   const supabase = createClient();
-  const [{ data: entitlement }, { data: tier }, { data: orders }] = await Promise.all([
-    supabase
-      .from('entitlements')
-      .select('product, granted_at')
-      .eq('user_id', user.id)
-      .eq('product', 'workshop_library')
-      .maybeSingle(),
-    supabase
-      .from('ladder_tiers')
-      .select('is_visible, price_label, cta_label')
-      .eq('slug', 'workshop_library')
-      .maybeSingle(),
-    supabase
-      .from('entitlements')
-      .select('id, product, granted_at, amount_total, currency')
-      .eq('user_id', user.id)
-      .order('granted_at', { ascending: false }),
+
+  const [{ data: entitlementRows }, { data: tiers }, { data: paidVideos }, { data: views }] = await Promise.all([
+    supabase.from('entitlements').select('*').eq('user_id', user.id).order('granted_at', { ascending: false }),
+    supabase.from('ladder_tiers').select('*'),
+    supabase.from('paid_videos').select('*').eq('is_visible', true).order('sort_order'),
+    supabase.from('paid_video_views').select('paid_video_id').eq('user_id', user.id),
   ]);
-  const orderList = (orders as Pick<Entitlement, 'id' | 'product' | 'granted_at' | 'amount_total' | 'currency'>[]) ?? [];
+
+  const orderList = (entitlementRows as Entitlement[]) ?? [];
+  const allTiers = (tiers as LadderTier[]) ?? [];
+  const videoList = (paidVideos as PaidVideoRow[]) ?? [];
+  const viewedCount = new Set(((views as { paid_video_id: string }[]) ?? []).map((v) => v.paid_video_id)).size;
+
+  const byProduct = new Map(orderList.filter((e) => isActive(e)).map((e) => [e.product, e]));
+  const workshopEntitlement = byProduct.get('workshop_library');
+  const workshopTier = allTiers.find((t) => t.slug === 'workshop_library');
+  const auditRoomTier = allTiers.find((t) => t.slug === 'audit_room');
+
+  const newVideos = videoList.filter((v) => {
+    const ageMs = Date.now() - new Date(v.created_at).getTime();
+    return ageMs < 1000 * 60 * 60 * 24 * 30;
+  });
+
+  const activeLabels = [...byProduct.keys()].map((p) => PRODUCT_LABELS[p] ?? p);
 
   return (
     <>
       <AuthHeader />
-      <div className="auth-shell" style={{ alignItems: 'flex-start', paddingTop: 140 }}>
-      <div className="auth-card" style={{ maxWidth: 480 }}>
-        <h1>Your Account</h1>
-        <p className="sub">{user.email}</p>
-
-        <div className="admin-field">
-          <label>Name</label>
-          <div style={{ color: 'var(--cream)' }}>{profile?.full_name || '—'}</div>
-        </div>
-        <div className="admin-field">
-          <label>Phone</label>
-          <div style={{ color: 'var(--cream)' }}>{formatPhoneDisplay(profile?.phone) || '—'}</div>
-        </div>
-        <div className="admin-field">
-          <label>Workshop Library</label>
-          <div style={{ color: 'var(--cream)' }}>
-            {entitlement ? 'Active — full access' : 'Not purchased yet'}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
-          {entitlement ? (
-            <Link href="/library" className="btn-primary" style={{ textAlign: 'center' }}>
-              Go to Workshop Library
-            </Link>
-          ) : tier?.is_visible ? (
-            // Reactive to Admin -> Ladder Tiers: reflects whatever price/
-            // label is actually configured there, and disappears the
-            // moment that tier is toggled off — never a stale hardcoded
-            // price or a button pointing at something no longer for sale.
-            <a
-              href="/api/checkout/workshop-library"
-              className="btn-primary"
-              style={{ textAlign: 'center' }}
-            >
-              {tier.cta_label || 'Get Access'} — {tier.price_label}
-            </a>
-          ) : (
-            <Link href="/#ladder" className="btn-ghost" style={{ textAlign: 'center' }}>
-              See Ways to Work Together
-            </Link>
-          )}
-          {/* Only shown once there's an actual purchase — a Stripe customer
-              only exists after checkout, so this button was guaranteed to
-              error for anyone who'd never bought anything. */}
-          {entitlement && (
-            <form action="/api/stripe/portal" method="POST">
-              <button className="btn-ghost" type="submit" style={{ width: '100%' }}>
-                Manage Billing
+      <div className="account-shell">
+        <div className="account-content">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <h1>Your Account</h1>
+              <p className="sub" style={{ margin: 0 }}>{user.email}</p>
+            </div>
+            <form action={signOutAction}>
+              <button className="btn-ghost" type="submit" style={{ cursor: 'pointer', padding: '10px 18px' }}>
+                Sign Out
               </button>
             </form>
-          )}
-          <form action={signOutAction}>
-            <button className="btn-ghost" type="submit" style={{ width: '100%', cursor: 'pointer' }}>
-              Sign Out
-            </button>
-          </form>
-        </div>
+          </div>
 
-        {/* The nav is deliberately lean once you're signed in (just Account,
-            no repeated marketing links) — this is the replacement: quick
-            access to the same destinations from here instead. */}
-        <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid rgba(243,238,227,.12)' }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--muted-d)', marginBottom: 12 }}>
-            Quick Links
-          </label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {entitlement && (
-              <Link href="/library" style={{ color: 'var(--gold-bright)', fontSize: 14 }}>
-                Workshop Library →
+          {searchParams.saved && <p className="admin-toast ok" style={{ marginTop: 20 }}>Saved</p>}
+          {searchParams.error && <p className="admin-toast err" style={{ marginTop: 20 }}>{searchParams.error}</p>}
+
+          {/* ---------- Profile ---------- */}
+          <div className="account-module" style={{ marginTop: 28 }}>
+            <h2>Profile</h2>
+            <form action={updateProfileAction}>
+              <div className="admin-row">
+                <div className="admin-field">
+                  <label htmlFor="full_name">Name</label>
+                  <input id="full_name" name="full_name" type="text" defaultValue={profile?.full_name ?? ''} />
+                </div>
+                <div className="admin-field">
+                  <label htmlFor="phone">Phone</label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    defaultValue={formatPhoneDisplay(profile?.phone) || ''}
+                    placeholder="(843) 555-0123"
+                  />
+                </div>
+              </div>
+              <button className="admin-btn" type="submit">
+                Save Profile
+              </button>
+            </form>
+            <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgba(243,238,227,.1)' }}>
+              <Link href="/forgot-password" style={{ fontSize: 13, color: 'var(--muted-d)', textDecoration: 'underline' }}>
+                Change password
+              </Link>
+              {workshopEntitlement?.stripe_customer_id && (
+                <form action="/api/stripe/portal" method="POST" style={{ display: 'inline-block', marginLeft: 20 }}>
+                  <button
+                    type="submit"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      fontSize: 13,
+                      color: 'var(--muted-d)',
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                      font: 'inherit',
+                    }}
+                  >
+                    Manage billing
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+
+          {/* ---------- Entitlement status ---------- */}
+          <div className="account-module">
+            <h2>What You Have Access To</h2>
+            {activeLabels.length === 0 ? (
+              <p className="sub" style={{ margin: 0 }}>Nothing yet — see Ways to Work Together below.</p>
+            ) : (
+              <ul style={{ listStyle: 'none', color: 'var(--cream)', fontSize: 15, lineHeight: 1.9 }}>
+                {activeLabels.map((label) => (
+                  <li key={label}>{label}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* ---------- Workshop Library ---------- */}
+          <div className="account-module">
+            <h2>Workshop Library</h2>
+            {workshopEntitlement ? (
+              <>
+                <p className="sub" style={{ marginBottom: 6 }}>
+                  {videoList.length > 0
+                    ? `${viewedCount} of ${videoList.length} sessions viewed.`
+                    : 'Full access — episodes are added regularly.'}
+                </p>
+                {newVideos.length > 0 && (
+                  <p className="sub" style={{ marginBottom: 16 }}>
+                    {newVideos.length} new session{newVideos.length === 1 ? '' : 's'} added in the last 30 days.
+                  </p>
+                )}
+                <Link href="/library" className="btn-primary" style={{ display: 'inline-block' }}>
+                  Go to the Library
+                </Link>
+                {auditRoomTier?.is_visible && (
+                  <p style={{ marginTop: 18, fontSize: 13.5, color: 'var(--muted-d)' }}>
+                    Next step, when you&apos;re ready:{' '}
+                    <Link href={auditRoomTier.cta_href || '/#ladder'} style={{ color: 'var(--gold-bright)', textDecoration: 'underline' }}>
+                      {auditRoomTier.title || 'The Audit Room'}
+                    </Link>
+                    .
+                  </p>
+                )}
+              </>
+            ) : workshopTier?.is_visible ? (
+              <>
+                <p className="sub">
+                  The full, uncut version of every session — longer than the free edit, with the parts that
+                  didn&apos;t make the public cut.
+                </p>
+                <a href="/api/checkout/workshop-library" className="btn-primary" style={{ display: 'inline-block' }}>
+                  {workshopTier.cta_label || 'Get Access'} — {workshopTier.price_label}
+                </a>
+              </>
+            ) : (
+              <Link href="/#ladder" className="btn-ghost" style={{ display: 'inline-block' }}>
+                See Ways to Work Together
               </Link>
             )}
-            <Link href="/#calendar" style={{ color: 'var(--cream)', fontSize: 14 }}>
-              Upcoming Free Masterclasses →
-            </Link>
-            <Link href="/#ladder" style={{ color: 'var(--cream)', fontSize: 14 }}>
-              Ways to Work Together →
-            </Link>
           </div>
-        </div>
 
-        <div id="orders" style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid rgba(243,238,227,.12)' }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--muted-d)', marginBottom: 12 }}>
-            Order History
-          </label>
-          {orderList.length === 0 ? (
-            <p className="sub" style={{ margin: 0 }}>No purchases yet.</p>
-          ) : (
+          {/* ---------- Audit Room / Scoped Engagement / VIP ----------
+              These tiers don't have self-serve purchase/registration flows
+              yet — an admin grants access by hand and writes the relevant
+              details (session date, deliverable link, engagement status)
+              in the grant's note, which just renders here as-is. */}
+          {(['audit_room', 'scoped_engagement', 'vip'] as const).map((product) => {
+            const e = byProduct.get(product);
+            if (!e) return null;
+            return (
+              <div className="account-module" key={product}>
+                <h2>{PRODUCT_LABELS[product]}</h2>
+                <p className="sub" style={{ marginBottom: e.note ? 12 : 0 }}>
+                  Since {formatOrderDate(e.granted_at)}.
+                </p>
+                {e.note ? (
+                  <p style={{ color: 'var(--cream)', fontSize: 14.5, lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+                    {e.note}
+                  </p>
+                ) : (
+                  <p className="sub" style={{ margin: 0 }}>
+                    Details from your engagement will show up here — reach out if you&apos;re expecting
+                    something specific.
+                  </p>
+                )}
+              </div>
+            );
+          })}
+
+          {/* ---------- Quick Links ---------- */}
+          <div className="account-module">
+            <h2>Quick Links</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {orderList.map((order) => {
-                const amount = formatMoney(order.amount_total, order.currency);
-                return (
+              {workshopEntitlement && (
+                <Link href="/library" style={{ color: 'var(--gold-bright)', fontSize: 14 }}>
+                  Workshop Library →
+                </Link>
+              )}
+              <Link href="/#calendar" style={{ color: 'var(--cream)', fontSize: 14 }}>
+                Upcoming Free Masterclasses →
+              </Link>
+              <Link href="/#ladder" style={{ color: 'var(--cream)', fontSize: 14 }}>
+                Ways to Work Together →
+              </Link>
+            </div>
+          </div>
+
+          {/* ---------- Order History ---------- */}
+          <div className="account-module" id="orders">
+            <h2>Order History</h2>
+            {orderList.length === 0 ? (
+              <p className="sub" style={{ margin: 0 }}>No purchases yet.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {orderList.map((order) => (
                   <div
                     key={order.id}
                     style={{
@@ -157,28 +259,30 @@ export default async function AccountPage() {
                       background: 'rgba(243,238,227,.05)',
                       border: '1px solid rgba(243,238,227,.1)',
                       borderRadius: 4,
+                      opacity: isActive(order) ? 1 : 0.55,
                     }}
                   >
                     <div>
                       <div style={{ color: 'var(--cream)', fontSize: 14, fontWeight: 600 }}>
                         {PRODUCT_LABELS[order.product] ?? order.product}
+                        {!isActive(order) && (
+                          <span style={{ color: 'var(--muted-d)', fontWeight: 500 }}> — revoked</span>
+                        )}
                       </div>
                       <div style={{ color: 'var(--muted-d)', fontSize: 12.5, marginTop: 2 }}>
                         {formatOrderDate(order.granted_at)}
+                        {order.source === 'manual_admin' ? ' · Manual' : ' · Stripe'}
                       </div>
                     </div>
-                    {amount && (
-                      <div style={{ color: 'var(--gold-bright)', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                        {amount}
-                      </div>
-                    )}
+                    <div style={{ color: 'var(--gold-bright)', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      {formatMoney(order.amount_total, order.currency)}
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </>
   );

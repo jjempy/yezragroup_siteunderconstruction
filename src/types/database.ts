@@ -26,6 +26,8 @@ export interface Entitlement {
   source: string;
   amount_total: number | null;
   currency: string | null;
+  status: string;
+  note: string | null;
 }
 
 export interface SiteSettings {
