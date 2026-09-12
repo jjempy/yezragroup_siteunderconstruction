@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 const CARDS = [
+  { href: '/admin/analytics', title: 'Analytics', desc: 'Signups, purchases, and revenue — by day, week, month, YTD, or all time.' },
   { href: '/admin/brand', title: 'Brand', desc: 'Logo, colors, fonts.' },
   { href: '/admin/content', title: 'Hero & About', desc: 'Hero copy, about paragraphs, founder photo, contact & social links.' },
   { href: '/admin/testimonials', title: 'Testimonials', desc: 'Real client quotes for the "What Happens in the Room" wall.' },

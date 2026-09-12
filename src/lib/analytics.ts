@@ -74,23 +74,26 @@ export interface Bucket {
 const SHORT_DATE = { month: 'short', day: 'numeric' } as const;
 
 /** Splits a range into the buckets its chart should show:
- *  - day: a single bucket (no chart, just the summary numbers)
- *  - week: 7 daily bars, labeled Mon/Tue/... only — the exact dates are
- *    already in the range header above, so repeating them on every bar
- *    is just noise.
- *  - month: weekly bars (Week 1, Week 2, ...) rather than 28-31 individual
- *    daily bars — a full month of unlabeled-but-crowded daily bars was
- *    both unreadable and the direct cause of the chart overflowing on
- *    mobile.
- *  - ytd: monthly bars (max 12)
- *  - all: yearly bars
- * Every kind tops out at a small, fixed-ish number of bars, which is what
- * actually keeps this from ever needing to scroll. */
+ *  - day: a single bucket — one point has no trend to show, so the page
+ *    skips the chart entirely for this range and shows just the totals.
+ *  - week: 7 daily bars, each labeled with its day-of-month number only
+ *    ("8" not "Sep 8") — compact, but the actual date is still ON the
+ *    chart itself rather than only in a header above it that a viewer
+ *    glancing at just the graph (or a screenshot of it) would never see.
+ *  - month: a single bucket, same reasoning as "day" — a month is one
+ *    period for this business's current volume; breaking it into weeks
+ *    manufactures a trend line out of what's usually a handful of
+ *    events, which reads as more precise than the data actually is.
+ *  - ytd: monthly bars (max 12), each a full calendar month — real
+ *    month-over-month trend, worth charting.
+ *  - all: yearly bars — real year-over-year trend, worth charting.
+ * Anything with more than one bucket also stays capped at a small,
+ * fixed-ish count, which is what keeps this from ever needing to scroll. */
 export function bucketsFor(kind: RangeKind, range: DateRange, minYear: number): Bucket[] {
   const buckets: Bucket[] = [];
 
-  if (kind === 'day') {
-    return [{ label: 'Today', start: range.start, end: range.end }];
+  if (kind === 'day' || kind === 'month') {
+    return [{ label: '', start: range.start, end: range.end }];
   }
 
   if (kind === 'week') {
@@ -99,31 +102,12 @@ export function bucketsFor(kind: RangeKind, range: DateRange, minYear: number): 
       const bStart = new Date(cursor);
       const bEnd = new Date(cursor.getTime() + DAY_MS);
       buckets.push({
-        label: bStart.toLocaleDateString('en-US', { weekday: 'short' }),
+        label: String(bStart.getDate()),
         title: bStart.toLocaleDateString('en-US', SHORT_DATE),
         start: bStart,
         end: bEnd,
       });
       cursor.setDate(cursor.getDate() + 1);
-    }
-    return buckets;
-  }
-
-  if (kind === 'month') {
-    const cursor = new Date(range.start);
-    let week = 1;
-    while (cursor < range.end) {
-      const bStart = new Date(cursor);
-      cursor.setDate(cursor.getDate() + 7);
-      const bEnd = new Date(Math.min(cursor.getTime(), range.end.getTime()));
-      const lastDay = new Date(bEnd.getTime() - DAY_MS);
-      buckets.push({
-        label: `Wk ${week}`,
-        title: `${bStart.toLocaleDateString('en-US', SHORT_DATE)} – ${lastDay.toLocaleDateString('en-US', SHORT_DATE)}`,
-        start: bStart,
-        end: bEnd,
-      });
-      week += 1;
     }
     return buckets;
   }
@@ -145,6 +129,15 @@ export function bucketsFor(kind: RangeKind, range: DateRange, minYear: number): 
     buckets.push({ label: String(y), start: new Date(y, 0, 1), end: new Date(y + 1, 0, 1) });
   }
   return buckets;
+}
+
+/** Whether this range kind has more than one period to actually chart a
+ * trend across — day/month are single, point-in-time totals (already
+ * shown as the KPI numbers), so a "chart" of one bar would just repeat
+ * that number with none of a chart's actual value: seeing change over
+ * time. */
+export function hasTrendChart(kind: RangeKind): boolean {
+  return kind === 'week' || kind === 'ytd' || kind === 'all';
 }
 
 /** Sums whatever numeric value a list of timestamped rows contribute into

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/auth';
-import { computeRange, bucketsFor, bucketSums, type RangeKind } from '@/lib/analytics';
+import { computeRange, bucketsFor, bucketSums, hasTrendChart, type RangeKind } from '@/lib/analytics';
 import { PRODUCT_LABELS } from '@/lib/entitlements';
 import { BarChart } from '@/components/admin/BarChart';
 
@@ -159,19 +159,28 @@ export default async function AnalyticsAdminPage({
         </p>
       )}
 
-      <div className="admin-card">
-        <h2>New Accounts</h2>
-        <BarChart data={buckets.map((b, i) => ({ label: b.label, title: b.title, value: signupSeries[i] }))} />
-      </div>
+      {hasTrendChart(kind) ? (
+        <>
+          <div className="admin-card">
+            <h2>New Accounts {kind === 'week' ? '(by day)' : kind === 'ytd' ? '(by month)' : '(by year)'}</h2>
+            <BarChart data={buckets.map((b, i) => ({ label: b.label, title: b.title, value: signupSeries[i] }))} />
+          </div>
 
-      <div className="admin-card">
-        <h2>Revenue</h2>
-        <BarChart
-          data={buckets.map((b, i) => ({ label: b.label, title: b.title, value: revenueSeries[i] }))}
-          formatValue={(v) => `$${v.toFixed(0)}`}
-          color="var(--gold-deep)"
-        />
-      </div>
+          <div className="admin-card">
+            <h2>Revenue {kind === 'week' ? '(by day)' : kind === 'ytd' ? '(by month)' : '(by year)'}</h2>
+            <BarChart
+              data={buckets.map((b, i) => ({ label: b.label, title: b.title, value: revenueSeries[i] }))}
+              formatValue={(v) => `$${v.toFixed(0)}`}
+              color="var(--gold-deep)"
+            />
+          </div>
+        </>
+      ) : (
+        <p className="hint" style={{ marginBottom: 20 }}>
+          A single {kind} is one data point — no trend to chart from that alone. Switch to Week, YTD, or
+          All Time above to see how it compares over time.
+        </p>
+      )}
 
       <div className="admin-card">
         <h2>Revenue by Source (reconciliation)</h2>
