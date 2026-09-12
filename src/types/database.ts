@@ -115,6 +115,17 @@ export interface CalendarSession {
   created_at: string;
 }
 
+export interface Testimonial {
+  id: string;
+  sort_order: number;
+  quote: string;
+  name: string;
+  title: string;
+  company: string;
+  is_visible: boolean;
+  created_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {

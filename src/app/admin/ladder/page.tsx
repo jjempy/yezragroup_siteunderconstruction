@@ -42,7 +42,7 @@ export default async function LadderAdminPage({
       <p className="sub">
         The five ways to work together. Toggle a tier off to hide it from the homepage entirely.
       </p>
-      {searchParams.saved && <p className="admin-toast ok">Saved.</p>}
+      {searchParams.saved && <p className="admin-toast ok">Saved</p>}
       {(tiers as LadderTier[])?.map((tier) => {
         const linkConfig = LINK_FIELD[tier.slug];
         const boundAction = updateTier.bind(null, tier.id, tier.slug);

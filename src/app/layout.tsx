@@ -3,6 +3,16 @@ import { createClient } from '@/lib/supabase/server';
 import type { SiteSettings } from '@/types/database';
 import './globals.css';
 
+// Next.js caches fetch() responses by default — including the ones
+// Supabase's client makes under the hood — even on routes that are
+// otherwise rendered dynamically. Without this, an admin save could take
+// a while (or a full redeploy) to actually show up on the live site,
+// which reads as "my change didn't save" even though it did. This is a
+// low-traffic CMS-driven site, so always-fresh data is worth far more
+// than the caching would ever save.
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 export const metadata: Metadata = {
   title: 'Orchemet',
   description:

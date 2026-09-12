@@ -20,7 +20,7 @@ export default async function ExtendedVideosAdminPage({
         clip (Preview Length) of this content, with an unlock prompt — full playback is buyers-only.
         The free homepage videos are managed separately under Workshop Videos and are never gated.
       </p>
-      {searchParams.saved && <p className="admin-toast ok">Saved.</p>}
+      {searchParams.saved && <p className="admin-toast ok">Saved</p>}
 
       <div className="admin-card">
         <h2>Add an Extended Episode</h2>

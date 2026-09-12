@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
-import type { CalendarSession, LadderTier, SiteSettings, VideoRow } from '@/types/database';
+import type { CalendarSession, LadderTier, SiteSettings, Testimonial, VideoRow } from '@/types/database';
 
 export interface SiteData {
   settings: SiteSettings;
   tiers: LadderTier[];
   videos: VideoRow[];
   calendarSessions: CalendarSession[];
+  testimonials: Testimonial[];
 }
 
 const FALLBACK_SETTINGS: SiteSettings = {
@@ -151,7 +152,7 @@ export async function getSiteData(): Promise<SiteData> {
   try {
     const supabase = createClient();
 
-    const [{ data: settings }, { data: tiers }, { data: videos }, { data: calendarSessions }] =
+    const [{ data: settings }, { data: tiers }, { data: videos }, { data: calendarSessions }, { data: testimonials }] =
       await Promise.all([
         supabase.from('site_settings').select('*').eq('id', 'default').maybeSingle<SiteSettings>(),
         supabase.from('ladder_tiers').select('*').eq('is_visible', true).order('sort_order'),
@@ -161,6 +162,7 @@ export async function getSiteData(): Promise<SiteData> {
           .select('*')
           .eq('is_visible', true)
           .order('sort_order'),
+        supabase.from('testimonials').select('*').eq('is_visible', true).order('sort_order'),
       ]);
 
     return {
@@ -170,6 +172,7 @@ export async function getSiteData(): Promise<SiteData> {
       calendarSessions: (calendarSessions as CalendarSession[] | null)?.length
         ? (calendarSessions as CalendarSession[])
         : FALLBACK_CALENDAR_SESSIONS,
+      testimonials: (testimonials as Testimonial[]) ?? [],
     };
   } catch {
     // Supabase env vars missing/invalid, or the project is unreachable —
@@ -179,6 +182,7 @@ export async function getSiteData(): Promise<SiteData> {
       tiers: FALLBACK_TIERS,
       videos: [],
       calendarSessions: FALLBACK_CALENDAR_SESSIONS,
+      testimonials: [],
     };
   }
 }

@@ -10,11 +10,15 @@ export function AuthHeader() {
   return (
     <div className="app-header" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10 }}>
       <div className="wrap">
+        {/* Left, matching the standard back-button convention on most
+            sites/apps. Hidden on narrow screens — on mobile, the native
+            edge swipe-back gesture is the more natural way back, and a
+            visible link here would just be redundant clutter. */}
+        <Link href="/" className="crumb back-to-site-link">
+          ← Back to site
+        </Link>
         <Link href="/" className="crumb" style={{ fontFamily: 'var(--serif)', fontSize: 16 }}>
           Orchemet
-        </Link>
-        <Link href="/" className="crumb">
-          ← Back to site
         </Link>
       </div>
     </div>

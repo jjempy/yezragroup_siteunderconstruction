@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { SiteSettings } from '@/types/database';
 import { updateContentSettings } from '../settings-actions';
+import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 
 export default async function ContentAdminPage({
   searchParams,
@@ -15,8 +16,14 @@ export default async function ContentAdminPage({
     <>
       <h1>Hero &amp; About</h1>
       <p className="sub">The homepage hero copy, about-section paragraphs, founder photo, contact and social links.</p>
-      {searchParams.saved && <p className="admin-toast ok">Saved.</p>}
-      <form action={updateContentSettings} className="admin-card">
+      {searchParams.saved && <p className="admin-toast ok">Saved</p>}
+      <div style={{ marginBottom: 16 }}>
+        <button className="admin-btn" type="submit" form="content-form">
+          Save Content
+        </button>
+      </div>
+      <UnsavedChangesGuard>
+      <form id="content-form" action={updateContentSettings} className="admin-card">
         <h2>Hero</h2>
         <div className="admin-field">
           <label htmlFor="hero_eyebrow">Eyebrow</label>
@@ -36,7 +43,11 @@ export default async function ContentAdminPage({
         <div className="admin-field">
           <label htmlFor="founder_photo_url">Founder Photo URL</label>
           <input id="founder_photo_url" name="founder_photo_url" type="url" defaultValue={settings.founder_photo_url} placeholder="https://…/joseph.jpg" />
-          <div className="hint">Leave blank to show the soft brand-colored panel instead of a photo.</div>
+          <div className="hint">
+            Leave blank to show the soft brand-colored panel instead of a photo. Must be a direct link
+            to the image file itself (right-click the photo → "Copy image address"), not a page that
+            contains it — a Google Images result page or a LinkedIn profile URL won't work.
+          </div>
         </div>
         <div className="admin-field">
           <label htmlFor="about_body">About Paragraphs</label>
@@ -80,6 +91,7 @@ export default async function ContentAdminPage({
           Save Content
         </button>
       </form>
+      </UnsavedChangesGuard>
     </>
   );
 }

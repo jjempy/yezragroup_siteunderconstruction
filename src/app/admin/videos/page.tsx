@@ -18,7 +18,7 @@ export default async function VideosAdminPage({
         The always-free, publicly-released episodes shown on the homepage — never gated. For the
         paid-only "Early Access" bonus cuts, see Extended Videos instead.
       </p>
-      {searchParams.saved && <p className="admin-toast ok">Saved.</p>}
+      {searchParams.saved && <p className="admin-toast ok">Saved</p>}
 
       <div className="admin-card">
         <h2>Add an Episode</h2>

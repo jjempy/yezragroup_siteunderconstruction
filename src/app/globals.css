@@ -334,15 +334,27 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .app-header nav{padding:0; max-width:none;}
 .app-header a.crumb{color:var(--muted-d); font-size:13px;}
 .app-header a.crumb:hover{color:var(--cream);}
+@media(max-width:640px){.back-to-site-link{display:none;}}
 
 .admin-shell{min-height:100vh; background:var(--cream);}
 .admin-layout{display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 68px);}
 @media(max-width:800px){.admin-layout{grid-template-columns:1fr;}}
 .admin-side{background:var(--ink); padding:32px 0; border-right:1px solid var(--line-d);}
+.admin-nav-toggle{display:none;}
 .admin-side a{
   display:block; padding:11px 28px; font-size:13.5px; color:var(--muted-d); transition:color .2s, background .2s;
 }
-.admin-side a:hover, .admin-side a.active{color:var(--cream); background:rgba(198,160,69,.08);}
+.admin-side a:hover, .admin-side a.active{color:var(--gold); background:rgba(198,160,69,.08); border-left:3px solid var(--gold); padding-left:25px;}
+@media(max-width:800px){
+  .admin-side{padding:0;}
+  .admin-nav-toggle{
+    display:flex; width:100%; justify-content:space-between; align-items:center;
+    background:var(--ink); color:var(--cream); border:none; padding:16px 20px;
+    font-size:14px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .admin-nav-list{display:none; padding:8px 0 16px;}
+  .admin-nav-list.open{display:block;}
+}
 .admin-main{padding:44px 40px;}
 @media(max-width:700px){.admin-main{padding:28px 20px;}}
 .admin-main h1{font-size:26px; margin-bottom:6px; color:var(--charcoal);}
@@ -380,7 +392,8 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .pill.role-standard{background:var(--card); color:var(--muted-l);}
 .pill.blocked{background:rgba(180,87,63,.14); color:#B4573F;}
 .pill.active{background:rgba(92,143,99,.14); color:#3f7a4a;}
-.admin-toast{font-size:13px; margin-top:10px;}
+.admin-toast{font-size:17px; font-weight:600; margin:4px 0 20px;}
 .admin-toast.ok{color:#3f7a4a;}
 .admin-toast.err{color:#B4573F;}
+@media(max-width:700px){.admin-toast{font-size:15px;}}
 .drag-handle{cursor:grab; color:var(--muted-l); font-size:16px; padding-right:8px;}

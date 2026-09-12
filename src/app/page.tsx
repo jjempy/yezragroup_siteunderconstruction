@@ -15,7 +15,7 @@ import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 
 export default async function HomePage() {
   const [session, site] = await Promise.all([getSessionUser(), getSiteData()]);
-  const { settings, tiers, videos, calendarSessions } = site;
+  const { settings, tiers, videos, calendarSessions, testimonials } = site;
 
   const vipTier = tiers.find((t) => t.slug === 'vip');
 
@@ -26,7 +26,7 @@ export default async function HomePage() {
       <Ladder tiers={tiers} settings={settings} userId={session?.user.id ?? null} />
       <Calendar sessions={calendarSessions} />
       <Library videos={videos} settings={settings} />
-      <Proof />
+      <Proof testimonials={testimonials} />
       <About settings={settings} />
       <Vip tier={vipTier} settings={settings} userId={session?.user.id ?? null} />
       <Newsletter />

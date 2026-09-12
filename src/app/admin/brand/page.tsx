@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { SiteSettings } from '@/types/database';
 import { updateBrandSettings } from '../settings-actions';
+import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 
 export default async function BrandAdminPage({
   searchParams,
@@ -15,8 +16,14 @@ export default async function BrandAdminPage({
     <>
       <h1>Brand</h1>
       <p className="sub">Logo, colors, and fonts. Leave a field blank to keep the current default.</p>
-      {searchParams.saved && <p className="admin-toast ok">Saved.</p>}
-      <form action={updateBrandSettings} className="admin-card">
+      {searchParams.saved && <p className="admin-toast ok">Saved</p>}
+      <div style={{ marginBottom: 16 }}>
+        <button className="admin-btn" type="submit" form="brand-form">
+          Save Brand Settings
+        </button>
+      </div>
+      <UnsavedChangesGuard>
+      <form id="brand-form" action={updateBrandSettings} className="admin-card">
         <div className="admin-field">
           <label htmlFor="brand_name">Brand Name</label>
           <input id="brand_name" name="brand_name" type="text" defaultValue={settings.brand_name} required />
@@ -60,6 +67,7 @@ export default async function BrandAdminPage({
           Save Brand Settings
         </button>
       </form>
+      </UnsavedChangesGuard>
     </>
   );
 }

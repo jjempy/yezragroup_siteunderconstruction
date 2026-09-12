@@ -3,11 +3,13 @@ import Link from 'next/link';
 const CARDS = [
   { href: '/admin/brand', title: 'Brand', desc: 'Logo, colors, fonts.' },
   { href: '/admin/content', title: 'Hero & About', desc: 'Hero copy, about paragraphs, founder photo, contact & social links.' },
+  { href: '/admin/testimonials', title: 'Testimonials', desc: 'Real client quotes for the "What Happens in the Room" wall.' },
   { href: '/admin/ladder', title: 'Ladder Tiers', desc: 'Edit copy, price, links, and show/hide each of the five rungs.' },
   { href: '/admin/videos', title: 'Workshop Videos', desc: 'The always-free episodes shown on the homepage — never gated.' },
   { href: '/admin/extended-videos', title: 'Extended Videos', desc: 'The paid-only bonus cut of each session — what the $147 tier unlocks.' },
   { href: '/admin/calendar', title: 'Calendar', desc: 'Manage upcoming masterclass sessions.' },
   { href: '/admin/users', title: 'Users', desc: 'Roles, blocking, and CSV export.' },
+  { href: '/admin/payments-setup', title: 'Payments Setup', desc: 'Step-by-step Stripe setup guide — for whenever you need to do this again.' },
 ];
 
 export default function AdminDashboard() {

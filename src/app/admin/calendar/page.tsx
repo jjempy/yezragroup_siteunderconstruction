@@ -15,7 +15,7 @@ export default async function CalendarAdminPage({
     <>
       <h1>Calendar</h1>
       <p className="sub">Only real, confirmed sessions belong here — no “TBD” filler cards.</p>
-      {searchParams.saved && <p className="admin-toast ok">Saved.</p>}
+      {searchParams.saved && <p className="admin-toast ok">Saved</p>}
 
       <div className="admin-card">
         <h2>Add a Session</h2>
