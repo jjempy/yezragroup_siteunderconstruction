@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { AuthHeader } from '@/components/AuthHeader';
 import { signOutAction } from './actions';
 import type { Entitlement } from '@/types/database';
+import { formatPhoneDisplay } from '@/lib/phone';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -64,7 +65,7 @@ export default async function AccountPage() {
         </div>
         <div className="admin-field">
           <label>Phone</label>
-          <div style={{ color: 'var(--cream)' }}>{profile?.phone || '—'}</div>
+          <div style={{ color: 'var(--cream)' }}>{formatPhoneDisplay(profile?.phone) || '—'}</div>
         </div>
         <div className="admin-field">
           <label>Workshop Library</label>
@@ -112,7 +113,29 @@ export default async function AccountPage() {
           </form>
         </div>
 
-        <div id="orders" style={{ marginTop: 36, paddingTop: 24, borderTop: '1px solid rgba(243,238,227,.12)' }}>
+        {/* The nav is deliberately lean once you're signed in (just Account,
+            no repeated marketing links) — this is the replacement: quick
+            access to the same destinations from here instead. */}
+        <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid rgba(243,238,227,.12)' }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--muted-d)', marginBottom: 12 }}>
+            Quick Links
+          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {entitlement && (
+              <Link href="/library" style={{ color: 'var(--gold-bright)', fontSize: 14 }}>
+                Workshop Library →
+              </Link>
+            )}
+            <Link href="/#calendar" style={{ color: 'var(--cream)', fontSize: 14 }}>
+              Upcoming Free Masterclasses →
+            </Link>
+            <Link href="/#ladder" style={{ color: 'var(--cream)', fontSize: 14 }}>
+              Ways to Work Together →
+            </Link>
+          </div>
+        </div>
+
+        <div id="orders" style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid rgba(243,238,227,.12)' }}>
           <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--muted-d)', marginBottom: 12 }}>
             Order History
           </label>

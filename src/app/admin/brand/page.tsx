@@ -6,7 +6,7 @@ import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 export default async function BrandAdminPage({
   searchParams,
 }: {
-  searchParams: { saved?: string };
+  searchParams: { saved?: string; error?: string };
 }) {
   const supabase = createClient();
   const { data } = await supabase.from('site_settings').select('*').eq('id', 'default').maybeSingle<SiteSettings>();
@@ -17,6 +17,7 @@ export default async function BrandAdminPage({
       <h1>Brand</h1>
       <p className="sub">Logo, colors, and fonts. Leave a field blank to keep the current default.</p>
       {searchParams.saved && <p className="admin-toast ok">Saved</p>}
+      {searchParams.error && <p className="admin-toast err">{searchParams.error}</p>}
       <div style={{ marginBottom: 16 }}>
         <button className="admin-btn" type="submit" form="brand-form">
           Save Brand Settings

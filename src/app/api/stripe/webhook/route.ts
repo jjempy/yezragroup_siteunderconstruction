@@ -62,18 +62,30 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createAdminClient();
-    const { error } = await supabase.from('entitlements').upsert(
-      {
-        user_id: userId,
-        product: 'workshop_library',
-        stripe_checkout_session_id: session.id,
-        stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
-        amount_total: session.amount_total ?? null,
-        currency: session.currency ?? null,
-        source: 'stripe_webhook',
-      },
-      { onConflict: 'user_id,product' }
-    );
+    const grant: Record<string, unknown> = {
+      user_id: userId,
+      product: 'workshop_library',
+      stripe_checkout_session_id: session.id,
+      stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
+      amount_total: session.amount_total ?? null,
+      currency: session.currency ?? null,
+      source: 'stripe_webhook',
+    };
+
+    let { error } = await supabase.from('entitlements').upsert(grant, { onConflict: 'user_id,product' });
+
+    // Granting access is the one thing this webhook must never fail to do
+    // — if the 0008 migration (amount_total/currency columns) hasn't been
+    // run against this Supabase project yet, don't let that block the
+    // actual purchase from being honored. Retry with just the columns that
+    // are guaranteed to exist; the order-history $ amount can backfill
+    // later, but the customer's access can't wait on a migration.
+    if (error && error.message.includes('column') && error.message.includes('schema cache')) {
+      console.warn('[stripe webhook] amount_total/currency columns missing (run 0008 migration) — retrying core grant only');
+      delete grant.amount_total;
+      delete grant.currency;
+      ({ error } = await supabase.from('entitlements').upsert(grant, { onConflict: 'user_id,product' }));
+    }
 
     if (error) {
       console.error('[stripe webhook] failed to write entitlement:', error.message);

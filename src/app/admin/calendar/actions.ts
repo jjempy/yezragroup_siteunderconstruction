@@ -12,6 +12,23 @@ function done() {
   redirect('/admin/calendar?saved=1');
 }
 
+// A thrown error from a Server Action just crashes to Next's generic error
+// screen with no detail — redirect with the real message as a toast
+// instead so a failure (e.g. a migration that hasn't been run yet) is
+// actually visible and diagnosable, not a dead end.
+function failure(message: string): never {
+  redirect(`/admin/calendar?error=${encodeURIComponent(message)}`);
+}
+
+// If the 0008 migration (adding calendar_sessions.session_date) hasn't
+// been run against this Supabase project yet, any write that includes it
+// fails outright — which used to crash the whole page. Detect that one
+// specific, recognizable case and retry without the column so the rest of
+// the form still saves; every other error still surfaces as a toast.
+function isMissingSessionDateColumn(message: string) {
+  return message.includes('session_date') && (message.includes('column') || message.includes('schema cache'));
+}
+
 export async function addSession(formData: FormData) {
   await requireAdmin();
   const supabase = createClient();
@@ -23,7 +40,7 @@ export async function addSession(formData: FormData) {
     .limit(1);
   const nextOrder = (existing?.[0]?.sort_order ?? 0) + 1;
 
-  const { error } = await supabase.from('calendar_sessions').insert({
+  const row: Record<string, unknown> = {
     label: (formData.get('label') as string) ?? '',
     topic: (formData.get('topic') as string) ?? '',
     location: (formData.get('location') as string) ?? '',
@@ -32,27 +49,37 @@ export async function addSession(formData: FormData) {
     status: (formData.get('status') as string) || 'Open',
     sort_order: nextOrder,
     is_visible: true,
-  });
-  if (error) throw new Error(error.message);
+  };
+
+  let { error } = await supabase.from('calendar_sessions').insert(row);
+  if (error && isMissingSessionDateColumn(error.message)) {
+    delete row.session_date;
+    ({ error } = await supabase.from('calendar_sessions').insert(row));
+  }
+  if (error) failure(`Couldn't add session: ${error.message}`);
   done();
 }
 
 export async function updateSession(sessionId: string, formData: FormData) {
   await requireAdmin();
   const supabase = createClient();
-  const { error } = await supabase
-    .from('calendar_sessions')
-    .update({
-      label: (formData.get('label') as string) ?? '',
-      topic: (formData.get('topic') as string) ?? '',
-      location: (formData.get('location') as string) ?? '',
-      date_text: (formData.get('date_text') as string) ?? '',
-      session_date: (formData.get('session_date') as string) || null,
-      status: (formData.get('status') as string) || 'Open',
-      is_visible: formData.get('is_visible') === 'on',
-    })
-    .eq('id', sessionId);
-  if (error) throw new Error(error.message);
+
+  const row: Record<string, unknown> = {
+    label: (formData.get('label') as string) ?? '',
+    topic: (formData.get('topic') as string) ?? '',
+    location: (formData.get('location') as string) ?? '',
+    date_text: (formData.get('date_text') as string) ?? '',
+    session_date: (formData.get('session_date') as string) || null,
+    status: (formData.get('status') as string) || 'Open',
+    is_visible: formData.get('is_visible') === 'on',
+  };
+
+  let { error } = await supabase.from('calendar_sessions').update(row).eq('id', sessionId);
+  if (error && isMissingSessionDateColumn(error.message)) {
+    delete row.session_date;
+    ({ error } = await supabase.from('calendar_sessions').update(row).eq('id', sessionId));
+  }
+  if (error) failure(`Couldn't save session: ${error.message}`);
   done();
 }
 
@@ -60,7 +87,7 @@ export async function deleteSession(sessionId: string) {
   await requireAdmin();
   const supabase = createClient();
   const { error } = await supabase.from('calendar_sessions').delete().eq('id', sessionId);
-  if (error) throw new Error(error.message);
+  if (error) failure(`Couldn't remove session: ${error.message}`);
   done();
 }
 

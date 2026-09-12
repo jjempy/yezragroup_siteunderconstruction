@@ -27,3 +27,16 @@ export function normalizePhone(raw: string): { value: string | null; valid: bool
   }
   return { value: parsed.number, valid: true }; // parsed.number is E.164
 }
+
+/**
+ * Formats a stored phone number (E.164, or a bare "18438043080"-style
+ * string from before normalization) as something a human actually wants to
+ * read — "(843) 804-3080" — instead of a raw digit string. Falls back to
+ * the original input unchanged if it doesn't parse as a real number.
+ */
+export function formatPhoneDisplay(raw: string | null | undefined): string {
+  if (!raw) return '';
+  const parsed = parsePhoneNumberFromString(raw, 'US');
+  if (!parsed || !parsed.isValid()) return raw;
+  return parsed.formatNational();
+}

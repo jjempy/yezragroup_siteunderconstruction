@@ -6,7 +6,7 @@ import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 export default async function ContentAdminPage({
   searchParams,
 }: {
-  searchParams: { saved?: string };
+  searchParams: { saved?: string; error?: string };
 }) {
   const supabase = createClient();
   const { data } = await supabase.from('site_settings').select('*').eq('id', 'default').maybeSingle<SiteSettings>();
@@ -17,6 +17,7 @@ export default async function ContentAdminPage({
       <h1>Hero &amp; About</h1>
       <p className="sub">The homepage hero copy, about-section paragraphs, founder photo, contact and social links.</p>
       {searchParams.saved && <p className="admin-toast ok">Saved</p>}
+      {searchParams.error && <p className="admin-toast err">{searchParams.error}</p>}
       <div style={{ marginBottom: 16 }}>
         <button className="admin-btn" type="submit" form="content-form">
           Save Content

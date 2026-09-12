@@ -20,7 +20,7 @@ function formatSessionDate(dateStr: string) {
 export default async function CalendarAdminPage({
   searchParams,
 }: {
-  searchParams: { saved?: string };
+  searchParams: { saved?: string; error?: string };
 }) {
   const supabase = createClient();
   const { data: sessions } = await supabase.from('calendar_sessions').select('*').order('sort_order');
@@ -54,6 +54,7 @@ export default async function CalendarAdminPage({
         sort itself into Today / Upcoming / Past automatically.
       </p>
       {searchParams.saved && <p className="admin-toast ok">Saved</p>}
+      {searchParams.error && <p className="admin-toast err">{searchParams.error}</p>}
 
       <div className="agenda-jump">
         {sections.map((sec) => (

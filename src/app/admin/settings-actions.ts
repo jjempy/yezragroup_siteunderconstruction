@@ -29,6 +29,14 @@ const CONTENT_TEXT_FIELDS = [
   'ga4_measurement_id',
 ] as const;
 
+// A thrown error from a Server Action renders Next's generic crash screen
+// with no detail — useless for an admin trying to figure out why a save
+// didn't do what they expected. Redirecting with the real message as a
+// toast instead means a failure is always visible and readable.
+function failure(path: string, message: string): never {
+  redirect(`${path}?error=${encodeURIComponent(message)}`);
+}
+
 export async function updateBrandSettings(formData: FormData) {
   await requireAdmin();
   const supabase = createClient();
@@ -43,11 +51,11 @@ export async function updateBrandSettings(formData: FormData) {
   // to something already hosted elsewhere).
   const logoFile = formData.get('logo_file') as File | null;
   const { url: uploadedLogoUrl, error: uploadError } = await uploadPublicImage(supabase, logoFile, 'logos');
-  if (uploadError) throw new Error(uploadError);
+  if (uploadError) failure('/admin/brand', `Logo upload failed: ${uploadError}`);
   if (uploadedLogoUrl) update.logo_url = uploadedLogoUrl;
 
   const { error } = await supabase.from('site_settings').update(update).eq('id', 'default');
-  if (error) throw new Error(error.message);
+  if (error) failure('/admin/brand', `Save failed: ${error.message}`);
 
   revalidatePath('/');
   revalidatePath('/admin/brand');
@@ -69,7 +77,7 @@ export async function updateContentSettings(formData: FormData) {
     photoFile,
     'founder-photo'
   );
-  if (uploadError) throw new Error(uploadError);
+  if (uploadError) failure('/admin/content', `Photo upload failed: ${uploadError}`);
   if (uploadedPhotoUrl) update.founder_photo_url = uploadedPhotoUrl;
 
   // about_body comes in as one paragraph per line from a textarea.
@@ -80,7 +88,7 @@ export async function updateContentSettings(formData: FormData) {
     .filter(Boolean);
 
   const { error } = await supabase.from('site_settings').update(update).eq('id', 'default');
-  if (error) throw new Error(error.message);
+  if (error) failure('/admin/content', `Save failed: ${error.message}`);
 
   revalidatePath('/');
   revalidatePath('/admin/content');
