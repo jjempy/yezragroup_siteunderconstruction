@@ -14,6 +14,7 @@ const NAV = [
   { href: '/admin/extended-videos', label: 'Extended Videos' },
   { href: '/admin/calendar', label: 'Calendar' },
   { href: '/admin/users', label: 'Users' },
+  { href: '/admin/newsletter', label: 'Newsletter Signups' },
   { href: '/admin/payments-setup', label: 'Payments Setup' },
 ];
 

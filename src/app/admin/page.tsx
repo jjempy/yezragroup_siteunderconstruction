@@ -9,6 +9,7 @@ const CARDS = [
   { href: '/admin/extended-videos', title: 'Extended Videos', desc: 'The paid-only bonus cut of each session — what the $147 tier unlocks.' },
   { href: '/admin/calendar', title: 'Calendar', desc: 'Manage upcoming masterclass sessions.' },
   { href: '/admin/users', title: 'Users', desc: 'Roles, blocking, and CSV export.' },
+  { href: '/admin/newsletter', title: 'Newsletter Signups', desc: 'Lean email capture — export as CSV to migrate into Beehiiv later.' },
   { href: '/admin/payments-setup', title: 'Payments Setup', desc: 'Step-by-step Stripe setup guide — for whenever you need to do this again.' },
 ];
 
