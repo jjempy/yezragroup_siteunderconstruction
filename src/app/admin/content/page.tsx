@@ -40,6 +40,20 @@ export default async function ContentAdminPage({
           <textarea id="hero_lede" name="hero_lede" defaultValue={settings.hero_lede} />
         </div>
 
+        <h2 style={{ marginTop: 32 }}>Masterclass Calendar Section</h2>
+        <div className="admin-field">
+          <label htmlFor="calendar_eyebrow">Eyebrow</label>
+          <input id="calendar_eyebrow" name="calendar_eyebrow" type="text" defaultValue={settings.calendar_eyebrow} />
+        </div>
+        <div className="admin-field">
+          <label htmlFor="calendar_heading">Heading</label>
+          <input id="calendar_heading" name="calendar_heading" type="text" defaultValue={settings.calendar_heading} />
+        </div>
+        <div className="admin-field">
+          <label htmlFor="calendar_lede">Subheading</label>
+          <textarea id="calendar_lede" name="calendar_lede" defaultValue={settings.calendar_lede} />
+        </div>
+
         <h2 style={{ marginTop: 32 }}>About</h2>
         <div className="admin-field">
           <label htmlFor="founder_photo_file">Founder Photo</label>

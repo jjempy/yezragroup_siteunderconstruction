@@ -54,6 +54,9 @@ export interface SiteSettings {
   hero_eyebrow: string;
   hero_heading: string;
   hero_lede: string;
+  calendar_eyebrow: string;
+  calendar_heading: string;
+  calendar_lede: string;
   about_body: string[];
   updated_at: string;
 }

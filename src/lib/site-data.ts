@@ -35,6 +35,10 @@ const FALLBACK_SETTINGS: SiteSettings = {
     "Clarity for the business you're *actually* running — not the one you keep telling people about.",
   hero_lede:
     "Free public masterclasses, hands-on workshops, and private engagements — built on one idea: the biggest risk to a growing business usually isn't what you don't know. It's what nobody around you will say out loud.",
+  calendar_eyebrow: 'The Year Ahead',
+  calendar_heading: 'A free masterclass, almost every month.',
+  calendar_lede:
+    "One live, in-person session most months — always free, always open, always built around a blind spot business owners don't know they have until it costs them.",
   about_body: [
     "Fifteen years in precision manufacturing engineering, state-licensed in insurance, and self-taught in building working AI systems — that's an unusual stack, and it's the whole point.",
     "I spent those years building things other people trusted to be right the first time — tooling, training manuals, vendor systems where a small mistake got expensive fast. When I started building AI tools, it wasn't to keep up with a trend. I built them to catch my own blind spots first, before I ever thought about teaching anyone else to do the same.",
