@@ -1,4 +1,5 @@
 import type { CalendarSession } from '@/types/database';
+import { CalendarCard } from './CalendarCard';
 
 export function Calendar({ sessions }: { sessions: CalendarSession[] }) {
   return (
@@ -14,25 +15,7 @@ export function Calendar({ sessions }: { sessions: CalendarSession[] }) {
         </div>
         <div className="cal-grid">
           {sessions.map((s) => (
-            <div className="cal-card reveal" key={s.id}>
-              <div className="cal-month">{s.label}</div>
-              <div className="cal-topic">{s.topic}</div>
-              {s.location && (
-                <a
-                  className="cal-meta"
-                  style={{ textDecoration: 'underline', display: 'block' }}
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.location)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {s.location}
-                </a>
-              )}
-              <div className="cal-meta" style={{ marginTop: 2 }}>
-                {s.date_text}
-              </div>
-              <div className="cal-status">{s.status}</div>
-            </div>
+            <CalendarCard session={s} key={s.id} />
           ))}
         </div>
       </div>

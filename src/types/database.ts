@@ -123,6 +123,15 @@ export interface CalendarSession {
   session_date: string | null;
 }
 
+export interface MasterclassRsvp {
+  id: string;
+  calendar_session_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  created_at: string;
+}
+
 export interface Testimonial {
   id: string;
   sort_order: number;
@@ -143,6 +152,7 @@ export interface Database {
       ladder_tiers: { Row: LadderTier; Insert: Partial<LadderTier>; Update: Partial<LadderTier> };
       videos: { Row: VideoRow; Insert: Partial<VideoRow>; Update: Partial<VideoRow> };
       calendar_sessions: { Row: CalendarSession; Insert: Partial<CalendarSession>; Update: Partial<CalendarSession> };
+      masterclass_rsvps: { Row: MasterclassRsvp; Insert: Partial<MasterclassRsvp>; Update: Partial<MasterclassRsvp> };
     };
   };
 }

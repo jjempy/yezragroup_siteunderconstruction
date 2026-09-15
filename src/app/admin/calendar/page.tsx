@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import type { CalendarSession } from '@/types/database';
+import type { CalendarSession, MasterclassRsvp } from '@/types/database';
 import { addSession, deleteSession, updateSession } from './actions';
 
 type Bucket = 'today' | 'upcoming' | 'unscheduled' | 'past';
@@ -23,8 +23,17 @@ export default async function CalendarAdminPage({
   searchParams: { saved?: string; error?: string };
 }) {
   const supabase = createClient();
-  const { data: sessions } = await supabase.from('calendar_sessions').select('*').order('sort_order');
+  const [{ data: sessions }, { data: rsvpRows }] = await Promise.all([
+    supabase.from('calendar_sessions').select('*').order('sort_order'),
+    supabase.from('masterclass_rsvps').select('*').order('created_at', { ascending: false }),
+  ]);
   const list = (sessions as CalendarSession[]) ?? [];
+  const rsvpsBySession = new Map<string, MasterclassRsvp[]>();
+  for (const r of (rsvpRows as MasterclassRsvp[]) ?? []) {
+    const arr = rsvpsBySession.get(r.calendar_session_id) ?? [];
+    arr.push(r);
+    rsvpsBySession.set(r.calendar_session_id, arr);
+  }
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -51,7 +60,10 @@ export default async function CalendarAdminPage({
       <h1>Calendar</h1>
       <p className="sub">
         Only real, confirmed sessions belong here — no “TBD” filler cards. Give a session a date and it&apos;ll
-        sort itself into Today / Upcoming / Past automatically.
+        sort itself into Today / Upcoming / Past automatically.{' '}
+        <a href="/api/admin/calendar/rsvps/export" style={{ color: 'var(--gold-deep)', textDecoration: 'underline' }}>
+          Export all RSVPs (CSV)
+        </a>
       </p>
       {searchParams.saved && <p className="admin-toast ok">Saved</p>}
       {searchParams.error && <p className="admin-toast err">{searchParams.error}</p>}
@@ -110,17 +122,40 @@ export default async function CalendarAdminPage({
             {items.length === 0 ? (
               <p className="hint">Nothing here.</p>
             ) : (
-              items.map((session) => (
+              items.map((session) => {
+                const rsvps = rsvpsBySession.get(session.id) ?? [];
+                return (
                 <details className={`agenda-item agenda-${sec.key}`} key={session.id}>
                   <summary>
                     <span className="agenda-item-date">
                       {session.session_date ? formatSessionDate(session.session_date) : session.label}
                     </span>
                     <span className="agenda-item-topic">{session.topic}</span>
+                    {rsvps.length > 0 && (
+                      <span className="agenda-item-status" style={{ background: 'rgba(92,143,99,.14)', color: '#3f7a4a' }}>
+                        {rsvps.length} RSVP{rsvps.length === 1 ? '' : 's'}
+                      </span>
+                    )}
                     <span className="agenda-item-status">{session.status}</span>
                     {!session.is_visible && <span className="agenda-item-hidden">Hidden</span>}
                   </summary>
                   <div className="agenda-item-body">
+                    {rsvps.length > 0 && (
+                      <div style={{ marginBottom: 20 }}>
+                        <h3 style={{ fontSize: 13, marginBottom: 8, color: 'var(--muted-l)' }}>
+                          RSVPs ({rsvps.length})
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {rsvps.map((r) => (
+                            <div key={r.id} style={{ fontSize: 13, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                              <strong>{r.full_name || '—'}</strong>
+                              <span style={{ color: 'var(--muted-l)' }}>{r.email}</span>
+                              {r.phone && <span style={{ color: 'var(--muted-l)' }}>{r.phone}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <form action={updateSession.bind(null, session.id)}>
                       <div className="admin-row">
                         <div className="admin-field">
@@ -172,7 +207,8 @@ export default async function CalendarAdminPage({
                     </form>
                   </div>
                 </details>
-              ))
+                );
+              })
             )}
           </div>
         );
