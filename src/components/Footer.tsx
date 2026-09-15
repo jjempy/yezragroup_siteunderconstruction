@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Mark } from './Mark';
 import type { SiteSettings } from '@/types/database';
 
@@ -52,7 +53,9 @@ export function Footer({ settings }: { settings: SiteSettings }) {
         </div>
         <div className="foot-bottom">
           <span>© {new Date().getFullYear()} {settings.brand_name}. All rights reserved.</span>
-          <span>Privacy · Terms</span>
+          <span>
+            <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
+          </span>
         </div>
       </div>
     </footer>

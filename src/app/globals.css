@@ -330,6 +330,8 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .foot-col a{display:block; font-size:13.5px; color:var(--muted-d); margin-bottom:10px; transition:color .2s;}
 .foot-col a:hover{color:var(--gold);}
 .foot-bottom{display:flex; justify-content:space-between; padding-top:24px; font-size:12px; flex-wrap:wrap; gap:10px;}
+.foot-bottom a{text-decoration:underline; transition:color .2s;}
+.foot-bottom a:hover{color:var(--gold);}
 
 .reveal{opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease;}
 .reveal.in{opacity:1; transform:none;}
@@ -526,3 +528,10 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 @media(max-width:600px){
   .agenda-item-date{min-width:0; width:100%;}
 }
+
+/* ---------- LEGAL PAGES (Privacy/Terms) ---------- */
+.legal-content h2{font-size:19px; margin:34px 0 12px;}
+.legal-content p{margin-bottom:16px;}
+.legal-content ul{margin:0 0 16px 22px;}
+.legal-content li{margin-bottom:8px;}
+.legal-content a{text-decoration:underline; color:var(--gold-deep);}
