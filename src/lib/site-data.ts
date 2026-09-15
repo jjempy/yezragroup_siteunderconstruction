@@ -210,12 +210,16 @@ export function resolveTierHref(
       return { href: '/api/checkout/workshop-library', configured: true };
     }
     case 'audit_room':
+      // Routed through /api/checkout/audit-room (not straight to Stripe) so
+      // client_reference_id gets attached — same reasoning as Workshop
+      // Library above.
       return settings.stripe_group_masterclass_url
-        ? { href: settings.stripe_group_masterclass_url, configured: true }
+        ? { href: '/api/checkout/audit-room', configured: true }
         : { href: '#', configured: false };
     case 'scoped_engagement':
+      // The $2,000 Engagement Deposit — same client_reference_id treatment.
       return settings.scoped_engagement_url
-        ? { href: settings.scoped_engagement_url, configured: true }
+        ? { href: '/api/checkout/scoped-engagement-deposit', configured: true }
         : { href: '#', configured: false };
     case 'vip':
       return settings.vip_application_url

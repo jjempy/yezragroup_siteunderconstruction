@@ -6,6 +6,23 @@ import { createAdminClient } from '@/lib/supabase/admin';
 // don't let Next parse it as JSON.
 export const runtime = 'nodejs';
 
+// Every Stripe Price ID this site knows how to sell, mapped to the
+// entitlement product it grants. Each is optional — an unset env var just
+// means that tier isn't live in Stripe yet, not a crash. Add a new tier
+// here (and a matching env var) any time a new direct-checkout product is
+// created; anything not in this map is safely ignored (e.g. a future,
+// unrelated Payment Link on the same Stripe account).
+const PRICE_TO_PRODUCT: Record<string, string> = {};
+if (process.env.STRIPE_PRICE_WORKSHOP_LIBRARY) {
+  PRICE_TO_PRODUCT[process.env.STRIPE_PRICE_WORKSHOP_LIBRARY] = 'workshop_library';
+}
+if (process.env.STRIPE_PRICE_AUDIT_ROOM) {
+  PRICE_TO_PRODUCT[process.env.STRIPE_PRICE_AUDIT_ROOM] = 'audit_room';
+}
+if (process.env.STRIPE_PRICE_SCOPED_ENGAGEMENT_DEPOSIT) {
+  PRICE_TO_PRODUCT[process.env.STRIPE_PRICE_SCOPED_ENGAGEMENT_DEPOSIT] = 'scoped_engagement';
+}
+
 export async function POST(req: NextRequest) {
   const signature = req.headers.get('stripe-signature');
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -34,7 +51,6 @@ export async function POST(req: NextRequest) {
       payment_status: string;
       amount_total: number | null;
       currency: string | null;
-      line_items?: { data: Array<{ price?: { id: string } | null }> };
     };
 
     if (session.payment_status !== 'paid') {
@@ -44,27 +60,29 @@ export async function POST(req: NextRequest) {
     const userId = session.client_reference_id;
     if (!userId) {
       // No signed-in user was attached to this checkout (shouldn't happen via
-      // our own /api/checkout/workshop-library flow, but guard anyway).
+      // our own /api/checkout/* routes, but guard anyway).
       console.warn('[stripe webhook] checkout.session.completed with no client_reference_id', session.id);
       return NextResponse.json({ received: true, skipped: 'no client_reference_id' });
     }
 
-    // Confirm the purchased price matches the Workshop Library price, so a
-    // future second Payment Link on the same Stripe account can't
-    // accidentally grant this entitlement.
-    const priceId = process.env.STRIPE_PRICE_WORKSHOP_LIBRARY;
-    if (priceId) {
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 10 });
-      const matches = lineItems.data.some((li) => li.price?.id === priceId);
-      if (!matches) {
-        return NextResponse.json({ received: true, skipped: 'price mismatch' });
-      }
+    // Which product did they actually buy? Match the purchased price
+    // against every known tier rather than assuming — this is what lets
+    // one webhook endpoint serve every direct-checkout tier (Workshop
+    // Library, Audit Room, the Scoped Engagement deposit, and whatever's
+    // added later) instead of one endpoint per product.
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 10 });
+    const matchedPriceId = lineItems.data.find((li) => li.price?.id && PRICE_TO_PRODUCT[li.price.id])?.price?.id;
+    const product = matchedPriceId ? PRICE_TO_PRODUCT[matchedPriceId] : null;
+
+    if (!product) {
+      console.warn('[stripe webhook] checkout.session.completed for an unrecognized price', session.id);
+      return NextResponse.json({ received: true, skipped: 'price not recognized' });
     }
 
     const supabase = createAdminClient();
     const grant: Record<string, unknown> = {
       user_id: userId,
-      product: 'workshop_library',
+      product,
       stripe_checkout_session_id: session.id,
       stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
       amount_total: session.amount_total ?? null,

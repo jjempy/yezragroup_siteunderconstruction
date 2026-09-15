@@ -10,13 +10,13 @@ const LINK_FIELD: Partial<Record<LadderSlug, { key: keyof SiteSettings; label: s
   },
   audit_room: {
     key: 'stripe_group_masterclass_url',
-    label: 'Intake Form URL',
-    hint: 'Tally form URL — it redirects to the $497 Stripe Payment Link on submit.',
+    label: 'Stripe Payment Link',
+    hint: 'The $497 Audit Room Payment Link from Stripe. Its "after payment" redirect should point to /checkout/success?product=audit_room.',
   },
   scoped_engagement: {
     key: 'scoped_engagement_url',
-    label: 'Intake Form URL',
-    hint: 'Airtable form share link.',
+    label: 'Stripe Payment Link (Engagement Deposit)',
+    hint: 'The $2,000 Engagement Deposit Payment Link from Stripe — credited toward the total project fee, not the full $25k+ (keeps card fees off a five-figure charge; the balance is arranged by wire/ACH once the engagement is scoped). Its "after payment" redirect should point to /checkout/success?product=scoped_engagement. After it clears, add the scope/next-steps details in Admin → Users → that client → Access, under the Scoped Engagement note — it shows up on their account page.',
   },
   vip: {
     key: 'vip_application_url',

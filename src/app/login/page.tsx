@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { checkoutPathFor } from '@/lib/checkoutPaths';
 import { AuthHeader } from '@/components/AuthHeader';
 
 function LoginForm() {
@@ -29,7 +30,7 @@ function LoginForm() {
       // replace, not push — the login form itself shouldn't become a back-
       // button stop once signed in; back should skip past it to wherever
       // the visitor was before they opened /login.
-      router.replace(redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account');
+      router.replace(checkoutPathFor(redirect));
       router.refresh();
     } catch (err) {
       setError(

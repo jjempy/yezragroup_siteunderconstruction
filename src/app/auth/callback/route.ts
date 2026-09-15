@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkoutPathFor } from '@/lib/checkoutPaths';
 
 /**
  * Handles the redirect from a Supabase email confirmation link
@@ -16,6 +17,6 @@ export async function GET(req: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  const target = redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account';
+  const target = checkoutPathFor(redirect);
   return NextResponse.redirect(new URL(target, req.url));
 }

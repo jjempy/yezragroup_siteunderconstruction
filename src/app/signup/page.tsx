@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { normalizePhone } from '@/lib/phone';
+import { checkoutPathFor } from '@/lib/checkoutPaths';
 import { AuthHeader } from '@/components/AuthHeader';
 
 function SignupForm() {
@@ -78,7 +79,7 @@ function SignupForm() {
         // .replace, not .href — same reasoning as login: the filled-out
         // signup form shouldn't be a back-button stop once the account
         // exists and is signed in.
-        window.location.replace(redirect === 'checkout' ? '/api/checkout/workshop-library' : '/account');
+        window.location.replace(checkoutPathFor(redirect));
         return;
       }
 
