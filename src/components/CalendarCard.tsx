@@ -1,14 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import type { CalendarSession } from '@/types/database';
 
 /** One masterclass session card with a real RSVP capture — the card used
  * to be purely informational (topic/date/location), no way to actually
- * signal you're coming. Lean on purpose, same posture as the newsletter
- * capture: no login required, straight into Supabase, duplicate RSVPs
- * (same email/session) treated as success rather than an error. */
+ * signal you're coming. Posts to /api/rsvp (not a direct Supabase
+ * insert like the newsletter capture) so a confirmation email can go out
+ * server-side as part of the same request. */
 export function CalendarCard({ session }: { session: CalendarSession }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -20,14 +19,12 @@ export function CalendarCard({ session }: { session: CalendarSession }) {
     e.preventDefault();
     setStatus('loading');
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from('masterclass_rsvps').insert({
-        calendar_session_id: session.id,
-        full_name: name,
-        email,
-        phone,
+      const res = await fetch('/api/rsvp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: session.id, fullName: name, email, phone }),
       });
-      if (error && !/duplicate|unique/i.test(error.message)) throw error;
+      if (!res.ok) throw new Error('RSVP failed');
       setStatus('done');
     } catch {
       setStatus('error');
@@ -58,7 +55,7 @@ export function CalendarCard({ session }: { session: CalendarSession }) {
 
       {status === 'done' ? (
         <div className="cal-rsvp-note" style={{ color: 'var(--gold-bright)' }}>
-          You&apos;re on the list — see you there.
+          You&apos;re on the list — check your email for confirmation. See you there.
         </div>
       ) : isFull ? (
         <div className="cal-rsvp-note">This session is full.</div>

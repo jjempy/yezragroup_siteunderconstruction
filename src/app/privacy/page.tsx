@@ -1,8 +1,15 @@
+import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { AuthHeader } from '@/components/AuthHeader';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'What Orchemet collects, why, and who it is shared with.',
+  robots: { index: true, follow: true },
+};
 
 export default async function PrivacyPage() {
   const supabase = createClient();

@@ -541,6 +541,18 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
   .agenda-item-date{min-width:0; width:100%;}
 }
 
+/* ---------- FAQ ---------- */
+.faq-list{max-width:760px;}
+.faq-item{border-bottom:1px solid var(--line-l); padding:20px 0;}
+.faq-item summary{
+  cursor:pointer; list-style:none; font-family:var(--serif); font-size:17px; font-weight:600;
+  color:var(--charcoal); display:flex; align-items:center; gap:12px;
+}
+.faq-item summary::-webkit-details-marker{display:none;}
+.faq-item summary::before{content:'+'; color:var(--gold-deep); font-size:20px; font-weight:400; width:16px;}
+.faq-item[open] summary::before{content:'–';}
+.faq-item p{margin-top:14px; padding-left:28px; color:var(--muted-l); font-size:15px; line-height:1.7;}
+
 /* ---------- LEGAL PAGES (Privacy/Terms) ---------- */
 .legal-content h2{font-size:19px; margin:34px 0 12px;}
 .legal-content p{margin-bottom:16px;}

@@ -13,10 +13,41 @@ import './globals.css';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
+const SITE_URL = 'https://orchemet.com';
+const DESCRIPTION =
+  "Free masterclasses, a paid workshop library, and advisory engagements for business owners whose business is working — but working despite something they can't quite name. Testimony, not theory.";
+
 export const metadata: Metadata = {
-  title: 'Orchemet',
-  description:
-    "Clarity for the business you're actually running — free masterclasses, workshops, and advisory engagements.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Orchemet — Clarity for the Business You're Actually Running",
+    template: '%s | Orchemet',
+  },
+  description: DESCRIPTION,
+  keywords: [
+    'business blind spots',
+    'why does my business feel stuck',
+    'honest business feedback',
+    'free business masterclass',
+    'small business workshop',
+    'business advisory engagement',
+    'business coaching alternative',
+  ],
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    type: 'website',
+    url: SITE_URL,
+    siteName: 'Orchemet',
+    title: "Orchemet — Clarity for the Business You're Actually Running",
+    description: DESCRIPTION,
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Orchemet — Clarity for the Business You're Actually Running",
+    description: DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
 };
 
 async function getBrandSettings(): Promise<Pick<

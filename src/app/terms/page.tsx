@@ -1,8 +1,15 @@
+import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { AuthHeader } from '@/components/AuthHeader';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description: 'The terms covering Orchemet purchases and account use.',
+  robots: { index: true, follow: true },
+};
 
 export default async function TermsPage() {
   const supabase = createClient();

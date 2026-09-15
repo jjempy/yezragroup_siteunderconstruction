@@ -33,6 +33,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
               <h4>Learn</h4>
               <a href="#library">Workshop Library</a>
               <a href="#about">About</a>
+              <a href="#faq">FAQ</a>
             </div>
             <div className="foot-col">
               <h4>Connect</h4>

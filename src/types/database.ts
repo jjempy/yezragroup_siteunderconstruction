@@ -130,6 +130,7 @@ export interface MasterclassRsvp {
   email: string;
   phone: string;
   created_at: string;
+  reminder_sent_at: string | null;
 }
 
 export interface Testimonial {
