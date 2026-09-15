@@ -17,7 +17,7 @@ const COPY: Record<Product, { emoji: string; heading: string; body: string; cta:
   workshop_library: {
     emoji: '🎉',
     heading: "You're in.",
-    body: 'Payment confirmed — the full Workshop Library, including the extended, less-edited sessions, just unlocked on your account.',
+    body: 'Payment confirmed — the full Workshop Library, including the extended, less-edited sessions, is now available on your account.',
     cta: { href: '/library', label: 'Go to the Workshop Library' },
   },
   audit_room: {

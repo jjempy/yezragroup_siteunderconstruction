@@ -41,7 +41,7 @@ export default async function LibraryPage() {
           <p>
             {isEntitled
               ? "The full, uncut version of every session — longer than the free edit, with the parts and insights that didn't make the public cut."
-              : 'A short preview of every session below. Unlock full access — $147, one time — for the longer, less-edited cut with additional insights, on top of everything already free on the homepage.'}
+              : 'A short preview of every session below. Get full access — $147, one time — for the longer, less-edited cut with additional insights, on top of everything already free on the homepage.'}
           </p>
           {!isEntitled && (
             <a
@@ -49,7 +49,7 @@ export default async function LibraryPage() {
               className="btn-primary"
               style={{ display: 'inline-block', marginTop: 20 }}
             >
-              Unlock Full Access — $147
+              Get Full Access — $147
             </a>
           )}
         </div>

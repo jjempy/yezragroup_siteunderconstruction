@@ -16,8 +16,8 @@ export default async function ExtendedVideosAdminPage({
       <h1>Extended Videos</h1>
       <p className="sub">
         The paid-only "Early Access" bonus cut of each session — longer, less edited, with additional
-        insights. This is what the $147 tier actually unlocks. Non-buyers see a short locked preview
-        clip (Preview Length) of this content, with an unlock prompt — full playback is buyers-only.
+        insights. This is what the $147 tier actually includes. Non-buyers see a short locked preview
+        clip (Preview Length) of this content, with a "Get Full Access" prompt — full playback is buyers-only.
         The free homepage videos are managed separately under Workshop Videos and are never gated.
       </p>
       {searchParams.saved && <p className="admin-toast ok">Saved</p>}

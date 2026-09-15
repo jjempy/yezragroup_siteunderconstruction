@@ -8,7 +8,7 @@ import { useBackToClose } from '@/lib/useBackToClose';
  * Shown to signed-in-but-unpaid visitors: thumbnail, title, and a "Preview"
  * button that plays only the first `preview_seconds` of the paid-only
  * extended cut (via YouTube's start/end embed params) before a persistent
- * "Unlock Full Access" prompt — a hook for the exclusive bonus content,
+ * "Get Full Access" prompt — a hook for the exclusive bonus content,
  * not a restricted view of the free episodes (those are never gated at
  * all — see the homepage).
  */
@@ -48,7 +48,7 @@ export function LockedVideoCard({ video, index }: { video: PaidVideoRow; index: 
           className="rung-btn gold"
           style={{ display: 'block', textAlign: 'center', marginTop: 12 }}
         >
-          Unlock Full Access — $147
+          Get Full Access — $147
         </a>
       </div>
     </div>

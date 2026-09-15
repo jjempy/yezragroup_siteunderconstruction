@@ -7,7 +7,7 @@ const CARDS = [
   { href: '/admin/testimonials', title: 'Testimonials', desc: 'Real client quotes for the "What Happens in the Room" wall.' },
   { href: '/admin/ladder', title: 'Ladder Tiers', desc: 'Edit copy, price, links, and show/hide each of the five rungs.' },
   { href: '/admin/videos', title: 'Workshop Videos', desc: 'The always-free episodes shown on the homepage — never gated.' },
-  { href: '/admin/extended-videos', title: 'Extended Videos', desc: 'The paid-only bonus cut of each session — what the $147 tier unlocks.' },
+  { href: '/admin/extended-videos', title: 'Extended Videos', desc: 'The paid-only bonus cut of each session — what the $147 tier includes.' },
   { href: '/admin/calendar', title: 'Calendar', desc: 'Manage upcoming masterclass sessions.' },
   { href: '/admin/users', title: 'Users', desc: 'Roles, blocking, and CSV export.' },
   { href: '/admin/newsletter', title: 'Newsletter Signups', desc: 'Lean email capture — export as CSV to migrate into Beehiiv later.' },

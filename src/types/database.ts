@@ -28,6 +28,7 @@ export interface Entitlement {
   currency: string | null;
   status: string;
   note: string | null;
+  roster_opt_in: boolean;
 }
 
 export interface SiteSettings {

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { AuthHeader } from '@/components/AuthHeader';
-import { signOutAction, updateProfileAction } from './actions';
+import { signOutAction, updateProfileAction, updateRosterOptIn } from './actions';
 import type { Entitlement, LadderTier, PaidVideoRow } from '@/types/database';
 import { formatPhoneDisplay } from '@/lib/phone';
 import { PRODUCT_LABELS } from '@/lib/entitlements';
@@ -217,6 +217,24 @@ export default async function AccountPage({
                     Details from your engagement will show up here — reach out if you&apos;re expecting
                     something specific.
                   </p>
+                )}
+                {product === 'audit_room' && (
+                  <form
+                    action={updateRosterOptIn}
+                    style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(243,238,227,.1)' }}
+                  >
+                    <label className="admin-checkbox" style={{ color: 'var(--cream)' }}>
+                      <input type="checkbox" name="roster_opt_in" defaultChecked={e.roster_opt_in} />
+                      Let others in this session see your name
+                    </label>
+                    <p className="sub" style={{ margin: '6px 0 12px' }}>
+                      Off by default. Nothing about your presence in a session is visible to anyone else
+                      unless you turn this on.
+                    </p>
+                    <button className="btn-ghost" type="submit" style={{ padding: '8px 16px', fontSize: 13 }}>
+                      Save
+                    </button>
+                  </form>
                 )}
               </div>
             );

@@ -40,3 +40,24 @@ export async function updateProfileAction(formData: FormData) {
   revalidatePath('/account');
   redirect('/account?saved=1');
 }
+
+/** Audit Room cohort roster consent — opted out by default; a client
+ * explicitly chooses to be visible to the rest of their session's
+ * cohort, and can change their mind any time from here. */
+export async function updateRosterOptIn(formData: FormData) {
+  const { user } = await requireUser();
+  const supabase = createClient();
+
+  const rosterOptIn = formData.get('roster_opt_in') === 'on';
+
+  const { error } = await supabase
+    .from('entitlements')
+    .update({ roster_opt_in: rosterOptIn })
+    .eq('user_id', user.id)
+    .eq('product', 'audit_room');
+
+  if (error) failure(`Couldn't save: ${error.message}`);
+
+  revalidatePath('/account');
+  redirect('/account?saved=1');
+}
