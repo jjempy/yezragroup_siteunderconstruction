@@ -10,7 +10,7 @@ const NAV = [
   { href: '/admin/brand', label: 'Brand' },
   { href: '/admin/content', label: 'Hero & About' },
   { href: '/admin/testimonials', label: 'Testimonials' },
-  { href: '/admin/ladder', label: 'Ladder Tiers' },
+  { href: '/admin/offers', label: 'Offers' },
   { href: '/admin/videos', label: 'Workshop Videos' },
   { href: '/admin/extended-videos', label: 'Extended Videos' },
   { href: '/admin/calendar', label: 'Calendar' },

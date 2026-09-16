@@ -25,10 +25,10 @@ const LINK_FIELD: Partial<Record<LadderSlug, { key: keyof SiteSettings; label: s
   },
 };
 
-export default async function LadderAdminPage({
+export default async function OffersAdminPage({
   searchParams,
 }: {
-  searchParams: { saved?: string };
+  searchParams: { saved?: string; error?: string };
 }) {
   const supabase = createClient();
   const [{ data: tiers }, { data: settings }] = await Promise.all([
@@ -38,11 +38,14 @@ export default async function LadderAdminPage({
 
   return (
     <>
-      <h1>Ladder Tiers</h1>
+      <h1>Offers</h1>
       <p className="sub">
-        The five ways to work together. Toggle a tier off to hide it from the homepage entirely.
+        The five things you sell. Toggle one off to hide it from the homepage entirely — nothing here
+        forces a visitor through these in order; someone can go straight to a Scoped Engagement without
+        ever RSVPing to a masterclass, and that&apos;s fine.
       </p>
       {searchParams.saved && <p className="admin-toast ok">Saved</p>}
+      {searchParams.error && <p className="admin-toast err">{searchParams.error}</p>}
       {(tiers as LadderTier[])?.map((tier) => {
         const linkConfig = LINK_FIELD[tier.slug];
         const boundAction = updateTier.bind(null, tier.id, tier.slug);

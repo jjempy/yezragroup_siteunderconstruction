@@ -48,7 +48,7 @@ export async function redirectToCheckout(
   // outright — `new URL()` throws on anything that isn't a real absolute
   // URL, and nothing caught it. Falling back to the ladder section (with
   // a clear server log naming exactly which field/value was bad) means a
-  // bad paste in Admin -> Ladder Tiers degrades to "the button doesn't
+  // bad paste in Admin -> Offers degrades to "the button doesn't
   // work yet" instead of a crash page.
   let target: URL;
   try {

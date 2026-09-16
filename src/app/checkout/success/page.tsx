@@ -45,10 +45,14 @@ const COPY: Record<Product, { emoji: string; heading: string; body: string; cta:
  * We deliberately don't rely on any Stripe-supplied query param (like a
  * checkout session id) to decide what to show — the signed-in user's own
  * entitlement row is the source of truth, same as everywhere else in the
- * app. The webhook that grants it can lag a few seconds behind the
- * redirect, so if it hasn't landed yet we auto-refresh a few times (plain
- * <meta refresh>, no client JS needed) before falling back to a "check
- * your account shortly" message instead of spinning forever.
+ * app.
+ *
+ * The webhook that grants it can lag a little behind the redirect, so
+ * this waits once (a single auto-refresh after a few seconds — not a
+ * repeated reload loop, which just reads as broken) before settling into
+ * a calm, static "here's what to do" state. Deliberately no "go check
+ * your account" button while still waiting — showing an action alongside
+ * "please wait" was sending two contradictory signals at once.
  */
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -60,24 +64,32 @@ export default async function CheckoutSuccessPage({
 
   const product: Product = isKnownProduct(searchParams.product) ? searchParams.product : 'workshop_library';
 
-  const { data: entitlement } = await supabase
-    .from('entitlements')
-    .select('product, granted_at, status')
-    .eq('user_id', user.id)
-    .eq('product', product)
-    .maybeSingle();
+  const [{ data: entitlement }, { data: settings }] = await Promise.all([
+    supabase
+      .from('entitlements')
+      .select('product, granted_at, status')
+      .eq('user_id', user.id)
+      .eq('product', product)
+      .maybeSingle(),
+    supabase.from('site_settings').select('contact_email').eq('id', 'default').maybeSingle(),
+  ]);
   const isActive = Boolean(entitlement) && entitlement?.status !== 'revoked';
+  const contactEmail = settings?.contact_email || '';
 
   const attempt = Number(searchParams.check ?? '0') || 0;
-  const stillWaiting = !isActive && attempt < 4;
+  const stillWaiting = !isActive && attempt < 1;
+  const gaveUp = !isActive && !stillWaiting;
   const copy = COPY[product];
 
   return (
     <>
       <AuthHeader />
       {stillWaiting && (
+        // A single retry after a few seconds — plenty of time for the
+        // webhook to land in the overwhelming majority of cases, without
+        // the flickering repeated-reload feel of polling every 3 seconds.
         // eslint-disable-next-line @next/next/no-head-element
-        <meta httpEquiv="refresh" content={`3;url=/checkout/success?product=${product}&check=${attempt + 1}`} />
+        <meta httpEquiv="refresh" content={`5;url=/checkout/success?product=${product}&check=1`} />
       )}
       <div className="auth-shell" style={{ alignItems: 'flex-start', paddingTop: 140 }}>
         <div className="auth-card" style={{ maxWidth: 520, textAlign: 'center' }}>
@@ -95,18 +107,28 @@ export default async function CheckoutSuccessPage({
                 </Link>
               </div>
             </>
+          ) : stillWaiting ? (
+            <>
+              <h1>Payment received.</h1>
+              <p className="sub">Confirming this now — this page will update in a few seconds.</p>
+            </>
           ) : (
             <>
-              <div style={{ fontSize: 44, marginBottom: 6 }}>✅</div>
-              <h1>Payment received</h1>
+              <h1>Payment received.</h1>
               <p className="sub">
-                {stillWaiting
-                  ? 'Confirming this with Stripe — just a moment…'
-                  : 'This is taking a little longer than usual to confirm. Your access will show up on your Account page the moment it lands — no need to pay again.'}
+                Confirming this is taking longer than usual. Your card was charged and nothing needs to be
+                paid again — this will show up on your account shortly.
+                {contactEmail && (
+                  <>
+                    {' '}
+                    If it hasn&apos;t within a few minutes, email{' '}
+                    <a href={`mailto:${contactEmail}`}>{contactEmail}</a> and it&apos;ll get sorted out.
+                  </>
+                )}
               </p>
               <div style={{ marginTop: 24 }}>
                 <Link href="/account" className="btn-ghost" style={{ textAlign: 'center' }}>
-                  Check Account
+                  Go to Account
                 </Link>
               </div>
             </>

@@ -74,7 +74,7 @@ export default function PaymentsSetupPage() {
       <div className="admin-card">
         <h2>2. Paste the link into this admin panel</h2>
         <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--muted-l)' }}>
-          Go to <strong>Admin → Ladder Tiers</strong>, find the relevant tier (Early Access = Workshop
+          Go to <strong>Admin → Offers</strong>, find the relevant tier (Early Access = Workshop
           Library, The Audit Room, Scoped Engagement), paste the Payment Link URL into its link field,
           Save. That&apos;s the only step needed here — no redeploy required.
         </p>
@@ -137,7 +137,7 @@ export default function PaymentsSetupPage() {
           <li>Toggle Stripe to Live mode (top-right).</li>
           <li>Repeat step 1 in live mode, for every tier that's actually selling — test and live products/prices/links are entirely separate.</li>
           <li>Repeat step 3 with the live secret key, live Price IDs, and a new live-mode webhook.</li>
-          <li>Update the links in Admin → Ladder Tiers to the new live Payment Link URLs.</li>
+          <li>Update the links in Admin → Offers to the new live Payment Link URLs.</li>
         </ol>
       </div>
 
@@ -167,7 +167,7 @@ export default function PaymentsSetupPage() {
         <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--muted-l)' }}>
           VIP intentionally does <strong>not</strong> use Stripe checkout — it routes to an external
           application form instead (Tally/Google Forms), with payment kept off that form entirely.
-          Just paste that form&apos;s URL into Admin → Ladder Tiers for that row — nothing in Stripe to
+          Just paste that form&apos;s URL into Admin → Offers for that row — nothing in Stripe to
           set up for it.
         </p>
       </div>

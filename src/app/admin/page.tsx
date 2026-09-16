@@ -5,7 +5,7 @@ const CARDS = [
   { href: '/admin/brand', title: 'Brand', desc: 'Logo, colors, fonts.' },
   { href: '/admin/content', title: 'Hero & About', desc: 'Hero copy, about paragraphs, founder photo, contact & social links.' },
   { href: '/admin/testimonials', title: 'Testimonials', desc: 'Real client quotes for the "What Happens in the Room" wall.' },
-  { href: '/admin/ladder', title: 'Ladder Tiers', desc: 'Edit copy, price, links, and show/hide each of the five rungs.' },
+  { href: '/admin/offers', title: 'Offers', desc: 'Edit copy, price, and links for each of the five things you sell — show/hide/sold-out per offer.' },
   { href: '/admin/videos', title: 'Workshop Videos', desc: 'The always-free episodes shown on the homepage — never gated.' },
   { href: '/admin/extended-videos', title: 'Extended Videos', desc: 'The paid-only bonus cut of each session — what the $147 tier includes.' },
   { href: '/admin/calendar', title: 'Calendar', desc: 'Manage upcoming masterclass sessions.' },
