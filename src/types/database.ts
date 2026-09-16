@@ -81,6 +81,8 @@ export interface LadderTier {
   cta_href: string;
   is_visible: boolean;
   is_top: boolean;
+  sold_out: boolean;
+  sold_out_message: string;
   updated_at: string;
 }
 

@@ -37,13 +37,19 @@ export function Ladder({
                 <div className="rung-price">
                   <span className="amt">{tier.price_label}</span>
                   <span className="fmt">{tier.price_sub_label}</span>
-                  <a
-                    href={href}
-                    className={`rung-btn${isGold ? ' gold' : ''}${!configured ? ' not-configured' : ''}`}
-                    title={configured ? undefined : 'Not connected yet — set the link in Admin → Ladder.'}
-                  >
-                    {tier.cta_label}
-                  </a>
+                  {tier.sold_out ? (
+                    <div className="rung-sold-out">
+                      {tier.sold_out_message || 'Not available right now — check back soon.'}
+                    </div>
+                  ) : (
+                    <a
+                      href={href}
+                      className={`rung-btn${isGold ? ' gold' : ''}${!configured ? ' not-configured' : ''}`}
+                      title={configured ? undefined : 'Not connected yet — set the link in Admin → Ladder.'}
+                    >
+                      {tier.cta_label}
+                    </a>
+                  )}
                 </div>
               </div>
             );

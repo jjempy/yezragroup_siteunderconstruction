@@ -28,6 +28,8 @@ export async function updateTier(tierId: string, slug: LadderSlug, formData: For
       price_sub_label: (formData.get('price_sub_label') as string) ?? '',
       cta_label: (formData.get('cta_label') as string) ?? '',
       is_visible: formData.get('is_visible') === 'on',
+      sold_out: formData.get('sold_out') === 'on',
+      sold_out_message: (formData.get('sold_out_message') as string) ?? '',
     })
     .eq('id', tierId);
   if (error) throw new Error(error.message);

@@ -90,6 +90,23 @@ export default async function LadderAdminPage({
               <input type="checkbox" name="is_visible" defaultChecked={tier.is_visible} />
               Visible on the homepage
             </label>
+            <label className="admin-checkbox" style={{ marginTop: 10 }}>
+              <input type="checkbox" name="sold_out" defaultChecked={tier.sold_out} />
+              Sold out right now
+            </label>
+            <div className="admin-field" style={{ marginTop: 10 }}>
+              <label htmlFor={`sold_out_message-${tier.id}`}>Sold-out message</label>
+              <textarea
+                id={`sold_out_message-${tier.id}`}
+                name="sold_out_message"
+                defaultValue={tier.sold_out_message}
+                placeholder="This month's Audit Room is full — the next one opens November 1."
+              />
+              <div className="hint">
+                Shown instead of the button above while &quot;Sold out right now&quot; is checked. Set this
+                when Stripe shows this tier&apos;s Payment Link has hit its payment limit.
+              </div>
+            </div>
             <div style={{ marginTop: 18 }}>
               <button className="admin-btn" type="submit">
                 Save

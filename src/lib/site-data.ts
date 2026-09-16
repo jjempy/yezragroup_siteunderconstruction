@@ -70,6 +70,8 @@ const FALLBACK_TIERS: LadderTier[] = [
     cta_href: '#calendar',
     is_visible: true,
     is_top: false,
+    sold_out: false,
+    sold_out_message: '',
     updated_at: '',
   },
   {
@@ -85,6 +87,8 @@ const FALLBACK_TIERS: LadderTier[] = [
     cta_href: '',
     is_visible: true,
     is_top: false,
+    sold_out: false,
+    sold_out_message: '',
     updated_at: '',
   },
   {
@@ -100,6 +104,8 @@ const FALLBACK_TIERS: LadderTier[] = [
     cta_href: '',
     is_visible: true,
     is_top: false,
+    sold_out: false,
+    sold_out_message: '',
     updated_at: '',
   },
   {
@@ -115,6 +121,8 @@ const FALLBACK_TIERS: LadderTier[] = [
     cta_href: '',
     is_visible: true,
     is_top: false,
+    sold_out: false,
+    sold_out_message: '',
     updated_at: '',
   },
   {
@@ -130,6 +138,8 @@ const FALLBACK_TIERS: LadderTier[] = [
     cta_href: '',
     is_visible: true,
     is_top: true,
+    sold_out: false,
+    sold_out_message: '',
     updated_at: '',
   },
 ];
