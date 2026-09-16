@@ -23,13 +23,31 @@ export interface AdminUserRow {
   last_sign_in_at: string | null;
   created_at: string;
   entitlements: AdminUserEntitlement[];
+  on_newsletter: boolean;
+}
+
+export interface NewsletterOnlyRow {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
+export interface PeopleForAdmin {
+  accounts: AdminUserRow[];
+  // Emails on the homepage newsletter capture list that don't belong to
+  // any registered account — a real person Orchemet has contact for, just
+  // not one to manage roles/blocking for. Rendered as thin rows with no
+  // account actions rather than a separate page (see 0006 migration:
+  // newsletter_signups isn't linked to auth.users at all).
+  newsletterOnly: NewsletterOnlyRow[];
 }
 
 /** Combines auth.users (email, last sign-in) with public.profiles
- * (name/phone/role/blocked/marketing) and entitlements (purchases/manual
- * grants) for the admin Users page. Walks every page of
- * auth.admin.listUsers() so it covers the whole user base. */
-export async function getUsersForAdmin(): Promise<AdminUserRow[]> {
+ * (name/phone/role/blocked/marketing), entitlements (purchases/manual
+ * grants), and newsletter_signups (by email match) for the admin People
+ * page. Walks every page of auth.admin.listUsers() so it covers the whole
+ * user base. */
+export async function getPeopleForAdmin(): Promise<PeopleForAdmin> {
   const admin = createAdminClient();
 
   const authUsers: { id: string; email: string; last_sign_in_at: string | null }[] = [];
@@ -52,6 +70,14 @@ export async function getUsersForAdmin(): Promise<AdminUserRow[]> {
   // been run against this Supabase project yet, instead of a hard error.
   const { data: entitlementRows } = await admin.from('entitlements').select('*');
 
+  const { data: newsletterRows } = await admin
+    .from('newsletter_signups')
+    .select('id, email, created_at')
+    .order('created_at', { ascending: false });
+  const newsletterEmails = new Set(
+    ((newsletterRows as { email: string }[] | null) ?? []).map((r) => r.email.toLowerCase())
+  );
+
   const profileById = new Map<string, Profile>((profiles as Profile[]).map((p) => [p.id, p]));
   const entitlementsByUser = new Map<string, AdminUserEntitlement[]>();
   for (const row of (entitlementRows as Record<string, unknown>[] | null) ?? []) {
@@ -69,7 +95,9 @@ export async function getUsersForAdmin(): Promise<AdminUserRow[]> {
     entitlementsByUser.set(userId, list);
   }
 
-  return authUsers.map((u) => {
+  const accountEmails = new Set(authUsers.map((u) => u.email.toLowerCase()));
+
+  const accounts = authUsers.map((u) => {
     const profile = profileById.get(u.id);
     return {
       id: u.id,
@@ -82,6 +110,13 @@ export async function getUsersForAdmin(): Promise<AdminUserRow[]> {
       last_sign_in_at: u.last_sign_in_at,
       created_at: profile?.created_at ?? '',
       entitlements: entitlementsByUser.get(u.id) ?? [],
+      on_newsletter: newsletterEmails.has(u.email.toLowerCase()),
     };
   });
+
+  const newsletterOnly = ((newsletterRows as { id: string; email: string; created_at: string }[] | null) ?? [])
+    .filter((r) => !accountEmails.has(r.email.toLowerCase()))
+    .map((r) => ({ id: r.id, email: r.email, created_at: r.created_at }));
+
+  return { accounts, newsletterOnly };
 }

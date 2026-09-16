@@ -431,6 +431,10 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
   display:block; padding:11px 28px; font-size:13.5px; color:var(--muted-d); transition:color .2s, background .2s;
 }
 .admin-side a:hover, .admin-side a.active{color:var(--gold); background:rgba(198,160,69,.08); border-left:3px solid var(--gold); padding-left:25px;}
+.admin-nav-group{margin-top:4px;}
+.admin-nav-group-label{padding:14px 28px 4px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted-d); opacity:.65;}
+.admin-nav-group a{padding-left:40px;}
+.admin-nav-group a:hover, .admin-nav-group a.active{padding-left:37px;}
 @media(max-width:800px){
   .admin-side{padding:0;}
   .admin-nav-toggle{

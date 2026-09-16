@@ -1,11 +1,19 @@
 'use client';
 
 import { Fragment, useState, useTransition } from 'react';
-import type { AdminUserRow } from '@/lib/admin-users';
+import type { AdminUserRow, NewsletterOnlyRow } from '@/lib/admin-users';
 import { UserAccessPanel } from './UserAccessPanel';
 
-export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; currentUserId: string }) {
-  const [rows, setRows] = useState(users);
+export function PeopleTable({
+  accounts,
+  newsletterOnly,
+  currentUserId,
+}: {
+  accounts: AdminUserRow[];
+  newsletterOnly: NewsletterOnlyRow[];
+  currentUserId: string;
+}) {
+  const [rows, setRows] = useState(accounts);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -74,7 +82,7 @@ export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; cu
               <th>Last Login</th>
               <th>Role</th>
               <th>Status</th>
-              <th>Marketing</th>
+              <th>Newsletter</th>
               <th />
             </tr>
           </thead>
@@ -94,7 +102,7 @@ export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; cu
                       {user.blocked ? 'Blocked' : 'Active'}
                     </span>
                   </td>
-                  <td>{user.marketing_opt_in ? 'Yes' : 'No'}</td>
+                  <td>{user.on_newsletter ? 'Yes' : 'No'}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <button
                       className="admin-btn secondary"
@@ -127,11 +135,27 @@ export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; cu
                 )}
               </Fragment>
             ))}
+            {newsletterOnly.map((n) => (
+              <tr key={n.id} style={{ opacity: 0.7 }}>
+                <td>—</td>
+                <td>{n.email}</td>
+                <td>—</td>
+                <td>—</td>
+                <td>
+                  <span className="pill">no account</span>
+                </td>
+                <td>—</td>
+                <td>Yes</td>
+                <td style={{ fontSize: 12, color: 'var(--muted-l)' }}>
+                  Since {new Date(n.created_at).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
-      {/* Mobile: one stacked card per user, no horizontal scroll ever. */}
+      {/* Mobile: one stacked card per person, no horizontal scroll ever. */}
       <div className="users-card-list">
         {rows.map((user) => (
           <div className="user-card" key={user.id}>
@@ -149,7 +173,7 @@ export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; cu
                 {user.blocked ? 'Blocked' : 'Active'}
               </span>
               <span style={{ fontSize: 12, color: 'var(--muted-l)' }}>
-                Marketing: {user.marketing_opt_in ? 'Yes' : 'No'}
+                Newsletter: {user.on_newsletter ? 'Yes' : 'No'}
               </span>
             </div>
             <div className="user-card-actions">
@@ -173,6 +197,17 @@ export function UsersTable({ users, currentUserId }: { users: AdminUserRow[]; cu
               </button>
             </div>
             {expanded.has(user.id) && <UserAccessPanel userId={user.id} entitlements={user.entitlements} />}
+          </div>
+        ))}
+        {newsletterOnly.map((n) => (
+          <div className="user-card" key={n.id} style={{ opacity: 0.7 }}>
+            <div className="user-card-row">
+              <strong>{n.email}</strong>
+              <span className="pill">no account</span>
+            </div>
+            <div className="user-card-line">
+              Newsletter only · since {new Date(n.created_at).toLocaleDateString()}
+            </div>
           </div>
         ))}
       </div>
