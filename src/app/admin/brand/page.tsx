@@ -3,6 +3,7 @@ import type { SiteSettings } from '@/types/database';
 import { updateBrandSettings } from '../settings-actions';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
+import { BrandColorFields } from '@/components/admin/BrandColorFields';
 
 export default async function BrandAdminPage({
   searchParams,
@@ -90,30 +91,16 @@ export default async function BrandAdminPage({
           />
           <div className="hint">Applies to whichever mark is showing — your upload, or the default, if empty.</div>
         </div>
-        <div className="admin-row">
-          <div className="admin-field">
-            <label htmlFor="color_gold">Gold (primary accent)</label>
-            <input id="color_gold" name="color_gold" type="text" defaultValue={settings.color_gold} placeholder="#C6A045" />
-          </div>
-          <div className="admin-field">
-            <label htmlFor="color_gold_deep">Gold Deep (secondary accent)</label>
-            <input id="color_gold_deep" name="color_gold_deep" type="text" defaultValue={settings.color_gold_deep} placeholder="#9C7C2E" />
-          </div>
-        </div>
-        <div className="admin-row">
-          <div className="admin-field">
-            <label htmlFor="color_ink">Ink (dark background)</label>
-            <input id="color_ink" name="color_ink" type="text" defaultValue={settings.color_ink} placeholder="#0F1416" />
-          </div>
-          <div className="admin-field">
-            <label htmlFor="color_cream">Cream (light background)</label>
-            <input id="color_cream" name="color_cream" type="text" defaultValue={settings.color_cream} placeholder="#F3EEE3" />
-          </div>
-        </div>
+        <BrandColorFields
+          colorGold={settings.color_gold}
+          colorGoldDeep={settings.color_gold_deep}
+          colorInk={settings.color_ink}
+          colorCream={settings.color_cream}
+        />
         <div className="admin-row">
           <div className="admin-field">
             <label htmlFor="heading_font">Heading Font (Google Fonts name)</label>
-            <input id="heading_font" name="heading_font" type="text" defaultValue={settings.heading_font} placeholder="Fraunces" />
+            <input id="heading_font" name="heading_font" type="text" defaultValue={settings.heading_font} placeholder="Archivo" />
           </div>
           <div className="admin-field">
             <label htmlFor="body_font">Body Font (Google Fonts name)</label>

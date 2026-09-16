@@ -18,6 +18,20 @@ const BRAND_TEXT_FIELDS = [
   'body_font',
 ] as const;
 
+const COLOR_FIELDS = new Set(['color_gold', 'color_gold_deep', 'color_ink', 'color_cream']);
+
+// These get written straight into a CSS custom property (`--gold:${value}`
+// in layout.tsx) — a hex value missing its leading "#" is invalid CSS, so
+// the browser silently drops that one declaration and falls back to the
+// hardcoded default, with no error anywhere. Normalizing here means a
+// pasted "d5512b" behaves the same as "#d5512b" instead of quietly not
+// applying at all.
+function normalizeColor(value: string): string {
+  const trimmed = value.trim();
+  if (/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(trimmed)) return `#${trimmed}`;
+  return trimmed;
+}
+
 const CONTENT_TEXT_FIELDS = [
   'hero_eyebrow',
   'hero_heading',
@@ -47,7 +61,8 @@ export async function updateBrandSettings(formData: FormData) {
 
   const update: Record<string, unknown> = {};
   for (const key of BRAND_TEXT_FIELDS) {
-    update[key] = (formData.get(key) as string | null) ?? '';
+    const raw = (formData.get(key) as string | null) ?? '';
+    update[key] = COLOR_FIELDS.has(key) ? normalizeColor(raw) : raw;
   }
   update.hero_mark_url = (formData.get('hero_mark_url') as string | null) ?? '';
   const opacityRaw = Number(formData.get('hero_mark_opacity'));

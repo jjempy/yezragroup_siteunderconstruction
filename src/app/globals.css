@@ -3,22 +3,46 @@
    plumbing (auth, CMS, gating) is new. Brand color/font values are applied
    as CSS custom-property overrides from Supabase-backed settings in
    layout.tsx, the same "only touch what's actually set" behavior the old
-   CONFIG.applyColorOverrides/applyFontOverrides had. */
+   CONFIG.applyColorOverrides/applyFontOverrides had.
+
+   Only four colors are ever admin-set: --gold, --gold-deep, --ink,
+   --cream. Every other color token below is *computed* from those four
+   with color-mix() rather than hardcoded to a second, silently-stale hex
+   value — a rebrand used to only reach 4 of 12+ tokens, leaving borders,
+   card backgrounds, and muted text still painted with the old palette
+   (that's what made the masterclass card unreadable: its background came
+   from --ink-2, a flat hex never touched by a color change). Tinted
+   overlays elsewhere (nav borders, hover backgrounds, etc.) use the CSS
+   relative-color syntax rgb(from var(--gold) r g b / alpha) for the same
+   reason — same brand color, applied at some transparency, instead of a
+   separately hardcoded rgba() triple. */
 
 :root{
   --ink:#0F1416;
-  --ink-2:#171D20;
   --cream:#F3EEE3;
-  --card:#F4F0E7;
   --gold:#C6A045;
   --gold-deep:#9C7C2E;
-  --gold-bright:#DDB758;
-  --charcoal:#14181B;
-  --muted-l:#5C6F72;
-  --muted-d:#9AA5A7;
-  --line-l:#E1DACB;
-  --line-d:#2A3234;
-  --serif:'Fraunces', Georgia, serif;
+  /* Derived from the four above — a slightly lighter dark-card shade, a
+     slightly muted light-card shade, and a brighter accent for
+     highlighted text/hover states. */
+  --ink-2: color-mix(in srgb, var(--ink), white 6%);
+  --card: color-mix(in srgb, var(--cream), white 3%);
+  --gold-bright: color-mix(in srgb, var(--gold), white 18%);
+  --charcoal: color-mix(in srgb, var(--ink), white 3%);
+  /* Secondary text: interpolated between ink and cream so it's always
+     legible against either — --muted-l for text on light backgrounds
+     (closer to ink), --muted-d for text on dark backgrounds (closer to
+     cream). Borders the same idea, lower contrast. */
+  --muted-l: color-mix(in srgb, var(--ink), var(--cream) 38%);
+  --muted-d: color-mix(in srgb, var(--ink), var(--cream) 65%);
+  --line-l: color-mix(in srgb, var(--ink), var(--cream) 90%);
+  --line-d: color-mix(in srgb, var(--ink), var(--cream) 13%);
+  /* --serif is a legacy name from the original warm/editorial design —
+     kept as-is rather than renamed everywhere, but it now holds the new
+     brand's bold sans heading face, not an actual serif. Best estimate
+     from the new logo lockup pending an exact name from the designer's
+     style guide; swap it via Admin -> Brand -> Heading Font any time. */
+  --serif:'Archivo', -apple-system, sans-serif;
   --sans:'Inter', -apple-system, sans-serif;
   /* 1180px was a fixed desktop-mockup width. Top-performing responsive
      sites don't jump between two or three fixed breakpoints for their main
@@ -49,15 +73,15 @@ h1,h2,h3{font-family:var(--serif); font-weight:600; letter-spacing:-.01em;}
 
 /* ---------- MARK ---------- */
 .mark{display:inline-block;}
-.mark circle.spark{fill:var(--gold);}
-.mark circle.primary{fill:var(--cream);}
+.mark circle.spark, .hero-mark circle.spark{fill:var(--gold);}
+.mark circle.primary, .hero-mark circle.primary{fill:var(--cream);}
 .mark.on-light circle.primary{fill:var(--charcoal);}
 
 /* ---------- NAV ---------- */
 header{
   position:fixed; top:0; left:0; right:0; z-index:100;
-  background:rgba(15,20,22,.86); backdrop-filter:blur(10px);
-  border-bottom:1px solid rgba(198,160,69,.18);
+  background:rgb(from var(--ink) r g b / .86); backdrop-filter:blur(10px);
+  border-bottom:1px solid rgb(from var(--gold) r g b / .18);
 }
 header nav{
   max-width:var(--max); margin:0 auto; padding:16px 32px;
@@ -80,11 +104,11 @@ header nav{
 .nav-links-member{gap:22px;}
 .nav-admin-link{
   font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;
-  border:1px solid rgba(243,238,227,.25); padding:8px 14px; border-radius:2px;
+  border:1px solid rgb(from var(--cream) r g b / .25); padding:8px 14px; border-radius:2px;
 }
 .nav-admin-link:hover{border-color:var(--gold); color:var(--cream) !important;}
-.nav-cta-ghost{background:transparent; border:1px solid rgba(198,160,69,.6); color:var(--gold-bright) !important;}
-.nav-cta-ghost:hover{background:rgba(198,160,69,.12);}
+.nav-cta-ghost{background:transparent; border:1px solid rgb(from var(--gold) r g b / .6); color:var(--gold-bright) !important;}
+.nav-cta-ghost:hover{background:rgb(from var(--gold) r g b / .12);}
 
 /* Hamburger — hidden on desktop, only shown once the signed-out marketing
    links would otherwise get cramped. */
@@ -100,7 +124,7 @@ header nav{
   .nav-links:not(.nav-links-member){
     position:absolute; top:100%; left:0; right:0;
     flex-direction:column; align-items:flex-start; gap:18px;
-    background:var(--ink); border-bottom:1px solid rgba(198,160,69,.18);
+    background:var(--ink); border-bottom:1px solid rgb(from var(--gold) r g b / .18);
     padding:0 32px; max-height:0; overflow:hidden; opacity:0; pointer-events:none;
     transition:max-height .25s ease, opacity .2s ease, padding .25s ease;
   }
@@ -129,7 +153,7 @@ header nav{
 }
 .btn-primary:hover{background:var(--gold-bright); transform:translateY(-1px);}
 .btn-ghost{
-  border:1px solid rgba(243,238,227,.3); color:var(--cream); padding:16px 30px; font-weight:500; font-size:14px;
+  border:1px solid rgb(from var(--cream) r g b / .3); color:var(--cream); padding:16px 30px; font-weight:500; font-size:14px;
   border-radius:2px; transition:border-color .2s, background .2s;
   /* Originally only ever used on <a> tags (transparent by default). Now
      also used on real <button> elements (account page), which get an
@@ -137,7 +161,7 @@ header nav{
      cream text was invisible against the browser's default button chrome. */
   background:transparent; font-family:inherit; cursor:pointer;
 }
-.btn-ghost:hover{border-color:var(--gold); background:rgba(198,160,69,.08);}
+.btn-ghost:hover{border-color:var(--gold); background:rgb(from var(--gold) r g b / .08);}
 
 /* orbit intro animation */
 .orbit-spark{animation:orbitIn 1.6s cubic-bezier(.2,.8,.2,1) both;}
@@ -168,7 +192,7 @@ section{padding:100px 0;}
   background:var(--card); border:1px solid var(--line-l); border-radius:6px; padding:26px 30px;
   transition:transform .25s, box-shadow .25s;
 }
-.rung:hover{transform:translateX(4px); box-shadow:0 10px 30px rgba(20,24,27,.06);}
+.rung:hover{transform:translateX(4px); box-shadow:0 10px 30px rgb(from var(--charcoal) r g b / .06);}
 .rung.top{
   background:var(--ink); border-color:#2b3336; color:var(--cream);
 }
@@ -191,7 +215,7 @@ section{padding:100px 0;}
 .rung-btn:hover{background:#fff; border-color:var(--gold-deep);}
 .rung-btn.gold{background:var(--gold); border-color:var(--gold); color:var(--ink);}
 .rung-btn.gold:hover{background:var(--gold-bright);}
-.rung.top .rung-btn:not(.gold){background:transparent; color:var(--cream); border-color:rgba(243,238,227,.3);}
+.rung.top .rung-btn:not(.gold){background:transparent; color:var(--cream); border-color:rgb(from var(--cream) r g b / .3);}
 .rung-sold-out{
   margin-top:14px; font-size:12.5px; color:var(--muted-l); white-space:normal; max-width:220px;
   margin-left:auto; line-height:1.5;
@@ -214,7 +238,7 @@ section{padding:100px 0;}
 @media(max-width:520px){.cal-grid{grid-template-columns:1fr;}}
 .cal-card{
   background:var(--ink-2); border:1px solid var(--line-d); border-radius:6px; padding:22px;
-  transition:border-color .2s;
+  transition:border-color .2s; color:var(--cream);
 }
 .cal-card:hover{border-color:var(--gold-deep);}
 .cal-month{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); font-weight:600;}
@@ -251,13 +275,13 @@ section{padding:100px 0;}
 }
 .vid-thumb iframe{position:absolute; inset:0; width:100%; height:100%; border:none;}
 .play-btn{
-  width:46px; height:46px; border-radius:50%; background:rgba(20,24,27,.75);
+  width:46px; height:46px; border-radius:50%; background:rgb(from var(--charcoal) r g b / .75);
   display:flex; align-items:center; justify-content:center; transition:background .2s, transform .2s;
   position:relative; z-index:2;
 }
 .vid-thumb:hover .play-btn{background:var(--gold); transform:scale(1.06);}
 .play-btn:after{content:''; border-left:14px solid var(--cream); border-top:8px solid transparent; border-bottom:8px solid transparent; margin-left:3px;}
-.vid-len{position:absolute; bottom:10px; right:10px; background:rgba(15,20,22,.75); color:var(--cream); font-size:11px; padding:3px 8px; border-radius:3px; z-index:2;}
+.vid-len{position:absolute; bottom:10px; right:10px; background:rgb(from var(--ink) r g b / .75); color:var(--cream); font-size:11px; padding:3px 8px; border-radius:3px; z-index:2;}
 .vid-body{padding:16px 18px;}
 .vid-title{font-family:var(--serif); font-size:15px; font-weight:600; margin-bottom:4px;}
 .vid-tag{font-size:11px; color:var(--gold-deep); text-transform:uppercase; letter-spacing:.06em; display:flex; justify-content:space-between; align-items:center;}
@@ -293,8 +317,8 @@ section{padding:100px 0;}
 .about-photo-fallback{
   position:absolute; inset:0;
   background:
-    radial-gradient(circle at 30% 20%, rgba(198,160,69,.16), transparent 55%),
-    radial-gradient(circle at 75% 80%, rgba(156,124,46,.14), transparent 50%),
+    radial-gradient(circle at 30% 20%, rgb(from var(--gold) r g b / .16), transparent 55%),
+    radial-gradient(circle at 75% 80%, rgb(from var(--gold-deep) r g b / .14), transparent 50%),
     var(--card);
 }
 .about-photo-img{
@@ -305,12 +329,12 @@ section{padding:100px 0;}
 
 /* ---------- VIP ---------- */
 .vip{
-  background:linear-gradient(160deg,#171D20 0%, #0F1416 70%);
+  background:linear-gradient(160deg, var(--ink-2) 0%, var(--ink) 70%);
   border:1px solid var(--gold-deep); border-radius:10px; padding:64px 56px; position:relative; overflow:hidden;
 }
 .vip:before{
   content:''; position:absolute; top:-120px; right:-120px; width:340px; height:340px; border-radius:50%;
-  background:radial-gradient(circle, rgba(198,160,69,.16), transparent 70%);
+  background:radial-gradient(circle, rgb(from var(--gold) r g b / .16), transparent 70%);
 }
 .vip-grid{display:grid; grid-template-columns:1.1fr .9fr; gap:56px; position:relative; z-index:2;}
 @media(max-width:800px){.vip-grid{grid-template-columns:1fr;}}
@@ -320,7 +344,7 @@ section{padding:100px 0;}
 .vip-list div{display:flex; gap:12px; align-items:flex-start; color:var(--cream); font-size:14.5px;}
 .vip-list span.dot{width:6px; height:6px; border-radius:50%; background:var(--gold); margin-top:7px; flex:none;}
 .vip-side{
-  background:rgba(243,238,227,.04); border:1px solid rgba(198,160,69,.25); border-radius:8px; padding:32px;
+  background:rgb(from var(--cream) r g b / .04); border:1px solid rgb(from var(--gold) r g b / .25); border-radius:8px; padding:32px;
 }
 .vip-side .label{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold);}
 .vip-side .price{font-family:var(--serif); font-size:34px; color:var(--cream); margin:10px 0 24px;}
@@ -334,7 +358,7 @@ section{padding:100px 0;}
 }
 .newsletter-form{display:flex; gap:10px; flex-wrap:wrap;}
 .newsletter-form input{
-  background:rgba(243,238,227,.06); border:1px solid rgba(243,238,227,.2); border-radius:3px;
+  background:rgb(from var(--cream) r g b / .06); border:1px solid rgb(from var(--cream) r g b / .2); border-radius:3px;
   padding:13px 16px; color:var(--cream); font-family:var(--sans); font-size:14px; min-width:240px;
 }
 .newsletter-form input::placeholder{color:var(--muted-d);}
@@ -379,7 +403,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .account-content h1{font-size:26px; color:var(--cream);}
 .account-content .sub{color:var(--muted-d); font-size:14px;}
 .account-module{
-  background:rgba(243,238,227,.04); border:1px solid rgba(243,238,227,.1);
+  background:rgb(from var(--cream) r g b / .04); border:1px solid rgb(from var(--cream) r g b / .1);
   border-radius:8px; padding:28px 30px; margin-top:20px;
 }
 .account-module h2{
@@ -391,7 +415,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .field{margin-bottom:18px;}
 .field label{display:block; font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted-d); margin-bottom:8px;}
 .field input{
-  width:100%; background:rgba(243,238,227,.06); border:1px solid rgba(243,238,227,.2); border-radius:3px;
+  width:100%; background:rgb(from var(--cream) r g b / .06); border:1px solid rgb(from var(--cream) r g b / .2); border-radius:3px;
   padding:12px 14px; color:var(--cream); font-family:var(--sans); font-size:14px;
 }
 .field input:focus{outline:none; border-color:var(--gold);}
@@ -408,7 +432,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
   padding:10px 14px; border-radius:4px; font-size:13px; margin-bottom:18px; line-height:1.5;
 }
 .auth-notice{
-  background:rgba(198,160,69,.1); border:1px solid rgba(198,160,69,.35); color:var(--gold-bright);
+  background:rgb(from var(--gold) r g b / .1); border:1px solid rgb(from var(--gold) r g b / .35); color:var(--gold-bright);
   padding:10px 14px; border-radius:4px; font-size:13px; margin-bottom:18px; line-height:1.5;
 }
 
@@ -430,7 +454,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .admin-side a{
   display:block; padding:11px 28px; font-size:13.5px; color:var(--muted-d); transition:color .2s, background .2s;
 }
-.admin-side a:hover, .admin-side a.active{color:var(--gold); background:rgba(198,160,69,.08); border-left:3px solid var(--gold); padding-left:25px;}
+.admin-side a:hover, .admin-side a.active{color:var(--gold); background:rgb(from var(--gold) r g b / .08); border-left:3px solid var(--gold); padding-left:25px;}
 .admin-nav-group{margin-top:4px;}
 .admin-nav-group-label{padding:14px 28px 4px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted-d); opacity:.65;}
 .admin-nav-group a{padding-left:40px;}
@@ -447,7 +471,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 }
 .admin-search{position:relative; flex:1; max-width:420px; min-width:180px;}
 .admin-search input{
-  width:100%; background:rgba(243,238,227,.06); border:1px solid var(--line-d); border-radius:20px;
+  width:100%; background:rgb(from var(--cream) r g b / .06); border:1px solid var(--line-d); border-radius:20px;
   color:var(--cream); font-size:13px; padding:8px 16px; font-family:inherit;
 }
 .admin-search input::placeholder{color:var(--muted-d);}
@@ -462,13 +486,13 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
   padding:10px 16px; cursor:pointer; font-family:inherit;
 }
 .admin-search-result:last-child{border-bottom:none;}
-.admin-search-result:hover{background:rgba(198,160,69,.08);}
+.admin-search-result:hover{background:rgb(from var(--gold) r g b / .08);}
 .admin-search-path{font-size:12px; font-weight:600; color:var(--gold-deep); margin-bottom:2px;}
 .admin-search-snippet{font-size:12.5px; color:var(--muted-l); line-height:1.4;}
 @media(max-width:800px){.admin-search{order:3; max-width:none; flex-basis:100%;}}
 @keyframes admin-highlight-pulse{
-  0%, 100%{box-shadow:0 0 0 0 rgba(198,160,69,0);}
-  20%, 80%{box-shadow:0 0 0 4px rgba(198,160,69,.45);}
+  0%, 100%{box-shadow:0 0 0 0 rgb(from var(--gold) r g b / 0);}
+  20%, 80%{box-shadow:0 0 0 4px rgb(from var(--gold) r g b / .45);}
 }
 .admin-highlight-pulse{animation:admin-highlight-pulse 2.4s ease-in-out; border-radius:4px;}
 .admin-main{padding:44px 40px;}
@@ -481,6 +505,10 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .admin-card h2{font-size:17px; margin-bottom:20px; color:var(--charcoal);}
 .admin-field{margin-bottom:16px;}
 .admin-field label{display:block; font-size:12px; font-weight:600; color:var(--muted-l); margin-bottom:6px;}
+.color-field-row{display:flex; gap:8px; align-items:center;}
+.color-field-row input[type=color]{width:44px; height:38px; padding:2px; border:1px solid var(--line-l); border-radius:4px; background:#fff; flex:none; cursor:pointer;}
+.color-field-row input[type=text]{flex:1;}
+.color-preview{border-radius:6px; padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
 .admin-field input[type=text], .admin-field input[type=email], .admin-field input[type=url],
 .admin-field input[type=number], .admin-field textarea, .admin-field select{
   width:100%; border:1px solid var(--line-l); border-radius:4px; padding:10px 12px; font-family:var(--sans);
@@ -525,7 +553,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
   .user-card-actions .admin-btn{flex:1; min-width:120px;}
 }
 .pill{display:inline-block; font-size:11px; padding:3px 9px; border-radius:20px; font-weight:600;}
-.pill.role-admin{background:rgba(198,160,69,.18); color:var(--gold-deep);}
+.pill.role-admin{background:rgb(from var(--gold) r g b / .18); color:var(--gold-deep);}
 .pill.role-standard{background:var(--card); color:var(--muted-l);}
 .pill.blocked{background:rgba(180,87,63,.14); color:#B4573F;}
 .pill.active{background:rgba(92,143,99,.14); color:#3f7a4a;}
@@ -569,7 +597,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .agenda-item-topic{color:var(--muted-l); flex:1; min-width:140px;}
 .agenda-item-status{
   font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
-  color:var(--gold-deep); background:rgba(198,160,69,.12); padding:3px 10px; border-radius:20px;
+  color:var(--gold-deep); background:rgb(from var(--gold) r g b / .12); padding:3px 10px; border-radius:20px;
 }
 .agenda-item-hidden{
   font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
