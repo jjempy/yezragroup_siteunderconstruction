@@ -84,9 +84,26 @@ header{
   border-bottom:1px solid rgb(from var(--gold) r g b / .18);
 }
 header nav{
-  max-width:var(--max); margin:0 auto; padding:16px 32px;
-  display:flex; align-items:center; justify-content:space-between;
+  max-width:var(--max); margin:0 auto; padding:16px 32px; min-height:62px;
+  display:flex; align-items:center; position:relative;
 }
+/* .nav-brand (header only — the footer has its own separate .brand block
+   with plain static flex styling, not sharing this) is absolutely
+   positioned at all times, not just once scrolled, so the left -> center
+   move is a smooth transition rather than a layout-mode switch.
+   .nav-right gets margin-left:auto to sit flush right the same way
+   justify-content:space-between used to, whether or not .nav-brand is
+   taking up flex space (it never is, now). */
+.nav-brand{
+  display:flex; align-items:center; gap:10px; cursor:pointer;
+  position:absolute; top:50%; left:32px; transform:translateY(-50%);
+  transition:left .45s ease, transform .45s ease;
+}
+.nav-right{display:flex; align-items:center; gap:34px; margin-left:auto; opacity:1; transition:opacity .3s ease;}
+/* Toggled on <body> by ScrollBrand — the logo sliding to center would sit
+   directly under the nav links otherwise, so they fade out together. */
+body.nav-scrolled .nav-brand{left:50%; transform:translate(-50%,-50%);}
+body.nav-scrolled .nav-right{opacity:0; pointer-events:none;}
 .brand{display:flex; align-items:center; gap:10px;}
 .brand-logo-img{height:30px; width:auto; display:block;}
 .brand-name{font-family:var(--serif); color:var(--cream); font-size:18px; letter-spacing:.02em; font-weight:600;}
@@ -443,6 +460,14 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .app-header nav{padding:0; max-width:none;}
 .app-header a.crumb{color:var(--muted-d); font-size:13px;}
 .app-header a.crumb:hover{color:var(--cream);}
+/* The brand mark centers over the bar (absolute, so it never fights the
+   back button or search bar for flex space); whatever else is left in
+   flow — just the back button on AuthHeader, back button + search on the
+   admin bar — sits normally, with margin-left:auto pushing the last one
+   to the right edge the way justify-content:space-between used to. */
+.auth-header-wrap{position:relative;}
+.site-brand-center{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:1;}
+.auth-header-wrap .admin-search{margin-left:auto;}
 @media(max-width:640px){.back-to-site-link{display:none;}}
 
 .admin-shell{min-height:100vh; background:var(--cream);}
