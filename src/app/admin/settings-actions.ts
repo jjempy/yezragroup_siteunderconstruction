@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { uploadPublicImage } from '@/lib/storage';
+import { updateDroppingMissingColumns } from '@/lib/safe-update';
 
 const BRAND_TEXT_FIELDS = [
   'brand_name',
@@ -70,8 +71,8 @@ export async function updateBrandSettings(formData: FormData) {
   if (heroMarkUploadError) failure('/admin/brand', `Hero mark upload failed: ${heroMarkUploadError}`);
   if (uploadedHeroMarkUrl) update.hero_mark_url = uploadedHeroMarkUrl;
 
-  const { error } = await supabase.from('site_settings').update(update).eq('id', 'default');
-  if (error) failure('/admin/brand', `Save failed: ${error.message}`);
+  const { error } = await updateDroppingMissingColumns(supabase, 'site_settings', { id: 'default' }, update);
+  if (error) failure('/admin/brand', `Save failed: ${error}`);
 
   revalidatePath('/');
   revalidatePath('/admin/brand');
@@ -103,8 +104,8 @@ export async function updateContentSettings(formData: FormData) {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  const { error } = await supabase.from('site_settings').update(update).eq('id', 'default');
-  if (error) failure('/admin/content', `Save failed: ${error.message}`);
+  const { error } = await updateDroppingMissingColumns(supabase, 'site_settings', { id: 'default' }, update);
+  if (error) failure('/admin/content', `Save failed: ${error}`);
 
   revalidatePath('/');
   revalidatePath('/admin/content');
