@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { AuthHeader } from '@/components/AuthHeader';
+import { getStripe } from '@/lib/stripe';
+import { PRICE_TO_PRODUCT } from '@/lib/stripe-products';
+import { grantEntitlement } from '@/lib/grant-entitlement';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -53,28 +56,71 @@ const COPY: Record<Product, { emoji: string; heading: string; body: string; cta:
  * a calm, static "here's what to do" state. Deliberately no "go check
  * your account" button while still waiting — showing an action alongside
  * "please wait" was sending two contradictory signals at once.
+ *
+ * If the Payment Link's "after payment" redirect includes
+ * `session_id={CHECKOUT_SESSION_ID}` (Stripe fills that placeholder in
+ * automatically), this page verifies the session directly with Stripe and
+ * grants the entitlement itself in the same request — so a purchase shows
+ * up immediately even if the async webhook is slow, misconfigured, or
+ * never fires at all. That session id also becomes the confirmation
+ * number shown below, so there's a paper trail even if the confirmation
+ * email never sends.
  */
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: { check?: string; product?: string };
+  searchParams: { check?: string; product?: string; session_id?: string };
 }) {
   const { user } = await requireUser();
   const supabase = createClient();
 
   const product: Product = isKnownProduct(searchParams.product) ? searchParams.product : 'workshop_library';
 
-  const [{ data: entitlement }, { data: settings }] = await Promise.all([
+  const [{ data: entitlementRow }, { data: settings }] = await Promise.all([
     supabase
       .from('entitlements')
-      .select('product, granted_at, status')
+      .select('product, granted_at, status, stripe_checkout_session_id')
       .eq('user_id', user.id)
       .eq('product', product)
       .maybeSingle(),
     supabase.from('site_settings').select('contact_email').eq('id', 'default').maybeSingle(),
   ]);
-  const isActive = Boolean(entitlement) && entitlement?.status !== 'revoked';
+  let isActive = Boolean(entitlementRow) && entitlementRow?.status !== 'revoked';
   const contactEmail = settings?.contact_email || '';
+  let confirmationNumber: string | null = entitlementRow?.stripe_checkout_session_id ?? null;
+
+  if (searchParams.session_id) {
+    try {
+      const stripe = getStripe();
+      const session = await stripe.checkout.sessions.retrieve(searchParams.session_id, {
+        expand: ['line_items'],
+      });
+      if (session.client_reference_id === user.id && session.payment_status === 'paid') {
+        confirmationNumber = session.id;
+        if (!isActive) {
+          const matchedPriceId = session.line_items?.data.find(
+            (li) => li.price?.id && PRICE_TO_PRODUCT[li.price.id]
+          )?.price?.id;
+          const matchedProduct = matchedPriceId ? PRICE_TO_PRODUCT[matchedPriceId] : null;
+          if (matchedProduct === product) {
+            const { error } = await grantEntitlement({
+              userId: user.id,
+              product,
+              sessionId: session.id,
+              customerId: typeof session.customer === 'string' ? session.customer : null,
+              amountTotal: session.amount_total ?? null,
+              currency: session.currency ?? null,
+              source: 'checkout_success_selfheal',
+            });
+            if (!error) isActive = true;
+            else console.error('[checkout success] self-heal grant failed:', error);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[checkout success] session verification failed:', err);
+    }
+  }
 
   const attempt = Number(searchParams.check ?? '0') || 0;
   const stillWaiting = !isActive && attempt < 1;
@@ -106,11 +152,25 @@ export default async function CheckoutSuccessPage({
                   View Order History &amp; Account
                 </Link>
               </div>
+              {confirmationNumber && (
+                <p style={{ marginTop: 22, fontSize: 12.5, color: 'var(--muted-d)' }}>
+                  Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
+                  <br />
+                  Please save this for your records.
+                </p>
+              )}
             </>
           ) : stillWaiting ? (
             <>
               <h1>Payment received.</h1>
               <p className="sub">Confirming this now — this page will update in a few seconds.</p>
+              {confirmationNumber && (
+                <p style={{ marginTop: 18, fontSize: 12.5, color: 'var(--muted-d)' }}>
+                  Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
+                  <br />
+                  Please save this for your records.
+                </p>
+              )}
             </>
           ) : (
             <>
@@ -126,6 +186,13 @@ export default async function CheckoutSuccessPage({
                   </>
                 )}
               </p>
+              {confirmationNumber && (
+                <p style={{ marginTop: 18, fontSize: 12.5, color: 'var(--muted-d)' }}>
+                  Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
+                  <br />
+                  Please save this for your records{contactEmail ? ' and include it in that email' : ''}.
+                </p>
+              )}
               <div style={{ marginTop: 24 }}>
                 <Link href="/account" className="btn-ghost" style={{ textAlign: 'center' }}>
                   Go to Account

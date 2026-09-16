@@ -479,7 +479,8 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .admin-btn:disabled{opacity:.6; cursor:not-allowed;}
 .admin-btn.secondary{background:var(--card); color:var(--charcoal); border:1px solid var(--line-l);}
 .admin-btn.danger{background:#B4573F; color:#fff;}
-.admin-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+.users-table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+.admin-table{width:100%; min-width:760px; border-collapse:collapse; font-size:13.5px;}
 .admin-table th{text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-l); padding:10px 12px; border-bottom:1px solid var(--line-l);}
 .admin-table td{padding:12px; border-bottom:1px solid var(--line-l); vertical-align:middle;}
 .admin-table tr:last-child td{border-bottom:none;}
