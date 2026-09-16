@@ -38,38 +38,33 @@ const COPY: Record<Product, { emoji: string; heading: string; body: string; cta:
 };
 
 /**
- * Where each direct-checkout tier's Stripe Payment Link "after payment"
- * redirect should point (configured per-Payment-Link in the Stripe
- * Dashboard — can't be set via API from this environment):
- *   /checkout/success?product=workshop_library
- *   /checkout/success?product=audit_room
- *   /checkout/success?product=scoped_engagement
+ * The async webhook that normally grants access can lag behind the
+ * redirect (or not be configured at all yet) — so this page verifies the
+ * purchase directly with Stripe itself and grants it in the same request
+ * whenever the webhook hasn't:
  *
- * We deliberately don't rely on any Stripe-supplied query param (like a
- * checkout session id) to decide what to show — the signed-in user's own
- * entitlement row is the source of truth, same as everywhere else in the
- * app.
+ *   1. If the Payment Link's "after payment" redirect carries
+ *      `session_id={CHECKOUT_SESSION_ID}` (Stripe fills that in), look
+ *      that exact session up.
+ *   2. Otherwise (or if that lookup didn't pan out), scan this user's
+ *      most recent paid checkout sessions for one matching this product —
+ *      client_reference_id ties every session back to a signed-in user,
+ *      so no session_id in the URL is actually required for this to work.
  *
- * The webhook that grants it can lag a little behind the redirect, so
- * this waits once (a single auto-refresh after a few seconds — not a
- * repeated reload loop, which just reads as broken) before settling into
- * a calm, static "here's what to do" state. Deliberately no "go check
- * your account" button while still waiting — showing an action alongside
- * "please wait" was sending two contradictory signals at once.
+ * Either way requires STRIPE_SECRET_KEY to be set — without it neither
+ * this nor the webhook can reach Stripe at all, and a purchase just won't
+ * show up.
  *
- * If the Payment Link's "after payment" redirect includes
- * `session_id={CHECKOUT_SESSION_ID}` (Stripe fills that placeholder in
- * automatically), this page verifies the session directly with Stripe and
- * grants the entitlement itself in the same request — so a purchase shows
- * up immediately even if the async webhook is slow, misconfigured, or
- * never fires at all. That session id also becomes the confirmation
- * number shown below, so there's a paper trail even if the confirmation
- * email never sends.
+ * Whatever happens, the messaging here stays calm: Stripe already
+ * confirmed the charge before this page ever loaded, so there's nothing
+ * for the buyer to be uncertain about. No "still confirming" waiting
+ * state, no refresh loop — either it's granted and shown, or it briefly
+ * isn't yet and the copy says exactly that without hedging.
  */
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: { check?: string; product?: string; session_id?: string };
+  searchParams: { product?: string; session_id?: string };
 }) {
   const { user } = await requireUser();
   const supabase = createClient();
@@ -89,54 +84,62 @@ export default async function CheckoutSuccessPage({
   const contactEmail = settings?.contact_email || '';
   let confirmationNumber: string | null = entitlementRow?.stripe_checkout_session_id ?? null;
 
-  if (searchParams.session_id) {
-    try {
-      const stripe = getStripe();
-      const session = await stripe.checkout.sessions.retrieve(searchParams.session_id, {
-        expand: ['line_items'],
-      });
-      if (session.client_reference_id === user.id && session.payment_status === 'paid') {
-        confirmationNumber = session.id;
-        if (!isActive) {
-          const matchedPriceId = session.line_items?.data.find(
-            (li) => li.price?.id && PRICE_TO_PRODUCT[li.price.id]
-          )?.price?.id;
-          const matchedProduct = matchedPriceId ? PRICE_TO_PRODUCT[matchedPriceId] : null;
-          if (matchedProduct === product) {
-            const { error } = await grantEntitlement({
-              userId: user.id,
-              product,
-              sessionId: session.id,
-              customerId: typeof session.customer === 'string' ? session.customer : null,
-              amountTotal: session.amount_total ?? null,
-              currency: session.currency ?? null,
-              source: 'checkout_success_selfheal',
-            });
-            if (!error) isActive = true;
-            else console.error('[checkout success] self-heal grant failed:', error);
-          }
-        }
-      }
-    } catch (err) {
-      console.error('[checkout success] session verification failed:', err);
-    }
+  async function heal(session: {
+    id: string;
+    customer: string | { id: string } | null;
+    amount_total: number | null;
+    currency: string | null;
+    line_items?: { data: { price?: { id: string } | null }[] };
+  }) {
+    confirmationNumber = session.id;
+    if (isActive) return;
+    const priceIds = session.line_items?.data.map((li) => li.price?.id).filter(Boolean) as string[] | undefined;
+    const matchedPriceId = priceIds?.find((id) => PRICE_TO_PRODUCT[id]);
+    if (!matchedPriceId || PRICE_TO_PRODUCT[matchedPriceId] !== product) return;
+    const { error } = await grantEntitlement({
+      userId: user.id,
+      product,
+      sessionId: session.id,
+      customerId: typeof session.customer === 'string' ? session.customer : null,
+      amountTotal: session.amount_total ?? null,
+      currency: session.currency ?? null,
+      source: 'checkout_success_selfheal',
+    });
+    if (!error) isActive = true;
+    else console.error('[checkout success] self-heal grant failed:', error);
   }
 
-  const attempt = Number(searchParams.check ?? '0') || 0;
-  const stillWaiting = !isActive && attempt < 1;
-  const gaveUp = !isActive && !stillWaiting;
+  try {
+    const stripe = getStripe();
+
+    if (searchParams.session_id) {
+      const session = await stripe.checkout.sessions.retrieve(searchParams.session_id, { expand: ['line_items'] });
+      if (session.client_reference_id === user.id && session.payment_status === 'paid') {
+        await heal(session);
+      }
+    }
+
+    if (!isActive) {
+      // No session_id on the URL (the Payment Link redirect wasn't set up
+      // with one) or it didn't resolve — fall back to scanning this
+      // account's own recent paid sessions instead of giving up.
+      const recent = await stripe.checkout.sessions.list({ limit: 20 });
+      for (const session of recent.data) {
+        if (session.client_reference_id !== user.id || session.payment_status !== 'paid') continue;
+        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5 });
+        await heal({ ...session, line_items: lineItems });
+        if (isActive) break;
+      }
+    }
+  } catch (err) {
+    console.error('[checkout success] Stripe verification unavailable:', err);
+  }
+
   const copy = COPY[product];
 
   return (
     <>
       <AuthHeader />
-      {stillWaiting && (
-        // A single retry after a few seconds — plenty of time for the
-        // webhook to land in the overwhelming majority of cases, without
-        // the flickering repeated-reload feel of polling every 3 seconds.
-        // eslint-disable-next-line @next/next/no-head-element
-        <meta httpEquiv="refresh" content={`5;url=/checkout/success?product=${product}&check=1`} />
-      )}
       <div className="auth-shell" style={{ alignItems: 'flex-start', paddingTop: 140 }}>
         <div className="auth-card" style={{ maxWidth: 520, textAlign: 'center' }}>
           {isActive ? (
@@ -152,53 +155,29 @@ export default async function CheckoutSuccessPage({
                   View Order History &amp; Account
                 </Link>
               </div>
-              {confirmationNumber && (
-                <p style={{ marginTop: 22, fontSize: 12.5, color: 'var(--muted-d)' }}>
-                  Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
-                  <br />
-                  Please save this for your records.
-                </p>
-              )}
-            </>
-          ) : stillWaiting ? (
-            <>
-              <h1>Payment received.</h1>
-              <p className="sub">Confirming this now — this page will update in a few seconds.</p>
-              {confirmationNumber && (
-                <p style={{ marginTop: 18, fontSize: 12.5, color: 'var(--muted-d)' }}>
-                  Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
-                  <br />
-                  Please save this for your records.
-                </p>
-              )}
             </>
           ) : (
             <>
               <h1>Payment received.</h1>
-              <p className="sub">
-                Confirming this is taking longer than usual. Your card was charged and nothing needs to be
-                paid again — this will show up on your account shortly.
-                {contactEmail && (
-                  <>
-                    {' '}
-                    If it hasn&apos;t within a few minutes, email{' '}
-                    <a href={`mailto:${contactEmail}`}>{contactEmail}</a> and it&apos;ll get sorted out.
-                  </>
-                )}
-              </p>
-              {confirmationNumber && (
-                <p style={{ marginTop: 18, fontSize: 12.5, color: 'var(--muted-d)' }}>
-                  Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
-                  <br />
-                  Please save this for your records{contactEmail ? ' and include it in that email' : ''}.
-                </p>
-              )}
+              <p className="sub">This will show up in your order history shortly.</p>
               <div style={{ marginTop: 24 }}>
                 <Link href="/account" className="btn-ghost" style={{ textAlign: 'center' }}>
                   Go to Account
                 </Link>
               </div>
             </>
+          )}
+          {confirmationNumber && (
+            <p style={{ marginTop: 22, fontSize: 12.5, color: 'var(--muted-d)' }}>
+              Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
+              <br />
+              Please save this for your records{!isActive && contactEmail ? ' — mention it if you reach out' : ''}.
+            </p>
+          )}
+          {!isActive && contactEmail && (
+            <p style={{ marginTop: 8, fontSize: 12.5, color: 'var(--muted-d)' }}>
+              Questions in the meantime? <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+            </p>
           )}
         </div>
       </div>
