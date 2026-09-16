@@ -48,15 +48,27 @@ export async function updateBrandSettings(formData: FormData) {
   for (const key of BRAND_TEXT_FIELDS) {
     update[key] = (formData.get(key) as string | null) ?? '';
   }
-  update.hero_logo_watermark = formData.get('hero_logo_watermark') === 'on';
+  update.hero_mark_url = (formData.get('hero_mark_url') as string | null) ?? '';
+  const opacityRaw = Number(formData.get('hero_mark_opacity'));
+  update.hero_mark_opacity = Number.isFinite(opacityRaw) ? Math.min(100, Math.max(0, Math.round(opacityRaw))) : 35;
 
   // An uploaded file always wins over whatever's in the URL text field —
   // that field stays as a manual/advanced fallback (e.g. pasting a link
-  // to something already hosted elsewhere).
+  // to something already hosted elsewhere). Logo and hero mark are two
+  // fully independent images/uploads — one is not derived from the other.
   const logoFile = formData.get('logo_file') as File | null;
-  const { url: uploadedLogoUrl, error: uploadError } = await uploadPublicImage(supabase, logoFile, 'logos');
-  if (uploadError) failure('/admin/brand', `Logo upload failed: ${uploadError}`);
+  const { url: uploadedLogoUrl, error: logoUploadError } = await uploadPublicImage(supabase, logoFile, 'logos');
+  if (logoUploadError) failure('/admin/brand', `Logo upload failed: ${logoUploadError}`);
   if (uploadedLogoUrl) update.logo_url = uploadedLogoUrl;
+
+  const heroMarkFile = formData.get('hero_mark_file') as File | null;
+  const { url: uploadedHeroMarkUrl, error: heroMarkUploadError } = await uploadPublicImage(
+    supabase,
+    heroMarkFile,
+    'hero-mark'
+  );
+  if (heroMarkUploadError) failure('/admin/brand', `Hero mark upload failed: ${heroMarkUploadError}`);
+  if (uploadedHeroMarkUrl) update.hero_mark_url = uploadedHeroMarkUrl;
 
   const { error } = await supabase.from('site_settings').update(update).eq('id', 'default');
   if (error) failure('/admin/brand', `Save failed: ${error.message}`);

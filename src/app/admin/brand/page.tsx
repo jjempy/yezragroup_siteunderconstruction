@@ -47,16 +47,46 @@ export default async function BrandAdminPage({
           <input id="logo_url" name="logo_url" type="url" defaultValue={settings.logo_url} placeholder="https://…/logo.svg" />
           <div className="hint">Only used if you don&apos;t upload a file above. Leave as-is otherwise.</div>
         </div>
-        <label className="admin-checkbox" style={{ marginBottom: 16 }}>
-          <input type="checkbox" name="hero_logo_watermark" defaultChecked={settings.hero_logo_watermark} />
-          Also use this logo as the large faded background mark behind the homepage headline
-        </label>
-        <div className="hint" style={{ marginTop: -10, marginBottom: 20 }}>
-          Off by default — a detailed or non-transparent logo (most photo/PNG exports) looks like a hard
-          box when blown up large and faded behind text. Only turn this on with a logo that has a
-          transparent background (a real vector/SVG mark or a PNG exported with no background) and is
-          simple enough to read faded at low opacity. If it looks wrong after saving, just uncheck this —
-          the headline background will fall back to the default mark.
+        <div className="admin-field" style={{ marginTop: 8 }}>
+          <label htmlFor="hero_mark_file">Hero Background Mark</label>
+          <div className="hint" style={{ marginBottom: 8 }}>
+            A separate image from the logo above — the large, faded decorative element behind the
+            homepage headline. Leave empty to keep the default abstract mark. Works best with a
+            transparent background (a real vector/SVG or a PNG with no background) — a detailed or
+            opaque image will show as a hard box when faded large behind text.
+          </div>
+          {settings.hero_mark_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={settings.hero_mark_url}
+              alt="Current hero background mark"
+              style={{ height: 80, marginBottom: 10, display: 'block', background: '#0F1416', padding: 8 }}
+            />
+          )}
+          <input id="hero_mark_file" name="hero_mark_file" type="file" accept="image/*" />
+        </div>
+        <div className="admin-field">
+          <label htmlFor="hero_mark_url">Or paste an image URL instead</label>
+          <input
+            id="hero_mark_url"
+            name="hero_mark_url"
+            type="url"
+            defaultValue={settings.hero_mark_url}
+            placeholder="https://…/mark.svg"
+          />
+          <div className="hint">Only used if you don&apos;t upload a file above. Leave blank to use the default mark.</div>
+        </div>
+        <div className="admin-field" style={{ marginBottom: 20 }}>
+          <label htmlFor="hero_mark_opacity">Hero Mark Opacity ({settings.hero_mark_opacity}%)</label>
+          <input
+            id="hero_mark_opacity"
+            name="hero_mark_opacity"
+            type="range"
+            min="0"
+            max="100"
+            defaultValue={settings.hero_mark_opacity}
+          />
+          <div className="hint">Applies to whichever mark is showing — your upload, or the default, if empty.</div>
         </div>
         <div className="admin-row">
           <div className="admin-field">

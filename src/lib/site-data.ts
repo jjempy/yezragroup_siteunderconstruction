@@ -20,6 +20,8 @@ const FALLBACK_SETTINGS: SiteSettings = {
   brand_name: 'Orchemet',
   logo_url: '',
   hero_logo_watermark: false,
+  hero_mark_url: '',
+  hero_mark_opacity: 35,
   color_gold: '',
   color_gold_deep: '',
   color_ink: '',

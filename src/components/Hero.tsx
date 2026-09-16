@@ -4,13 +4,13 @@ import type { SiteSettings } from '@/types/database';
 export function Hero({ settings }: { settings: SiteSettings }) {
   return (
     <section className="hero">
-      {settings.hero_logo_watermark && settings.logo_url ? (
+      {settings.hero_mark_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           className="hero-mark orbit-spark"
-          src={settings.logo_url}
+          src={settings.hero_mark_url}
           alt=""
-          style={{ opacity: 0.35, width: 240, height: 240, objectFit: 'contain' }}
+          style={{ opacity: settings.hero_mark_opacity / 100, width: 240, height: 240, objectFit: 'contain' }}
         />
       ) : (
         <svg
@@ -18,7 +18,7 @@ export function Hero({ settings }: { settings: SiteSettings }) {
           width="360"
           height="360"
           viewBox="0 0 40 40"
-          style={{ opacity: 0.5 }}
+          style={{ opacity: settings.hero_mark_opacity / 100 }}
         >
           <circle className="spark" cx="27" cy="14" r="6.6" />
           <circle className="primary" cx="18" cy="21" r="11.5" />

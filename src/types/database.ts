@@ -36,6 +36,8 @@ export interface SiteSettings {
   brand_name: string;
   logo_url: string;
   hero_logo_watermark: boolean;
+  hero_mark_url: string;
+  hero_mark_opacity: number;
   color_gold: string;
   color_gold_deep: string;
   color_ink: string;
