@@ -43,7 +43,22 @@ export async function redirectToCheckout(
     return NextResponse.redirect(new URL('/#ladder', req.url));
   }
 
-  const target = new URL(paymentLinkUrl);
+  // A malformed value here (missing "https://", a pasted Dashboard link
+  // instead of a Payment Link, stray whitespace) used to crash this route
+  // outright — `new URL()` throws on anything that isn't a real absolute
+  // URL, and nothing caught it. Falling back to the ladder section (with
+  // a clear server log naming exactly which field/value was bad) means a
+  // bad paste in Admin -> Ladder Tiers degrades to "the button doesn't
+  // work yet" instead of a crash page.
+  let target: URL;
+  try {
+    target = new URL(paymentLinkUrl);
+  } catch {
+    console.error(
+      `[checkout] site_settings.${urlField} isn't a valid URL: ${JSON.stringify(paymentLinkUrl)}`
+    );
+    return NextResponse.redirect(new URL('/#ladder', req.url));
+  }
   target.searchParams.set('client_reference_id', user.id);
   if (user.email) target.searchParams.set('prefilled_email', user.email);
 
