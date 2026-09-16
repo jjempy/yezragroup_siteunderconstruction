@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { SiteSettings } from '@/types/database';
 import { updateContentSettings } from '../settings-actions';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
+import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
 
 export default async function ContentAdminPage({
   searchParams,
@@ -14,6 +15,7 @@ export default async function ContentAdminPage({
 
   return (
     <>
+      <AdminHighlightOnLoad />
       <h1>Hero &amp; About</h1>
       <p className="sub">The homepage hero copy, about-section paragraphs, founder photo, contact and social links.</p>
       {searchParams.saved && <p className="admin-toast ok">Saved</p>}

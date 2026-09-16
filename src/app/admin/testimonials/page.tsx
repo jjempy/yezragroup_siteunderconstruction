@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { Testimonial } from '@/types/database';
 import { addTestimonial, deleteTestimonial, moveTestimonial, updateTestimonial } from './actions';
+import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
 
 export default async function TestimonialsAdminPage({
   searchParams,
@@ -13,6 +14,7 @@ export default async function TestimonialsAdminPage({
 
   return (
     <>
+      <AdminHighlightOnLoad />
       <h1>Testimonials</h1>
       <p className="sub">
         The "What Happens in the Room" quotes on the homepage. Leave this list empty and that section

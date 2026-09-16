@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { SiteSettings } from '@/types/database';
 import { updateBrandSettings } from '../settings-actions';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
+import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
 
 export default async function BrandAdminPage({
   searchParams,
@@ -14,6 +15,7 @@ export default async function BrandAdminPage({
 
   return (
     <>
+      <AdminHighlightOnLoad />
       <h1>Brand</h1>
       <p className="sub">Logo, colors, and fonts. Leave a field blank to keep the current default.</p>
       {searchParams.saved && <p className="admin-toast ok">Saved</p>}

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { CalendarSession, MasterclassRsvp } from '@/types/database';
 import { addSession, deleteSession, updateSession } from './actions';
+import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
 
 type Bucket = 'today' | 'upcoming' | 'unscheduled' | 'past';
 
@@ -57,6 +58,7 @@ export default async function CalendarAdminPage({
 
   return (
     <>
+      <AdminHighlightOnLoad />
       <h1>Calendar</h1>
       <p className="sub">
         Only real, confirmed sessions belong here — no “TBD” filler cards. Give a session a date and it&apos;ll

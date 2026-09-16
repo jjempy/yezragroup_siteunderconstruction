@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { LadderSlug, LadderTier, SiteSettings } from '@/types/database';
 import { updateTier } from './actions';
+import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
 
 const LINK_FIELD: Partial<Record<LadderSlug, { key: keyof SiteSettings; label: string; hint: string }>> = {
   workshop_library: {
@@ -38,6 +39,7 @@ export default async function OffersAdminPage({
 
   return (
     <>
+      <AdminHighlightOnLoad />
       <h1>Offers</h1>
       <p className="sub">
         The five things you sell. Toggle one off to hide it from the homepage entirely — nothing here

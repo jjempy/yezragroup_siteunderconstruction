@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { VideoRow } from '@/types/database';
 import { addVideo, deleteVideo, moveVideo, updateVideo } from './actions';
+import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
 
 export default async function VideosAdminPage({
   searchParams,
@@ -13,6 +14,7 @@ export default async function VideosAdminPage({
 
   return (
     <>
+      <AdminHighlightOnLoad />
       <h1>Workshop Videos</h1>
       <p className="sub">
         The always-free, publicly-released episodes shown on the homepage — never gated. For the

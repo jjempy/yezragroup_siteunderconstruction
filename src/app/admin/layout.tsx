@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { AdminSearchBar } from '@/components/admin/AdminSearchBar';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
@@ -12,6 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/" className="crumb">
             ← Back to site
           </Link>
+          <AdminSearchBar />
           <span className="crumb" style={{ fontFamily: 'var(--serif)', fontSize: 16 }}>
             Orchemet Admin
           </span>

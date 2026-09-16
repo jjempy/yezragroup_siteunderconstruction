@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { PaidVideoRow } from '@/types/database';
 import { addPaidVideo, deletePaidVideo, movePaidVideo, updatePaidVideo } from './actions';
+import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
 
 export default async function ExtendedVideosAdminPage({
   searchParams,
@@ -13,6 +14,7 @@ export default async function ExtendedVideosAdminPage({
 
   return (
     <>
+      <AdminHighlightOnLoad />
       <h1>Extended Videos</h1>
       <p className="sub">
         The paid-only "Early Access" bonus cut of each session — longer, less edited, with additional
