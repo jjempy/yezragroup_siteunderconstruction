@@ -103,9 +103,16 @@ export default async function CalendarAdminPage({
               <input id="date_text" name="date_text" type="text" placeholder="Sept 21, 10:00 AM – 12:00 PM" />
             </div>
           </div>
-          <div className="admin-field">
-            <label htmlFor="status">Status</label>
-            <input id="status" name="status" type="text" defaultValue="Open" placeholder="Open, Full, VIP Only…" />
+          <div className="admin-row">
+            <div className="admin-field">
+              <label htmlFor="status">Status</label>
+              <input id="status" name="status" type="text" defaultValue="Open" placeholder="Open, Full, VIP Only…" />
+            </div>
+            <div className="admin-field">
+              <label htmlFor="capacity">RSVP Cap (optional)</label>
+              <input id="capacity" name="capacity" type="number" min="1" placeholder="Unlimited" />
+              <div className="hint">Once RSVPs reach this number, the site shows it as full automatically.</div>
+            </div>
           </div>
           <button className="admin-btn" type="submit">
             Add Session
@@ -132,8 +139,18 @@ export default async function CalendarAdminPage({
                     </span>
                     <span className="agenda-item-topic">{session.topic}</span>
                     {rsvps.length > 0 && (
-                      <span className="agenda-item-status" style={{ background: 'rgba(92,143,99,.14)', color: '#3f7a4a' }}>
-                        {rsvps.length} RSVP{rsvps.length === 1 ? '' : 's'}
+                      <span
+                        className="agenda-item-status"
+                        style={{
+                          background:
+                            session.capacity != null && rsvps.length >= session.capacity
+                              ? 'rgba(180,87,63,.14)'
+                              : 'rgba(92,143,99,.14)',
+                          color: session.capacity != null && rsvps.length >= session.capacity ? '#B4573F' : '#3f7a4a',
+                        }}
+                      >
+                        {rsvps.length}
+                        {session.capacity != null ? `/${session.capacity}` : ''} RSVP{rsvps.length === 1 ? '' : 's'}
                       </span>
                     )}
                     <span className="agenda-item-status">{session.status}</span>
@@ -186,9 +203,22 @@ export default async function CalendarAdminPage({
                           <input id={`date_text-${session.id}`} name="date_text" type="text" defaultValue={session.date_text} />
                         </div>
                       </div>
-                      <div className="admin-field">
-                        <label htmlFor={`status-${session.id}`}>Status</label>
-                        <input id={`status-${session.id}`} name="status" type="text" defaultValue={session.status} />
+                      <div className="admin-row">
+                        <div className="admin-field">
+                          <label htmlFor={`status-${session.id}`}>Status</label>
+                          <input id={`status-${session.id}`} name="status" type="text" defaultValue={session.status} />
+                        </div>
+                        <div className="admin-field">
+                          <label htmlFor={`capacity-${session.id}`}>RSVP Cap (optional)</label>
+                          <input
+                            id={`capacity-${session.id}`}
+                            name="capacity"
+                            type="number"
+                            min="1"
+                            defaultValue={session.capacity ?? ''}
+                            placeholder="Unlimited"
+                          />
+                        </div>
                       </div>
                       <label className="admin-checkbox">
                         <input type="checkbox" name="is_visible" defaultChecked={session.is_visible} />

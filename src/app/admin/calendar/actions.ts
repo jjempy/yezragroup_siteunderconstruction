@@ -25,8 +25,15 @@ function failure(message: string): never {
 // fails outright — which used to crash the whole page. Detect that one
 // specific, recognizable case and retry without the column so the rest of
 // the form still saves; every other error still surfaces as a toast.
-function isMissingSessionDateColumn(message: string) {
-  return message.includes('session_date') && (message.includes('column') || message.includes('schema cache'));
+function isMissingColumn(message: string, column: string) {
+  return message.includes(column) && (message.includes('column') || message.includes('schema cache'));
+}
+
+function parseCapacity(formData: FormData): number | null {
+  const raw = (formData.get('capacity') as string) ?? '';
+  if (!raw.trim()) return null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : null;
 }
 
 export async function addSession(formData: FormData) {
@@ -46,14 +53,19 @@ export async function addSession(formData: FormData) {
     location: (formData.get('location') as string) ?? '',
     date_text: (formData.get('date_text') as string) ?? '',
     session_date: (formData.get('session_date') as string) || null,
+    capacity: parseCapacity(formData),
     status: (formData.get('status') as string) || 'Open',
     sort_order: nextOrder,
     is_visible: true,
   };
 
   let { error } = await supabase.from('calendar_sessions').insert(row);
-  if (error && isMissingSessionDateColumn(error.message)) {
+  if (error && isMissingColumn(error.message, 'session_date')) {
     delete row.session_date;
+    ({ error } = await supabase.from('calendar_sessions').insert(row));
+  }
+  if (error && isMissingColumn(error.message, 'capacity')) {
+    delete row.capacity;
     ({ error } = await supabase.from('calendar_sessions').insert(row));
   }
   if (error) failure(`Couldn't add session: ${error.message}`);
@@ -70,13 +82,18 @@ export async function updateSession(sessionId: string, formData: FormData) {
     location: (formData.get('location') as string) ?? '',
     date_text: (formData.get('date_text') as string) ?? '',
     session_date: (formData.get('session_date') as string) || null,
+    capacity: parseCapacity(formData),
     status: (formData.get('status') as string) || 'Open',
     is_visible: formData.get('is_visible') === 'on',
   };
 
   let { error } = await supabase.from('calendar_sessions').update(row).eq('id', sessionId);
-  if (error && isMissingSessionDateColumn(error.message)) {
+  if (error && isMissingColumn(error.message, 'session_date')) {
     delete row.session_date;
+    ({ error } = await supabase.from('calendar_sessions').update(row).eq('id', sessionId));
+  }
+  if (error && isMissingColumn(error.message, 'capacity')) {
+    delete row.capacity;
     ({ error } = await supabase.from('calendar_sessions').update(row).eq('id', sessionId));
   }
   if (error) failure(`Couldn't save session: ${error.message}`);

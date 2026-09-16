@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { CalendarSession, LadderTier, SiteSettings, Testimonial, VideoRow } from '@/types/database';
 
 export interface SiteData {
@@ -7,6 +8,11 @@ export interface SiteData {
   videos: VideoRow[];
   calendarSessions: CalendarSession[];
   testimonials: Testimonial[];
+  // Session id -> RSVP count. Fetched with the service-role client and
+  // reduced to a plain count here — masterclass_rsvps holds name/email/
+  // phone, which the public site should never read even in aggregate, so
+  // this is the one piece of that table's data allowed to reach the page.
+  rsvpCounts: Record<string, number>;
 }
 
 const FALLBACK_SETTINGS: SiteSettings = {
@@ -140,6 +146,7 @@ const FALLBACK_CALENDAR_SESSIONS: CalendarSession[] = [
     is_visible: true,
     created_at: '',
     session_date: null,
+    capacity: null,
   },
 ];
 
@@ -171,6 +178,23 @@ export async function getSiteData(): Promise<SiteData> {
         supabase.from('testimonials').select('*').eq('is_visible', true).order('sort_order'),
       ]);
 
+    // RSVP rows hold name/email/phone — never readable by the anon/RLS
+    // client at all (see 0011 migration), so a plain count needs the
+    // service-role client. Reduced to counts-per-session immediately;
+    // nothing but that count ever leaves this function.
+    const rsvpCounts: Record<string, number> = {};
+    try {
+      const admin = createAdminClient();
+      const { data: rsvpRows } = await admin.from('masterclass_rsvps').select('calendar_session_id');
+      for (const row of (rsvpRows as { calendar_session_id: string }[] | null) ?? []) {
+        rsvpCounts[row.calendar_session_id] = (rsvpCounts[row.calendar_session_id] ?? 0) + 1;
+      }
+    } catch {
+      // Service-role key not configured, or the table doesn't exist yet
+      // (0011 migration not run) — capacity/scarcity messaging just
+      // won't show; never block the rest of the page over this.
+    }
+
     return {
       settings: settings ?? FALLBACK_SETTINGS,
       tiers: (tiers as LadderTier[] | null)?.length ? (tiers as LadderTier[]) : FALLBACK_TIERS,
@@ -179,6 +203,7 @@ export async function getSiteData(): Promise<SiteData> {
         ? (calendarSessions as CalendarSession[])
         : FALLBACK_CALENDAR_SESSIONS,
       testimonials: (testimonials as Testimonial[]) ?? [],
+      rsvpCounts,
     };
   } catch {
     // Supabase env vars missing/invalid, or the project is unreachable —
@@ -189,6 +214,7 @@ export async function getSiteData(): Promise<SiteData> {
       videos: [],
       calendarSessions: FALLBACK_CALENDAR_SESSIONS,
       testimonials: [],
+      rsvpCounts: {},
     };
   }
 }

@@ -1,7 +1,15 @@
 import type { CalendarSession, SiteSettings } from '@/types/database';
 import { CalendarCard } from './CalendarCard';
 
-export function Calendar({ sessions, settings }: { sessions: CalendarSession[]; settings: SiteSettings }) {
+export function Calendar({
+  sessions,
+  settings,
+  rsvpCounts,
+}: {
+  sessions: CalendarSession[];
+  settings: SiteSettings;
+  rsvpCounts: Record<string, number>;
+}) {
   return (
     <section className="dark" id="calendar">
       <div className="wrap">
@@ -12,7 +20,7 @@ export function Calendar({ sessions, settings }: { sessions: CalendarSession[]; 
         </div>
         <div className="cal-grid">
           {sessions.map((s) => (
-            <CalendarCard session={s} key={s.id} />
+            <CalendarCard session={s} rsvpCount={rsvpCounts[s.id] ?? 0} key={s.id} />
           ))}
         </div>
       </div>

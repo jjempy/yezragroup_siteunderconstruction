@@ -125,6 +125,8 @@ export interface CalendarSession {
   // Admin-only sorting/tracking aid — see 0008 migration. The public site
   // keeps showing date_text as-is; this never renders on the homepage.
   session_date: string | null;
+  // Optional RSVP cap — null means unlimited. See 0015 migration.
+  capacity: number | null;
 }
 
 export interface MasterclassRsvp {

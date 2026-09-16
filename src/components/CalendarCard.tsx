@@ -7,8 +7,13 @@ import type { CalendarSession } from '@/types/database';
  * to be purely informational (topic/date/location), no way to actually
  * signal you're coming. Posts to /api/rsvp (not a direct Supabase
  * insert like the newsletter capture) so a confirmation email can go out
- * server-side as part of the same request. */
-export function CalendarCard({ session }: { session: CalendarSession }) {
+ * server-side as part of the same request.
+ *
+ * "Full" is derived from real data (capacity vs. actual RSVP count), not
+ * only the manually-typed Status field — a capped session becomes full
+ * automatically the moment it hits capacity, whether or not an admin
+ * remembers to update the Status text too. */
+export function CalendarCard({ session, rsvpCount }: { session: CalendarSession; rsvpCount: number }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -31,7 +36,9 @@ export function CalendarCard({ session }: { session: CalendarSession }) {
     }
   }
 
-  const isFull = session.status.toLowerCase() === 'full';
+  const atCapacity = session.capacity != null && rsvpCount >= session.capacity;
+  const isFull = atCapacity || session.status.toLowerCase() === 'full';
+  const spotsLeft = session.capacity != null ? Math.max(0, session.capacity - rsvpCount) : null;
 
   return (
     <div className="cal-card reveal in">
@@ -58,7 +65,17 @@ export function CalendarCard({ session }: { session: CalendarSession }) {
           You&apos;re on the list — check your email for confirmation. See you there.
         </div>
       ) : isFull ? (
-        <div className="cal-rsvp-note">This session is full.</div>
+        <div className="cal-rsvp-full">
+          <p className="cal-rsvp-note" style={{ margin: 0 }}>
+            This session is full{atCapacity ? ` — all ${session.capacity} seats are taken` : ''}.
+          </p>
+          <p className="cal-rsvp-note" style={{ marginTop: 8 }}>
+            No need to wait for the next date — the Workshop Library has this material now.
+          </p>
+          <a href="/#library" className="btn-primary cal-rsvp-btn" style={{ display: 'block', textAlign: 'center' }}>
+            Get It in the Workshop Library
+          </a>
+        </div>
       ) : open ? (
         <form className="cal-rsvp-form" onSubmit={handleSubmit}>
           <input
@@ -91,9 +108,16 @@ export function CalendarCard({ session }: { session: CalendarSession }) {
           )}
         </form>
       ) : (
-        <button type="button" className="btn-primary cal-rsvp-btn" onClick={() => setOpen(true)}>
-          Reserve a Free Seat
-        </button>
+        <>
+          {spotsLeft != null && (
+            <div className="cal-rsvp-note" style={{ color: 'var(--gold)', fontWeight: 600 }}>
+              {spotsLeft} seat{spotsLeft === 1 ? '' : 's'} left
+            </div>
+          )}
+          <button type="button" className="btn-primary cal-rsvp-btn" onClick={() => setOpen(true)}>
+            Reserve a Free Seat
+          </button>
+        </>
       )}
     </div>
   );

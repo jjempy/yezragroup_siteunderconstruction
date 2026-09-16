@@ -22,7 +22,7 @@ import {
 
 export default async function HomePage() {
   const [session, site] = await Promise.all([getSessionUser(), getSiteData()]);
-  const { settings, tiers, videos, calendarSessions, testimonials } = site;
+  const { settings, tiers, videos, calendarSessions, testimonials, rsvpCounts } = site;
 
   const vipTier = tiers.find((t) => t.slug === 'vip');
 
@@ -48,7 +48,7 @@ export default async function HomePage() {
       <Nav settings={settings} isSignedIn={Boolean(session)} isAdmin={session?.profile?.role === 'admin'} />
       <Hero settings={settings} />
       <Ladder tiers={tiers} settings={settings} userId={session?.user.id ?? null} />
-      <Calendar sessions={calendarSessions} settings={settings} />
+      <Calendar sessions={calendarSessions} settings={settings} rsvpCounts={rsvpCounts} />
       <Library videos={videos} settings={settings} />
       <Proof testimonials={testimonials} />
       <About settings={settings} />
