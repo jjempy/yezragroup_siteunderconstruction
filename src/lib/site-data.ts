@@ -47,6 +47,10 @@ const FALLBACK_SETTINGS: SiteSettings = {
   calendar_heading: 'A free masterclass, almost every month.',
   calendar_lede:
     "One live, in-person session most months — always free, always open, always built around a blind spot business owners don't know they have until it costs them.",
+  ladder_eyebrow: 'Five Ways We Work Together',
+  ladder_heading: 'From a free evening to a private day.',
+  ladder_lede:
+    "Start wherever makes sense. Most people move up the ladder as trust builds — nobody's asked to jump in at the top.",
   about_body: [
     "Fifteen years in precision manufacturing engineering, state-licensed in insurance, and self-taught in building working AI systems — that's an unusual stack, and it's the whole point.",
     "I spent those years building things other people trusted to be right the first time — tooling, training manuals, vendor systems where a small mistake got expensive fast. When I started building AI tools, it wasn't to keep up with a trend. I built them to catch my own blind spots first, before I ever thought about teaching anyone else to do the same.",

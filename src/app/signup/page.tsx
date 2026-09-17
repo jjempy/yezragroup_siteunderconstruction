@@ -12,7 +12,7 @@ function SignupForm() {
   const params = useSearchParams();
   const redirect = params.get('redirect');
   const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(params.get('email') ?? '');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [marketingOptIn, setMarketingOptIn] = useState(true);

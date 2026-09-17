@@ -56,6 +56,20 @@ export default async function ContentAdminPage({
           <textarea id="calendar_lede" name="calendar_lede" defaultValue={settings.calendar_lede} />
         </div>
 
+        <h2 style={{ marginTop: 32 }}>Offers Section (&quot;Five Ways We Work Together&quot;)</h2>
+        <div className="admin-field">
+          <label htmlFor="ladder_eyebrow">Eyebrow</label>
+          <input id="ladder_eyebrow" name="ladder_eyebrow" type="text" defaultValue={settings.ladder_eyebrow} />
+        </div>
+        <div className="admin-field">
+          <label htmlFor="ladder_heading">Heading</label>
+          <input id="ladder_heading" name="ladder_heading" type="text" defaultValue={settings.ladder_heading} />
+        </div>
+        <div className="admin-field">
+          <label htmlFor="ladder_lede">Subheading</label>
+          <textarea id="ladder_lede" name="ladder_lede" defaultValue={settings.ladder_lede} />
+        </div>
+
         <h2 style={{ marginTop: 32 }}>About</h2>
         <div className="admin-field">
           <label htmlFor="founder_photo_file">Founder Photo</label>

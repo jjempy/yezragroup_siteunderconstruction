@@ -16,12 +16,9 @@ export function Ladder({
     <section className="light" id="ladder">
       <div className="wrap">
         <div className="section-head">
-          <div className="eyebrow">Five Ways We Work Together</div>
-          <h2>From a free evening to a private day.</h2>
-          <p>
-            Start wherever makes sense. Most people move up the ladder as trust builds — nobody&apos;s
-            asked to jump in at the top.
-          </p>
+          <div className="eyebrow">{settings.ladder_eyebrow}</div>
+          <h2>{settings.ladder_heading}</h2>
+          <p>{settings.ladder_lede}</p>
         </div>
         <div className="ladder">
           {tiers.map((tier, i) => {

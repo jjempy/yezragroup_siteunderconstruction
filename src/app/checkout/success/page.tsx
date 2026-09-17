@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { requireUser } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { getSessionUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { AuthHeader } from '@/components/AuthHeader';
 import { getStripe } from '@/lib/stripe';
@@ -16,26 +17,60 @@ function isKnownProduct(value: string | undefined): value is Product {
   return Boolean(value) && (KNOWN_PRODUCTS as readonly string[]).includes(value!);
 }
 
-const COPY: Record<Product, { emoji: string; heading: string; body: string; cta: { href: string; label: string } }> = {
+const COPY: Record<Product, { heading: string; body: string; cta: { href: string; label: string } }> = {
   workshop_library: {
-    emoji: '🎉',
     heading: "You're in.",
     body: 'Payment confirmed — the full Workshop Library, including the extended, less-edited sessions, is now available on your account.',
     cta: { href: '/library', label: 'Go to the Workshop Library' },
   },
   audit_room: {
-    emoji: '🎉',
     heading: "You're confirmed for The Audit Room.",
     body: "Payment confirmed — your seat is reserved. Session details (date, location or link) will show up on your account page as soon as they're set.",
     cta: { href: '/account', label: 'Go to Your Account' },
   },
   scoped_engagement: {
-    emoji: '✅',
     heading: 'Deposit received.',
     body: "Your $2,000 deposit is confirmed and credited toward the total project fee. We'll reach out personally within one business day to scope the engagement and arrange payment for the remainder.",
     cta: { href: '/account', label: 'Go to Your Account' },
   },
 };
+
+function SuccessBadge() {
+  return (
+    <div className="success-badge">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+        <path d="M5 13l4 4L19 7" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
+function ConfirmationFooter({
+  confirmationNumber,
+  contactEmail,
+  isActive,
+}: {
+  confirmationNumber: string | null;
+  contactEmail: string;
+  isActive: boolean;
+}) {
+  return (
+    <>
+      {confirmationNumber && (
+        <p style={{ marginTop: 22, fontSize: 12.5, color: 'var(--muted-d)' }}>
+          Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
+          <br />
+          Please save this for your records{!isActive && contactEmail ? ' — mention it if you reach out' : ''}.
+        </p>
+      )}
+      {!isActive && contactEmail && (
+        <p style={{ marginTop: 8, fontSize: 12.5, color: 'var(--muted-d)' }}>
+          Questions in the meantime? <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+        </p>
+      )}
+    </>
+  );
+}
 
 /**
  * The async webhook that normally grants access can lag behind the
@@ -51,58 +86,63 @@ const COPY: Record<Product, { emoji: string; heading: string; body: string; cta:
  *      client_reference_id ties every session back to a signed-in user,
  *      so no session_id in the URL is actually required for this to work.
  *
- * Either way requires STRIPE_SECRET_KEY to be set — without it neither
- * this nor the webhook can reach Stripe at all, and a purchase just won't
- * show up.
- *
- * Whatever happens, the messaging here stays calm: Stripe already
- * confirmed the charge before this page ever loaded, so there's nothing
- * for the buyer to be uncertain about. No "still confirming" waiting
- * state, no refresh loop — either it's granted and shown, or it briefly
- * isn't yet and the copy says exactly that without hedging.
+ * A third case this now handles: nobody is signed in at all when this
+ * page loads — either they paid via a Stripe link directly (bypassing the
+ * usual sign-up-first gate somehow) or they're on a different browser
+ * than the one they started on. Stripe itself always collects an email to
+ * process the charge, independent of anything we set — so if we have a
+ * verified paid session but no matching signed-in account, this offers a
+ * "claim your purchase" step (sign in or create an account with that
+ * email) instead of just bouncing to a bare login page with no context,
+ * or worse, quietly leaving a paying customer with no way to ever access
+ * what they bought.
  */
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
   searchParams: { product?: string; session_id?: string };
 }) {
-  const { user } = await requireUser();
+  const session = await getSessionUser();
   const supabase = createClient();
 
   const product: Product = isKnownProduct(searchParams.product) ? searchParams.product : 'workshop_library';
 
-  const [{ data: entitlementRow }, { data: settings }] = await Promise.all([
-    supabase
+  let isActive = false;
+  let confirmationNumber: string | null = null;
+  let claimEmail: string | null = null;
+
+  if (session) {
+    const { data: entitlementRow } = await supabase
       .from('entitlements')
       .select('product, granted_at, status, stripe_checkout_session_id')
-      .eq('user_id', user.id)
+      .eq('user_id', session.user.id)
       .eq('product', product)
-      .maybeSingle(),
-    supabase.from('site_settings').select('contact_email').eq('id', 'default').maybeSingle(),
-  ]);
-  let isActive = Boolean(entitlementRow) && entitlementRow?.status !== 'revoked';
-  const contactEmail = settings?.contact_email || '';
-  let confirmationNumber: string | null = entitlementRow?.stripe_checkout_session_id ?? null;
+      .maybeSingle();
+    isActive = Boolean(entitlementRow) && entitlementRow?.status !== 'revoked';
+    confirmationNumber = entitlementRow?.stripe_checkout_session_id ?? null;
+  }
 
-  async function heal(session: {
+  async function heal(stripeSession: {
     id: string;
     customer: string | { id: string } | null;
     amount_total: number | null;
     currency: string | null;
     line_items?: { data: { price?: { id: string } | null }[] };
   }) {
-    confirmationNumber = session.id;
-    if (isActive) return;
-    const priceIds = session.line_items?.data.map((li) => li.price?.id).filter(Boolean) as string[] | undefined;
+    confirmationNumber = stripeSession.id;
+    if (isActive || !session) return;
+    const priceIds = stripeSession.line_items?.data.map((li) => li.price?.id).filter(Boolean) as
+      | string[]
+      | undefined;
     const matchedPriceId = priceIds?.find((id) => PRICE_TO_PRODUCT[id]);
     if (!matchedPriceId || PRICE_TO_PRODUCT[matchedPriceId] !== product) return;
     const { error } = await grantEntitlement({
-      userId: user.id,
+      userId: session.user.id,
       product,
-      sessionId: session.id,
-      customerId: typeof session.customer === 'string' ? session.customer : null,
-      amountTotal: session.amount_total ?? null,
-      currency: session.currency ?? null,
+      sessionId: stripeSession.id,
+      customerId: typeof stripeSession.customer === 'string' ? stripeSession.customer : null,
+      amountTotal: stripeSession.amount_total ?? null,
+      currency: stripeSession.currency ?? null,
       source: 'checkout_success_selfheal',
     });
     if (!error) isActive = true;
@@ -111,40 +151,98 @@ export default async function CheckoutSuccessPage({
 
   try {
     const stripe = getStripe();
+    let verified: Awaited<ReturnType<typeof stripe.checkout.sessions.retrieve>> | null = null;
 
     if (searchParams.session_id) {
-      const session = await stripe.checkout.sessions.retrieve(searchParams.session_id, { expand: ['line_items'] });
-      if (session.client_reference_id === user.id && session.payment_status === 'paid') {
-        await heal(session);
-      }
+      verified = await stripe.checkout.sessions.retrieve(searchParams.session_id, { expand: ['line_items'] });
     }
 
-    if (!isActive) {
+    if (session && verified && verified.client_reference_id === session.user.id && verified.payment_status === 'paid') {
+      await heal(verified);
+    }
+
+    if (session && !isActive) {
       // No session_id on the URL (the Payment Link redirect wasn't set up
       // with one) or it didn't resolve — fall back to scanning this
       // account's own recent paid sessions instead of giving up.
       const recent = await stripe.checkout.sessions.list({ limit: 20 });
-      for (const session of recent.data) {
-        if (session.client_reference_id !== user.id || session.payment_status !== 'paid') continue;
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5 });
-        await heal({ ...session, line_items: lineItems });
+      for (const s of recent.data) {
+        if (s.client_reference_id !== session.user.id || s.payment_status !== 'paid') continue;
+        const lineItems = await stripe.checkout.sessions.listLineItems(s.id, { limit: 5 });
+        await heal({ ...s, line_items: lineItems });
         if (isActive) break;
       }
+    }
+
+    if (!session && verified && verified.payment_status === 'paid') {
+      confirmationNumber = verified.id;
+      claimEmail = verified.customer_details?.email ?? verified.customer_email ?? null;
     }
   } catch (err) {
     console.error('[checkout success] Stripe verification unavailable:', err);
   }
 
+  const { data: settings } = await supabase
+    .from('site_settings')
+    .select('contact_email')
+    .eq('id', 'default')
+    .maybeSingle();
+  const contactEmail = settings?.contact_email || '';
   const copy = COPY[product];
+
+  // Signed out, but Stripe confirms a real paid session with an email —
+  // offer to claim it instead of silently redirecting to a blank login
+  // page with no memory of what just happened.
+  if (!session && claimEmail && searchParams.session_id) {
+    const claimToken = `claim:${product}:${searchParams.session_id}`;
+    return (
+      <>
+        <AuthHeader />
+        <div className="auth-shell" style={{ alignItems: 'flex-start', paddingTop: 140 }}>
+          <div className="auth-card success-card" style={{ maxWidth: 480, textAlign: 'center' }}>
+            <SuccessBadge />
+            <h1>Payment received.</h1>
+            <p className="sub">
+              Paid with <strong>{claimEmail}</strong>. Sign in or create an account with that email to see this
+              purchase in your order history.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
+              <Link
+                href={`/signup?redirect=${encodeURIComponent(claimToken)}&email=${encodeURIComponent(claimEmail)}`}
+                className="btn-primary"
+                style={{ textAlign: 'center' }}
+              >
+                Create Account
+              </Link>
+              <Link
+                href={`/login?redirect=${encodeURIComponent(claimToken)}&email=${encodeURIComponent(claimEmail)}`}
+                className="btn-ghost"
+                style={{ textAlign: 'center' }}
+              >
+                Sign In
+              </Link>
+            </div>
+            <ConfirmationFooter confirmationNumber={confirmationNumber} contactEmail={contactEmail} isActive={false} />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Signed out, and no verifiable Stripe session to fall back on — nothing
+  // safe to show; send to sign in rather than a dead end.
+  if (!session) {
+    redirect('/login');
+  }
 
   return (
     <>
       <AuthHeader />
       <div className="auth-shell" style={{ alignItems: 'flex-start', paddingTop: 140 }}>
-        <div className="auth-card" style={{ maxWidth: 520, textAlign: 'center' }}>
+        <div className={`auth-card${isActive ? ' success-card' : ''}`} style={{ maxWidth: 520, textAlign: 'center' }}>
           {isActive ? (
             <>
-              <div style={{ fontSize: 44, marginBottom: 6 }}>{copy.emoji}</div>
+              <SuccessBadge />
               <h1>{copy.heading}</h1>
               <p className="sub">{copy.body}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 28 }}>
@@ -167,18 +265,7 @@ export default async function CheckoutSuccessPage({
               </div>
             </>
           )}
-          {confirmationNumber && (
-            <p style={{ marginTop: 22, fontSize: 12.5, color: 'var(--muted-d)' }}>
-              Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
-              <br />
-              Please save this for your records{!isActive && contactEmail ? ' — mention it if you reach out' : ''}.
-            </p>
-          )}
-          {!isActive && contactEmail && (
-            <p style={{ marginTop: 8, fontSize: 12.5, color: 'var(--muted-d)' }}>
-              Questions in the meantime? <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
-            </p>
-          )}
+          <ConfirmationFooter confirmationNumber={confirmationNumber} contactEmail={contactEmail} isActive={isActive} />
         </div>
       </div>
     </>

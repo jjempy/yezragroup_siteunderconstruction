@@ -60,6 +60,9 @@ export interface SiteSettings {
   calendar_eyebrow: string;
   calendar_heading: string;
   calendar_lede: string;
+  ladder_eyebrow: string;
+  ladder_heading: string;
+  ladder_lede: string;
   about_body: string[];
   updated_at: string;
 }
