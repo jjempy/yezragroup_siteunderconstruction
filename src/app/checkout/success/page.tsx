@@ -110,6 +110,19 @@ export default async function CheckoutSuccessPage({
   let isActive = false;
   let confirmationNumber: string | null = null;
   let claimEmail: string | null = null;
+  // Only ever shown to a signed-in admin (see the render below) — this has
+  // repeatedly been hard to diagnose blind (no access to Vercel logs or
+  // the Stripe/Supabase dashboards from here), so surface exactly what
+  // this request saw instead of guessing again next time it doesn't work.
+  const diagnostics: string[] = [];
+  const keyPrefix = process.env.STRIPE_SECRET_KEY?.slice(0, 8) ?? null;
+  diagnostics.push(
+    keyPrefix
+      ? `STRIPE_SECRET_KEY is set (${keyPrefix.startsWith('sk_live') ? 'live mode' : keyPrefix.startsWith('sk_test') ? 'test mode' : 'unrecognized prefix: ' + keyPrefix}).`
+      : 'STRIPE_SECRET_KEY is NOT set — nothing here or in the webhook can reach Stripe at all.'
+  );
+  diagnostics.push(`URL session_id param: ${searchParams.session_id ?? '(none)'}`);
+  diagnostics.push(`Signed in as: ${session ? `${session.user.email} (${session.user.id})` : '(not signed in)'}`);
 
   if (session) {
     const { data: entitlementRow } = await supabase
@@ -155,6 +168,9 @@ export default async function CheckoutSuccessPage({
 
     if (searchParams.session_id) {
       verified = await stripe.checkout.sessions.retrieve(searchParams.session_id, { expand: ['line_items'] });
+      diagnostics.push(
+        `Verified session ${verified.id}: payment_status=${verified.payment_status}, client_reference_id=${verified.client_reference_id ?? '(none)'}`
+      );
     }
 
     if (session && verified && verified.client_reference_id === session.user.id && verified.payment_status === 'paid') {
@@ -166,9 +182,17 @@ export default async function CheckoutSuccessPage({
       // with one) or it didn't resolve — fall back to scanning this
       // account's own recent paid sessions instead of giving up.
       const recent = await stripe.checkout.sessions.list({ limit: 20 });
+      const matchingSessions = recent.data.filter((s) => s.client_reference_id === session.user.id);
+      diagnostics.push(
+        `Scanned ${recent.data.length} most recent Stripe sessions (any account) — ${matchingSessions.length} had a client_reference_id matching this account.`
+      );
       for (const s of recent.data) {
         if (s.client_reference_id !== session.user.id || s.payment_status !== 'paid') continue;
         const lineItems = await stripe.checkout.sessions.listLineItems(s.id, { limit: 5 });
+        const priceIds = lineItems.data.map((li) => li.price?.id).filter(Boolean) as string[];
+        diagnostics.push(
+          `Session ${s.id} line item prices: ${priceIds.join(', ') || '(none)'} — known products: ${priceIds.map((id) => PRICE_TO_PRODUCT[id] ?? '(unrecognized price)').join(', ') || '(n/a)'}`
+        );
         await heal({ ...s, line_items: lineItems });
         if (isActive) break;
       }
@@ -179,6 +203,8 @@ export default async function CheckoutSuccessPage({
       claimEmail = verified.customer_details?.email ?? verified.customer_email ?? null;
     }
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    diagnostics.push(`Stripe call threw: ${message}`);
     console.error('[checkout success] Stripe verification unavailable:', err);
   }
 
@@ -266,6 +292,28 @@ export default async function CheckoutSuccessPage({
             </>
           )}
           <ConfirmationFooter confirmationNumber={confirmationNumber} contactEmail={contactEmail} isActive={isActive} />
+          {!isActive && session.profile?.role === 'admin' && (
+            <div
+              style={{
+                marginTop: 24,
+                textAlign: 'left',
+                fontSize: 11.5,
+                fontFamily: 'monospace',
+                color: 'var(--muted-d)',
+                background: 'rgba(0,0,0,.2)',
+                border: '1px solid var(--line-d)',
+                borderRadius: 4,
+                padding: 14,
+              }}
+            >
+              <div style={{ marginBottom: 6, fontWeight: 700 }}>Admin-only diagnostics</div>
+              {diagnostics.map((line, i) => (
+                <div key={i} style={{ marginBottom: 4 }}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

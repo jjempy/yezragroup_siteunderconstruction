@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BackButton } from './BackButton';
+import { Mark } from './Mark';
 
 /**
  * A minimal top bar for every auth-shell page (login, signup, account,
@@ -17,8 +18,8 @@ export function AuthHeader() {
     <div className="app-header" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10 }}>
       <div className="wrap auth-header-wrap">
         <BackButton className="crumb back-to-site-link" />
-        <Link href="/" className="crumb site-brand-center" style={{ fontFamily: 'var(--serif)', fontSize: 16 }}>
-          Orchemet
+        <Link href="/" className="crumb site-brand-center" aria-label="Back to homepage">
+          <Mark size={26} />
         </Link>
       </div>
     </div>

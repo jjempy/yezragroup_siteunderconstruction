@@ -177,6 +177,11 @@ body.nav-scrolled .nav-right{opacity:0; pointer-events:none;}
      opaque native background unless told otherwise — without this, the
      cream text was invisible against the browser's default button chrome. */
   background:transparent; font-family:inherit; cursor:pointer;
+  /* Missing on an <a> (default display:inline), vertical padding is only
+     ever painted, never reserved in the layout — so whatever follows the
+     link renders as if the button had no height at all, visually
+     overlapping it. .btn-primary already had this; .btn-ghost didn't. */
+  display:inline-block;
 }
 .btn-ghost:hover{border-color:var(--gold); background:rgb(from var(--gold) r g b / .08);}
 
