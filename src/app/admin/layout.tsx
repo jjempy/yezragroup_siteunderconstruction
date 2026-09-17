@@ -24,9 +24,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/" className="crumb site-brand-center" aria-label="Back to homepage">
             {settings?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={settings.logo_url} alt="" style={{ height: 26, width: 'auto', display: 'block' }} />
+              <img src={settings.logo_url} alt="" className="brand-logo-img" />
             ) : (
-              <Mark />
+              <Mark size={56} />
             )}
           </Link>
         </div>

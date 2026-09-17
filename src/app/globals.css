@@ -504,8 +504,23 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
    to the right edge the way justify-content:space-between used to. */
 .auth-header-wrap{position:relative;}
 .site-brand-center{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:1;}
+.site-brand-center .brand-logo-img{height:56px; width:auto; display:block;}
 .auth-header-wrap .admin-search{margin-left:auto;}
 @media(max-width:640px){.back-to-site-link{display:none;}}
+/* On the admin header, the search bar wraps to its own full-width line
+   below 800px (see .admin-search{order:3} below), which grows
+   .auth-header-wrap to two lines. .site-brand-center's top:50% would then
+   center against that whole two-line height and land on top of the search
+   bar instead of next to the back button. Taking it out of absolute
+   positioning here and back into the flex flow (same line as the back
+   button, ahead of the search line) fixes that: flex-wrap gives each line
+   its own cross-axis centering, so align-items:center on .app-header .wrap
+   centers it correctly within just that first line. */
+@media(max-width:800px){
+  .admin-shell .site-brand-center{
+    position:static; transform:none; order:2; flex:1; display:flex; justify-content:center;
+  }
+}
 
 .admin-shell{min-height:100vh; background:var(--cream);}
 .admin-layout{display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 68px);}
