@@ -16,17 +16,19 @@ export async function updateDroppingMissingColumns(
   table: string,
   match: Record<string, unknown>,
   row: Record<string, unknown>
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; droppedColumns: string[] }> {
   const remaining = { ...row };
+  const droppedColumns: string[] = [];
   for (let attempt = 0; attempt <= Object.keys(row).length; attempt++) {
     const { error } = await supabase.from(table).update(remaining).match(match);
-    if (!error) return { error: null };
+    if (!error) return { error: null, droppedColumns };
     const col = missingColumn(error.message);
     if (col && col in remaining) {
       delete remaining[col];
+      droppedColumns.push(col);
       continue;
     }
-    return { error: error.message };
+    return { error: error.message, droppedColumns };
   }
-  return { error: 'Too many missing columns — check that migrations have been run.' };
+  return { error: 'Too many missing columns — check that migrations have been run.', droppedColumns };
 }

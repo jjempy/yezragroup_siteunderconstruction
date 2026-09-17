@@ -86,8 +86,14 @@ export async function updateBrandSettings(formData: FormData) {
   if (heroMarkUploadError) failure('/admin/brand', `Hero mark upload failed: ${heroMarkUploadError}`);
   if (uploadedHeroMarkUrl) update.hero_mark_url = uploadedHeroMarkUrl;
 
-  const { error } = await updateDroppingMissingColumns(supabase, 'site_settings', { id: 'default' }, update);
+  const { error, droppedColumns } = await updateDroppingMissingColumns(supabase, 'site_settings', { id: 'default' }, update);
   if (error) failure('/admin/brand', `Save failed: ${error}`);
+  if (droppedColumns.length > 0) {
+    failure(
+      '/admin/brand',
+      `Saved everything else, but ${droppedColumns.join(', ')} didn't apply — that column doesn't exist yet in the database (a pending migration). Nothing you set for it took effect.`
+    );
+  }
 
   revalidatePath('/');
   revalidatePath('/admin/brand');
@@ -119,8 +125,14 @@ export async function updateContentSettings(formData: FormData) {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  const { error } = await updateDroppingMissingColumns(supabase, 'site_settings', { id: 'default' }, update);
+  const { error, droppedColumns } = await updateDroppingMissingColumns(supabase, 'site_settings', { id: 'default' }, update);
   if (error) failure('/admin/content', `Save failed: ${error}`);
+  if (droppedColumns.length > 0) {
+    failure(
+      '/admin/content',
+      `Saved everything else, but ${droppedColumns.join(', ')} didn't apply — that column doesn't exist yet in the database (a pending migration). Nothing you set for it took effect.`
+    );
+  }
 
   revalidatePath('/');
   revalidatePath('/admin/content');

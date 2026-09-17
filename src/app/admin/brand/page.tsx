@@ -4,6 +4,7 @@ import { updateBrandSettings } from '../settings-actions';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
 import { BrandColorFields } from '@/components/admin/BrandColorFields';
+import { HeroMarkOpacityField } from '@/components/admin/HeroMarkOpacityField';
 
 export default async function BrandAdminPage({
   searchParams,
@@ -79,18 +80,7 @@ export default async function BrandAdminPage({
           />
           <div className="hint">Only used if you don&apos;t upload a file above. Leave blank to use the default mark.</div>
         </div>
-        <div className="admin-field" style={{ marginBottom: 20 }}>
-          <label htmlFor="hero_mark_opacity">Hero Mark Opacity ({settings.hero_mark_opacity}%)</label>
-          <input
-            id="hero_mark_opacity"
-            name="hero_mark_opacity"
-            type="range"
-            min="0"
-            max="100"
-            defaultValue={settings.hero_mark_opacity}
-          />
-          <div className="hint">Applies to whichever mark is showing — your upload, or the default, if empty.</div>
-        </div>
+        <HeroMarkOpacityField opacity={settings.hero_mark_opacity} markUrl={settings.hero_mark_url} />
         <BrandColorFields
           colorGold={settings.color_gold}
           colorGoldDeep={settings.color_gold_deep}
