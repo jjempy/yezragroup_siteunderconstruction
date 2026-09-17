@@ -68,7 +68,7 @@ export default async function AdminMessagesPage() {
                   <form action={updateMessageStatus}>
                     <input type="hidden" name="id" value={m.id} />
                     <input type="hidden" name="status" value="read" />
-                    <button className="btn-ghost" style={{ padding: '6px 14px', fontSize: 12.5 }} type="submit">
+                    <button className="admin-btn secondary" style={{ padding: '6px 14px', fontSize: 12.5 }} type="submit">
                       Mark Read
                     </button>
                   </form>
@@ -85,7 +85,7 @@ export default async function AdminMessagesPage() {
                   <form action={updateMessageStatus}>
                     <input type="hidden" name="id" value={m.id} />
                     <input type="hidden" name="status" value="new" />
-                    <button className="btn-ghost" style={{ padding: '6px 14px', fontSize: 12.5 }} type="submit">
+                    <button className="admin-btn secondary" style={{ padding: '6px 14px', fontSize: 12.5 }} type="submit">
                       Reopen
                     </button>
                   </form>
