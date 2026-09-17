@@ -66,7 +66,10 @@ function ConfirmationFooter({
       )}
       {!isActive && (
         <p style={{ marginTop: 8, fontSize: 12.5, color: 'var(--muted-d)' }}>
-          Questions in the meantime? <Link href={contactHref}>Contact us</Link>
+          Questions in the meantime?{' '}
+          <Link href={contactHref} style={{ color: 'var(--gold)', textDecoration: 'underline' }}>
+            Contact us
+          </Link>
         </p>
       )}
     </>

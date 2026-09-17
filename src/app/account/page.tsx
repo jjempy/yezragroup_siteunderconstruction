@@ -214,7 +214,10 @@ export default async function AccountPage({
                 ) : (
                   <p className="sub" style={{ margin: 0 }}>
                     {ENTITLEMENT_STATUS_COPY[product]}{' '}
-                    <Link href={`/contact?context=order_purchase&email=${encodeURIComponent(user.email ?? '')}`}>
+                    <Link
+                      href={`/contact?context=order_purchase&email=${encodeURIComponent(user.email ?? '')}`}
+                      style={{ color: 'var(--gold-bright)', textDecoration: 'underline' }}
+                    >
                       Expecting something specific?
                     </Link>
                   </p>
@@ -302,7 +305,10 @@ export default async function AccountPage({
             )}
             <p className="sub" style={{ marginTop: 14, marginBottom: 0 }}>
               Missing a purchase, or something looks wrong?{' '}
-              <Link href={`/contact?context=order_purchase&email=${encodeURIComponent(user.email ?? '')}`}>
+              <Link
+                href={`/contact?context=order_purchase&email=${encodeURIComponent(user.email ?? '')}`}
+                style={{ color: 'var(--gold-bright)', textDecoration: 'underline' }}
+              >
                 Let us know
               </Link>
               .

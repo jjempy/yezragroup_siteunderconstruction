@@ -86,7 +86,7 @@ function LoginForm() {
           Still can&apos;t get in?{' '}
           <Link
             href={`/contact?context=account_access${email ? `&email=${encodeURIComponent(email)}` : ''}`}
-            style={{ textDecoration: 'underline' }}
+            style={{ color: 'var(--gold)', textDecoration: 'underline' }}
           >
             Contact us
           </Link>

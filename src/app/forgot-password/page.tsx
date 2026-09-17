@@ -54,7 +54,10 @@ export default function ForgotPasswordPage() {
             </div>
             <p style={{ fontSize: 12.5, color: 'var(--muted-d)' }}>
               Didn&apos;t get it?{' '}
-              <Link href={`/contact?context=account_access${email ? `&email=${encodeURIComponent(email)}` : ''}`}>
+              <Link
+                href={`/contact?context=account_access${email ? `&email=${encodeURIComponent(email)}` : ''}`}
+                style={{ color: 'var(--gold)', textDecoration: 'underline' }}
+              >
                 Contact us
               </Link>
             </p>

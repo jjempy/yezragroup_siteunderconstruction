@@ -26,7 +26,7 @@ export function Calendar({
         </div>
         <p style={{ marginTop: 20, fontSize: 13.5, color: 'var(--muted-d)' }}>
           Don&apos;t see a date that works, or looking for a specific month?{' '}
-          <Link href="/contact?context=masterclass_schedule" style={{ textDecoration: 'underline' }}>
+          <Link href="/contact?context=masterclass_schedule" style={{ color: 'var(--gold-bright)', textDecoration: 'underline' }}>
             Ask us
           </Link>
           .
