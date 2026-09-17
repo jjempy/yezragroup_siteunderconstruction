@@ -149,6 +149,7 @@ export function renderContactNotificationEmail(msg: { name: string; email: strin
       <p style="font-size:14px;color:#5C6F72;margin:0 0 4px;">${CONTACT_REASON_LABELS[msg.reason] ?? msg.reason}</p>
       <p style="font-size:16px;font-weight:600;margin:0 0 16px;">${msg.name} — ${msg.email}</p>
       <div style="background:#fff;border:1px solid #E1DACB;border-radius:6px;padding:18px 20px;white-space:pre-line;font-size:14.5px;line-height:1.6;">${msg.message}</div>
+      <p style="font-size:12.5px;color:#8a9598;margin:16px 0 0;">Hit reply — it goes straight to ${msg.email}, not back to this notification.</p>
     </div>
   </div>`;
 }
