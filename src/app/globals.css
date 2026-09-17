@@ -505,7 +505,15 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
    flow — just the back button on AuthHeader, back button + search on the
    admin bar — sits normally, with margin-left:auto pushing the last one
    to the right edge the way justify-content:space-between used to. */
-.auth-header-wrap{position:relative;}
+/* min-height matters here: on mobile the only in-flow child (the back
+   button) is hidden below 640px (see .back-to-site-link), which used to
+   collapse this wrap to near-zero height. The 56px logo is absolutely
+   positioned and centers vertically against *this* box's height, not the
+   logo's own size — with nothing reserving space for it, half the logo
+   (28px) overflowed past the header's 18px padding and bled into the
+   page content below. Flooring the wrap at the logo's own height fixes
+   that at every width, not just mobile. */
+.auth-header-wrap{position:relative; min-height:56px;}
 .site-brand-center{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:1;}
 .site-brand-center .brand-logo-img{height:56px; width:auto; display:block;}
 .auth-header-wrap .admin-search{margin-left:auto;}
