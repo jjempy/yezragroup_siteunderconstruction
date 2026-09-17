@@ -34,6 +34,7 @@ const SITE_SETTINGS_FIELDS: { key: keyof SiteSettings; page: string; pageLabel: 
   { key: 'contact_phone', page: '/admin/content', pageLabel: 'Hero & About', fieldLabel: 'Contact Phone' },
   { key: 'youtube_channel_url', page: '/admin/content', pageLabel: 'Hero & About', fieldLabel: 'YouTube Channel URL' },
   { key: 'spotify_url', page: '/admin/content', pageLabel: 'Hero & About', fieldLabel: 'Spotify URL' },
+  { key: 'ga4_measurement_id', page: '/admin/content', pageLabel: 'Hero & About', fieldLabel: 'GA4 Measurement ID (Google Analytics)' },
 ];
 
 function snippetAround(text: string, query: string): string {
@@ -73,13 +74,18 @@ export async function searchAdminContent(rawQuery: string): Promise<AdminSearchM
   if (settings) {
     for (const field of SITE_SETTINGS_FIELDS) {
       const value = settings[field.key];
-      if (typeof value === 'string' && matches(value, query)) {
+      const valueStr = typeof value === 'string' ? value : '';
+      // Match on the field's label too, not just its current value — a
+      // field admins would search by name ("Google Analytics") rather
+      // than by its cryptic stored value (a GA4 ID) would otherwise be
+      // unfindable whenever it's empty or not literally what was typed.
+      if (matches(valueStr, query) || matches(field.fieldLabel, query)) {
         results.push({
           page: field.page,
           pageLabel: field.pageLabel,
           fieldLabel: field.fieldLabel,
           fieldId: field.key,
-          snippet: snippetAround(value, query),
+          snippet: valueStr ? snippetAround(valueStr, query) : '(empty)',
         });
       }
     }

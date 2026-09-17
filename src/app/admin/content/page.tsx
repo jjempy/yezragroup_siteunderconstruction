@@ -122,7 +122,7 @@ export default async function ContentAdminPage({
           </div>
         </div>
         <div className="admin-field">
-          <label htmlFor="ga4_measurement_id">GA4 Measurement ID</label>
+          <label htmlFor="ga4_measurement_id">GA4 Measurement ID (Google Analytics)</label>
           <input id="ga4_measurement_id" name="ga4_measurement_id" type="text" defaultValue={settings.ga4_measurement_id} placeholder="G-XXXXXXXXXX" />
           <div className="hint">Leave blank to skip loading Google Analytics.</div>
         </div>
