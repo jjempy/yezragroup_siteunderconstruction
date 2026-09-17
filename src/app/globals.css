@@ -424,7 +424,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 /* ---------- AUTH / ACCOUNT / ADMIN (new — kept in the same visual system) ---------- */
 .auth-shell{
   min-height:100vh; display:flex; align-items:center; justify-content:center;
-  background:var(--ink); padding:120px 20px 60px;
+  background:var(--ink); padding:150px 20px 60px;
 }
 .auth-card{
   width:100%; max-width:420px; background:var(--ink-2); border:1px solid var(--line-d);
@@ -452,7 +452,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
    read that as a cramped popup with no real content. This is a full-width
    (up to a comfortable reading measure) stack of editorial "module"
    cards instead, in the same dark visual system. */
-.account-shell{min-height:100vh; background:var(--ink); padding:130px 20px 80px;}
+.account-shell{min-height:100vh; background:var(--ink); padding:160px 20px 80px;}
 .account-content{max-width:720px; margin:0 auto;}
 .account-content h1{font-size:26px; color:var(--cream);}
 .account-content .sub{color:var(--muted-d); font-size:14px;}

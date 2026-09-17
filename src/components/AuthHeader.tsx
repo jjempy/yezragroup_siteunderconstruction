@@ -21,9 +21,9 @@ export function AuthHeader({ logoUrl }: { logoUrl?: string }) {
         <Link href="/" className="crumb site-brand-center" aria-label="Back to homepage">
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" style={{ height: 26, width: 'auto', display: 'block' }} />
+            <img src={logoUrl} alt="" className="brand-logo-img" />
           ) : (
-            <Mark size={26} />
+            <Mark size={56} />
           )}
         </Link>
       </div>
