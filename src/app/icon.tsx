@@ -10,14 +10,27 @@ export const contentType = 'image/png';
 // of a permanently-frozen default. Falls back to the original two-circle
 // mark if no logo is uploaded, or if fetching site_settings fails for any
 // reason — a favicon should never be the thing that breaks the page.
+//
+// This always paints its own solid background behind the logo (not a
+// transparent PNG) — a white logo mark stays visible whether the browser
+// tab strip itself is light or dark themed, since the tab never shows
+// through the icon. That background now uses the live brand navy
+// (color_ink) instead of the original pre-rebrand hardcoded color, so it
+// actually matches the site instead of a stale leftover shade.
 export default async function Icon() {
   let logoUrl: string | null = null;
+  let ink = '#0F1416';
   try {
     const supabase = createClient();
-    const { data } = await supabase.from('site_settings').select('logo_url').eq('id', 'default').maybeSingle();
+    const { data } = await supabase
+      .from('site_settings')
+      .select('logo_url, color_ink')
+      .eq('id', 'default')
+      .maybeSingle();
     logoUrl = data?.logo_url || null;
+    ink = data?.color_ink || ink;
   } catch {
-    // Supabase unreachable — fall through to the default mark below.
+    // Supabase unreachable — fall through to the defaults above.
   }
 
   return new ImageResponse(
@@ -26,7 +39,7 @@ export default async function Icon() {
         style={{
           width: '100%',
           height: '100%',
-          background: '#0F1416',
+          background: ink,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
