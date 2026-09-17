@@ -15,7 +15,7 @@ export default async function PrivacyPage() {
   const supabase = createClient();
   const { data: settings } = await supabase
     .from('site_settings')
-    .select('brand_name, contact_email')
+    .select('brand_name, contact_email, logo_url')
     .eq('id', 'default')
     .maybeSingle();
 
@@ -25,7 +25,7 @@ export default async function PrivacyPage() {
 
   return (
     <>
-      <AuthHeader />
+      <AuthHeader logoUrl={settings?.logo_url} />
       <div style={{ background: 'var(--cream)', minHeight: '100vh', paddingTop: 60 }}>
         <div className="wrap" style={{ maxWidth: 760, paddingTop: 80, paddingBottom: 100 }}>
           <div className="eyebrow">Legal</div>

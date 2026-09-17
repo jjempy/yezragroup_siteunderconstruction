@@ -12,7 +12,7 @@ export default async function LibraryPage() {
   const { user } = await requireUser();
   const supabase = createClient();
 
-  const [{ data: entitlement }, { data: videos }, { data: views }] = await Promise.all([
+  const [{ data: entitlement }, { data: videos }, { data: views }, { data: settings }] = await Promise.all([
     supabase
       .from('entitlements')
       .select('product, status')
@@ -21,6 +21,7 @@ export default async function LibraryPage() {
       .maybeSingle(),
     supabase.from('paid_videos').select('*').eq('is_visible', true).order('sort_order'),
     supabase.from('paid_video_views').select('paid_video_id').eq('user_id', user.id),
+    supabase.from('site_settings').select('logo_url').eq('id', 'default').maybeSingle(),
   ]);
 
   // A missing `status` column (0010 migration not yet run) reads as
@@ -32,7 +33,7 @@ export default async function LibraryPage() {
 
   return (
     <>
-      <AuthHeader />
+      <AuthHeader logoUrl={settings?.logo_url} />
       <div style={{ background: 'var(--cream)', minHeight: '100vh', paddingTop: 60 }}>
       <div className="wrap" style={{ paddingTop: 60, paddingBottom: 100 }}>
         <div className="section-head">

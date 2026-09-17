@@ -41,12 +41,14 @@ export default async function AccountPage({
   const { user, profile } = await requireUser();
   const supabase = createClient();
 
-  const [{ data: entitlementRows }, { data: tiers }, { data: paidVideos }, { data: views }] = await Promise.all([
-    supabase.from('entitlements').select('*').eq('user_id', user.id).order('granted_at', { ascending: false }),
-    supabase.from('ladder_tiers').select('*'),
-    supabase.from('paid_videos').select('*').eq('is_visible', true).order('sort_order'),
-    supabase.from('paid_video_views').select('paid_video_id').eq('user_id', user.id),
-  ]);
+  const [{ data: entitlementRows }, { data: tiers }, { data: paidVideos }, { data: views }, { data: settings }] =
+    await Promise.all([
+      supabase.from('entitlements').select('*').eq('user_id', user.id).order('granted_at', { ascending: false }),
+      supabase.from('ladder_tiers').select('*'),
+      supabase.from('paid_videos').select('*').eq('is_visible', true).order('sort_order'),
+      supabase.from('paid_video_views').select('paid_video_id').eq('user_id', user.id),
+      supabase.from('site_settings').select('logo_url').eq('id', 'default').maybeSingle(),
+    ]);
 
   const orderList = (entitlementRows as Entitlement[]) ?? [];
   const allTiers = (tiers as LadderTier[]) ?? [];
@@ -67,7 +69,7 @@ export default async function AccountPage({
 
   return (
     <>
-      <AuthHeader />
+      <AuthHeader logoUrl={settings?.logo_url} />
       <div className="account-shell">
         <div className="account-content">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 12 }}>

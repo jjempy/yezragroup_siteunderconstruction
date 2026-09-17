@@ -13,13 +13,18 @@ import { Mark } from './Mark';
  * home link. ← Back replicates the actual browser-back gesture (see
  * BackButton) rather than always dropping you at the homepage.
  */
-export function AuthHeader() {
+export function AuthHeader({ logoUrl }: { logoUrl?: string }) {
   return (
     <div className="app-header" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10 }}>
       <div className="wrap auth-header-wrap">
         <BackButton className="crumb back-to-site-link" />
         <Link href="/" className="crumb site-brand-center" aria-label="Back to homepage">
-          <Mark size={26} />
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" style={{ height: 26, width: 'auto', display: 'block' }} />
+          ) : (
+            <Mark size={26} />
+          )}
         </Link>
       </div>
     </div>

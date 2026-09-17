@@ -210,7 +210,7 @@ export default async function CheckoutSuccessPage({
 
   const { data: settings } = await supabase
     .from('site_settings')
-    .select('contact_email')
+    .select('contact_email, logo_url')
     .eq('id', 'default')
     .maybeSingle();
   const contactEmail = settings?.contact_email || '';
@@ -223,7 +223,7 @@ export default async function CheckoutSuccessPage({
     const claimToken = `claim:${product}:${searchParams.session_id}`;
     return (
       <>
-        <AuthHeader />
+        <AuthHeader logoUrl={settings?.logo_url} />
         <div className="auth-shell" style={{ alignItems: 'flex-start', paddingTop: 140 }}>
           <div className="auth-card success-card" style={{ maxWidth: 480, textAlign: 'center' }}>
             <SuccessBadge />
@@ -263,7 +263,7 @@ export default async function CheckoutSuccessPage({
 
   return (
     <>
-      <AuthHeader />
+      <AuthHeader logoUrl={settings?.logo_url} />
       <div className="auth-shell" style={{ alignItems: 'flex-start', paddingTop: 140 }}>
         <div className={`auth-card${isActive ? ' success-card' : ''}`} style={{ maxWidth: 520, textAlign: 'center' }}>
           {isActive ? (

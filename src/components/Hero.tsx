@@ -10,7 +10,15 @@ export function Hero({ settings }: { settings: SiteSettings }) {
           className="hero-mark orbit-spark"
           src={settings.hero_mark_url}
           alt=""
-          style={{ opacity: settings.hero_mark_opacity / 100, width: 240, height: 240, objectFit: 'contain' }}
+          style={
+            {
+              opacity: settings.hero_mark_opacity / 100,
+              '--hero-mark-opacity': settings.hero_mark_opacity / 100,
+              width: 240,
+              height: 240,
+              objectFit: 'contain',
+            } as React.CSSProperties
+          }
         />
       ) : (
         <svg
@@ -18,7 +26,12 @@ export function Hero({ settings }: { settings: SiteSettings }) {
           width="360"
           height="360"
           viewBox="0 0 40 40"
-          style={{ opacity: settings.hero_mark_opacity / 100 }}
+          style={
+            {
+              opacity: settings.hero_mark_opacity / 100,
+              '--hero-mark-opacity': settings.hero_mark_opacity / 100,
+            } as React.CSSProperties
+          }
         >
           <circle className="spark" cx="27" cy="14" r="6.6" />
           <circle className="primary" cx="18" cy="21" r="11.5" />

@@ -37,7 +37,7 @@ export function ScrollBrand({ logoUrl, brandName }: { logoUrl: string; brandName
         // eslint-disable-next-line @next/next/no-img-element
         <img className="brand-logo-img" src={logoUrl} alt="" />
       ) : (
-        <Mark />
+        <Mark size={56} />
       )}
       {!logoUrl && <span className="brand-name">{brandName}</span>}
     </a>

@@ -84,7 +84,7 @@ header{
   border-bottom:1px solid rgb(from var(--gold) r g b / .18);
 }
 header nav{
-  max-width:var(--max); margin:0 auto; padding:16px 32px; min-height:62px;
+  max-width:var(--max); margin:0 auto; padding:16px 32px; min-height:88px;
   display:flex; align-items:center; position:relative;
 }
 /* .nav-brand (header only — the footer has its own separate .brand block
@@ -106,6 +106,14 @@ body.nav-scrolled .nav-brand{left:50%; transform:translate(-50%,-50%);}
 body.nav-scrolled .nav-right{opacity:0; pointer-events:none;}
 .brand{display:flex; align-items:center; gap:10px;}
 .brand-logo-img{height:30px; width:auto; display:block;}
+/* The main nav logo specifically, roughly double the base size — a
+   small circular mark reads as an indistinct blob at the base size once
+   it has real detail in it (vs. the plain two-circle default). Scoped to
+   .nav-brand only so the footer's own logo (which shares the same
+   .brand-logo-img class) isn't affected. header nav's min-height above
+   already accounts for this so nothing clips against the header
+   background. */
+.nav-brand .brand-logo-img{height:56px; max-height:100%;}
 .brand-name{font-family:var(--serif); color:var(--cream); font-size:18px; letter-spacing:.02em; font-weight:600;}
 .nav-links{display:flex; gap:34px; align-items:center;}
 .nav-links a{color:var(--muted-d); font-size:13px; font-weight:500; letter-spacing:.02em; transition:color .2s;}
@@ -138,6 +146,11 @@ body.nav-scrolled .nav-right{opacity:0; pointer-events:none;}
 @media(max-width:800px){
   .nav-burger{display:flex;}
   header nav{position:relative;}
+  /* Only reachable when no logo is uploaded (the fallback mark + text
+     name) — the icon-only case (a real logo_url) never renders this text
+     at all. Guards against the icon+wordmark combo colliding with the
+     hamburger/CTA on narrow screens regardless. */
+  .nav-brand .brand-name{display:none;}
   .nav-links:not(.nav-links-member){
     position:absolute; top:100%; left:0; right:0;
     flex-direction:column; align-items:flex-start; gap:18px;
@@ -185,12 +198,18 @@ body.nav-scrolled .nav-right{opacity:0; pointer-events:none;}
 }
 .btn-ghost:hover{border-color:var(--gold); background:rgb(from var(--gold) r g b / .08);}
 
-/* orbit intro animation */
+/* orbit intro animation — animates opacity 0 -> the configured
+   hero_mark_opacity (via --hero-mark-opacity, set inline in Hero.tsx),
+   not a hardcoded 1. With animation-fill-mode:both, the animation's own
+   final keyframe value permanently overrides any inline `opacity` style
+   once it finishes — hardcoding 1 here meant the admin's opacity setting
+   visibly worked for about 1.6s before silently snapping back to fully
+   opaque on every page load, regardless of what was configured. */
 .orbit-spark{animation:orbitIn 1.6s cubic-bezier(.2,.8,.2,1) both;}
 @keyframes orbitIn{
   0%{transform:translate(-70px,90px) scale(.4); opacity:0;}
-  70%{opacity:1;}
-  100%{transform:translate(0,0) scale(1); opacity:1;}
+  70%{opacity:var(--hero-mark-opacity, 1);}
+  100%{transform:translate(0,0) scale(1); opacity:var(--hero-mark-opacity, 1);}
 }
 @media (prefers-reduced-motion: reduce){ .orbit-spark{animation:none;} }
 
@@ -550,6 +569,47 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .opacity-preview{
   margin-top:10px; background:var(--ink); border-radius:8px; padding:24px;
   display:flex; align-items:center; justify-content:center;
+}
+
+/* The opacity slider was a native-default range input — a thin track and
+   tiny thumb, genuinely hard to grab precisely with a mouse and nearly
+   unusable with a fingertip. Rebuilt at real touch-target size, full
+   width, with a typeable % field alongside for anyone who'd rather not
+   fight a slider at all. */
+.opacity-control-row{display:flex; align-items:center; gap:16px; margin-top:6px;}
+.opacity-slider{
+  flex:1; -webkit-appearance:none; appearance:none; width:100%; height:32px; background:transparent; cursor:pointer;
+}
+.opacity-slider::-webkit-slider-runnable-track{
+  height:14px; border-radius:7px; background:var(--line-l);
+  border:1px solid var(--line-l);
+}
+.opacity-slider::-webkit-slider-thumb{
+  -webkit-appearance:none; margin-top:-13px;
+  width:40px; height:40px; border-radius:50%;
+  background:var(--gold); border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.35);
+}
+.opacity-slider::-moz-range-track{height:14px; border-radius:7px; background:var(--line-l); border:1px solid var(--line-l);}
+.opacity-slider::-moz-range-thumb{
+  width:40px; height:40px; border-radius:50%; border:3px solid #fff;
+  background:var(--gold); box-shadow:0 1px 4px rgba(0,0,0,.35);
+}
+.opacity-number-wrap{
+  display:flex; align-items:center; gap:4px; flex:none;
+  border:1px solid var(--line-l); border-radius:6px; padding:8px 10px; background:#fff;
+}
+.admin-field .opacity-number-wrap input[type=number]{
+  width:52px; border:none; padding:0; font-size:16px; text-align:right;
+  font-family:inherit; color:var(--charcoal); background:transparent;
+}
+.opacity-number-wrap input:focus{outline:none;}
+.opacity-number-wrap span{color:var(--muted-l); font-size:14px;}
+@media(max-width:700px){
+  .opacity-control-row{flex-wrap:wrap;}
+  .opacity-slider{flex-basis:100%; height:40px;}
+  .opacity-slider::-webkit-slider-thumb{width:44px; height:44px; margin-top:-15px;}
+  .opacity-slider::-moz-range-thumb{width:44px; height:44px;}
+  .opacity-number-wrap{margin-left:auto;}
 }
 .admin-field label{display:block; font-size:12px; font-weight:600; color:var(--muted-l); margin-bottom:6px;}
 .color-field-row{display:flex; gap:8px; align-items:center;}
