@@ -123,6 +123,9 @@ export default async function CheckoutSuccessPage({
   );
   diagnostics.push(`URL session_id param: ${searchParams.session_id ?? '(none)'}`);
   diagnostics.push(`Signed in as: ${session ? `${session.user.email} (${session.user.id})` : '(not signed in)'}`);
+  diagnostics.push(
+    `Price env vars: STRIPE_PRICE_WORKSHOP_LIBRARY=${process.env.STRIPE_PRICE_WORKSHOP_LIBRARY ?? '(unset)'}, STRIPE_PRICE_AUDIT_ROOM=${process.env.STRIPE_PRICE_AUDIT_ROOM ?? '(unset)'}, STRIPE_PRICE_SCOPED_ENGAGEMENT_DEPOSIT=${process.env.STRIPE_PRICE_SCOPED_ENGAGEMENT_DEPOSIT ?? '(unset)'}`
+  );
 
   if (session) {
     const { data: entitlementRow } = await supabase
