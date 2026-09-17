@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       payment_status: string;
       amount_total: number | null;
       currency: string | null;
+      customer_details: { email: string | null } | null;
     };
 
     if (session.payment_status !== 'paid') {
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
       amountTotal: session.amount_total ?? null,
       currency: session.currency ?? null,
       source: 'stripe_webhook',
+      email: session.customer_details?.email ?? null,
     });
 
     if (error) {

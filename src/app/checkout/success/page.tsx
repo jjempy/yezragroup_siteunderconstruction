@@ -47,25 +47,26 @@ function SuccessBadge() {
 
 function ConfirmationFooter({
   confirmationNumber,
-  contactEmail,
+  visitorEmail,
   isActive,
 }: {
   confirmationNumber: string | null;
-  contactEmail: string;
+  visitorEmail: string;
   isActive: boolean;
 }) {
+  const contactHref = `/contact?context=order_purchase${visitorEmail ? `&email=${encodeURIComponent(visitorEmail)}` : ''}`;
   return (
     <>
       {confirmationNumber && (
         <p style={{ marginTop: 22, fontSize: 12.5, color: 'var(--muted-d)' }}>
           Confirmation #: <span style={{ fontFamily: 'monospace' }}>{confirmationNumber}</span>
           <br />
-          Please save this for your records{!isActive && contactEmail ? ' — mention it if you reach out' : ''}.
+          Please save this for your records{!isActive ? ' — mention it if you reach out' : ''}.
         </p>
       )}
-      {!isActive && contactEmail && (
+      {!isActive && (
         <p style={{ marginTop: 8, fontSize: 12.5, color: 'var(--muted-d)' }}>
-          Questions in the meantime? <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+          Questions in the meantime? <Link href={contactHref}>Contact us</Link>
         </p>
       )}
     </>
@@ -160,6 +161,7 @@ export default async function CheckoutSuccessPage({
       amountTotal: stripeSession.amount_total ?? null,
       currency: stripeSession.currency ?? null,
       source: 'checkout_success_selfheal',
+      email: session.user.email ?? null,
     });
     if (!error) isActive = true;
     else console.error('[checkout success] self-heal grant failed:', error);
@@ -211,12 +213,7 @@ export default async function CheckoutSuccessPage({
     console.error('[checkout success] Stripe verification unavailable:', err);
   }
 
-  const { data: settings } = await supabase
-    .from('site_settings')
-    .select('contact_email, logo_url')
-    .eq('id', 'default')
-    .maybeSingle();
-  const contactEmail = settings?.contact_email || '';
+  const { data: settings } = await supabase.from('site_settings').select('logo_url').eq('id', 'default').maybeSingle();
   const copy = COPY[product];
 
   // Signed out, but Stripe confirms a real paid session with an email —
@@ -251,7 +248,7 @@ export default async function CheckoutSuccessPage({
                 Sign In
               </Link>
             </div>
-            <ConfirmationFooter confirmationNumber={confirmationNumber} contactEmail={contactEmail} isActive={false} />
+            <ConfirmationFooter confirmationNumber={confirmationNumber} visitorEmail={claimEmail ?? ''} isActive={false} />
           </div>
         </div>
       </>
@@ -294,7 +291,7 @@ export default async function CheckoutSuccessPage({
               </div>
             </>
           )}
-          <ConfirmationFooter confirmationNumber={confirmationNumber} contactEmail={contactEmail} isActive={isActive} />
+          <ConfirmationFooter confirmationNumber={confirmationNumber} visitorEmail={session.user.email ?? ''} isActive={isActive} />
           {!isActive && session.profile?.role === 'admin' && (
             <div
               style={{

@@ -15,12 +15,11 @@ export default async function PrivacyPage() {
   const supabase = createClient();
   const { data: settings } = await supabase
     .from('site_settings')
-    .select('brand_name, contact_email, logo_url')
+    .select('brand_name, logo_url')
     .eq('id', 'default')
     .maybeSingle();
 
   const brand = settings?.brand_name || 'Orchemet';
-  const email = settings?.contact_email || '';
   const updated = 'September 2026';
 
   return (
@@ -35,8 +34,8 @@ export default async function PrivacyPage() {
           <div className="legal-content" style={{ color: 'var(--charcoal)', fontSize: 15, lineHeight: 1.75 }}>
             <p>
               This policy explains what {brand} collects when you use this site, why, and who it&apos;s
-              shared with. It&apos;s written in plain language on purpose — if anything here is unclear,
-              {email ? <> email <a href={`mailto:${email}`}>{email}</a></> : ' reach out'} and ask.
+              shared with. It&apos;s written in plain language on purpose — if anything here is unclear,{' '}
+              <a href="/contact">reach out</a> and ask.
             </p>
 
             <h2>What we collect</h2>
@@ -70,9 +69,9 @@ export default async function PrivacyPage() {
               <li>You can update your name and phone number any time from your Account page.</li>
               <li>You can opt out of marketing email at signup, or by contacting us.</li>
               <li>
-                You can ask us to delete your account and associated personal data at any time
-                {email ? <> — email <a href={`mailto:${email}`}>{email}</a></> : ''}. Purchase and financial
-                records may be retained as required by law even after an account is deleted.
+                You can ask us to delete your account and associated personal data at any time — reach out
+                via <a href="/contact">the contact form</a>. Purchase and financial records may be retained
+                as required by law even after an account is deleted.
               </li>
             </ul>
 
@@ -91,8 +90,7 @@ export default async function PrivacyPage() {
 
             <h2>Contact</h2>
             <p>
-              Questions about this policy or your data:{' '}
-              {email ? <a href={`mailto:${email}`}>{email}</a> : 'use the contact information on the homepage'}.
+              Questions about this policy or your data: <a href="/contact">contact us</a>.
             </p>
           </div>
         </div>

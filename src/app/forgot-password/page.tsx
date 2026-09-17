@@ -47,10 +47,18 @@ export default function ForgotPasswordPage() {
         <p className="sub">Enter your email and we&apos;ll send you a link to reset your password.</p>
         {error && <div className="auth-error">{error}</div>}
         {sent ? (
-          <div className="auth-notice">
-            If an account exists for that email, a reset link is on its way. It may take a minute to
-            arrive.
-          </div>
+          <>
+            <div className="auth-notice">
+              If an account exists for that email, a reset link is on its way. It may take a minute to
+              arrive.
+            </div>
+            <p style={{ fontSize: 12.5, color: 'var(--muted-d)' }}>
+              Didn&apos;t get it?{' '}
+              <Link href={`/contact?context=account_access${email ? `&email=${encodeURIComponent(email)}` : ''}`}>
+                Contact us
+              </Link>
+            </p>
+          </>
         ) : (
           <form onSubmit={handleSubmit}>
             <div className="field">

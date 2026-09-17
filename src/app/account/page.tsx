@@ -7,6 +7,19 @@ import type { Entitlement, LadderTier, PaidVideoRow } from '@/types/database';
 import { formatPhoneDisplay } from '@/lib/phone';
 import { PRODUCT_LABELS } from '@/lib/entitlements';
 
+// The old default copy ("Details from your engagement will show up here")
+// read the same whether someone had paid a full deposit or nothing at
+// all — most misleadingly, Scoped Engagement showed up looking like full
+// access when it's actually just the $2,000 deposit, before any scoping
+// call has happened. Each tier now says plainly what stage they're
+// actually at when the admin hasn't added a specific note yet.
+const ENTITLEMENT_STATUS_COPY: Record<string, string> = {
+  audit_room: 'Seat reserved. Session date and details will show up here once scheduled.',
+  scoped_engagement:
+    "Deposit received — this reserves your engagement, it isn't full access yet. We'll reach out personally to scope the work; the engagement details and remaining-balance plan will show up here once that's set.",
+  vip: 'Application received. Details will show up here once next steps are confirmed.',
+};
+
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
@@ -64,8 +77,6 @@ export default async function AccountPage({
     const ageMs = Date.now() - new Date(v.created_at).getTime();
     return ageMs < 1000 * 60 * 60 * 24 * 30;
   });
-
-  const activeLabels = [...byProduct.keys()].map((p) => PRODUCT_LABELS[p] ?? p);
 
   return (
     <>
@@ -137,20 +148,6 @@ export default async function AccountPage({
             </div>
           </div>
 
-          {/* ---------- Entitlement status ---------- */}
-          <div className="account-module">
-            <h2>What You Have Access To</h2>
-            {activeLabels.length === 0 ? (
-              <p className="sub" style={{ margin: 0 }}>Nothing yet — see Ways to Work Together below.</p>
-            ) : (
-              <ul style={{ listStyle: 'none', color: 'var(--cream)', fontSize: 15, lineHeight: 1.9 }}>
-                {activeLabels.map((label) => (
-                  <li key={label}>{label}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-
           {/* ---------- Workshop Library ---------- */}
           <div className="account-module">
             <h2>Workshop Library</h2>
@@ -216,8 +213,10 @@ export default async function AccountPage({
                   </p>
                 ) : (
                   <p className="sub" style={{ margin: 0 }}>
-                    Details from your engagement will show up here — reach out if you&apos;re expecting
-                    something specific.
+                    {ENTITLEMENT_STATUS_COPY[product]}{' '}
+                    <Link href={`/contact?context=order_purchase&email=${encodeURIComponent(user.email ?? '')}`}>
+                      Expecting something specific?
+                    </Link>
                   </p>
                 )}
                 {product === 'audit_room' && (
@@ -301,6 +300,13 @@ export default async function AccountPage({
                 ))}
               </div>
             )}
+            <p className="sub" style={{ marginTop: 14, marginBottom: 0 }}>
+              Missing a purchase, or something looks wrong?{' '}
+              <Link href={`/contact?context=order_purchase&email=${encodeURIComponent(user.email ?? '')}`}>
+                Let us know
+              </Link>
+              .
+            </p>
           </div>
         </div>
       </div>

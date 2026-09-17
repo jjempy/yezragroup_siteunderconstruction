@@ -37,7 +37,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
             </div>
             <div className="foot-col">
               <h4>Connect</h4>
-              {settings.contact_email && <a href={`mailto:${settings.contact_email}`}>{settings.contact_email}</a>}
+              <Link href="/contact">Contact Us</Link>
               {settings.contact_phone && <a href={`tel:${settings.contact_phone}`}>{settings.contact_phone}</a>}
               {settings.youtube_channel_url && (
                 <a href={settings.youtube_channel_url} target="_blank" rel="noopener noreferrer">

@@ -13,6 +13,7 @@ type NavEntry = NavLink | { group: string; items: NavLink[] };
 const NAV: NavEntry[] = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/analytics', label: 'Analytics' },
+  { href: '/admin/messages', label: 'Messages' },
   {
     group: 'Site',
     items: [

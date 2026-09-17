@@ -146,6 +146,23 @@ export interface MasterclassRsvp {
   reminder_sent_at: string | null;
 }
 
+export type ContactReason =
+  | 'general'
+  | 'account_access'
+  | 'order_purchase'
+  | 'masterclass_schedule'
+  | 'other';
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  reason: string;
+  message: string;
+  status: 'new' | 'read' | 'resolved';
+  created_at: string;
+}
+
 export interface Testimonial {
   id: string;
   sort_order: number;
@@ -167,6 +184,7 @@ export interface Database {
       videos: { Row: VideoRow; Insert: Partial<VideoRow>; Update: Partial<VideoRow> };
       calendar_sessions: { Row: CalendarSession; Insert: Partial<CalendarSession>; Update: Partial<CalendarSession> };
       masterclass_rsvps: { Row: MasterclassRsvp; Insert: Partial<MasterclassRsvp>; Update: Partial<MasterclassRsvp> };
+      contact_messages: { Row: ContactMessage; Insert: Partial<ContactMessage>; Update: Partial<ContactMessage> };
     };
   };
 }

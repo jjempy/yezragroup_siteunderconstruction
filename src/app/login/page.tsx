@@ -82,6 +82,15 @@ function LoginForm() {
           <Link href="/forgot-password">Forgot password?</Link>
           <Link href={`/signup${redirect ? `?redirect=${redirect}` : ''}`}>Need an account? Sign up</Link>
         </div>
+        <p style={{ marginTop: 16, fontSize: 12.5, color: 'var(--muted-d)', textAlign: 'center' }}>
+          Still can&apos;t get in?{' '}
+          <Link
+            href={`/contact?context=account_access${email ? `&email=${encodeURIComponent(email)}` : ''}`}
+            style={{ textDecoration: 'underline' }}
+          >
+            Contact us
+          </Link>
+        </p>
       </div>
       </div>
     </>

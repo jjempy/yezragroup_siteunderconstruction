@@ -95,3 +95,74 @@ export function renderRsvpReminderEmail(session: {
     </div>
   </div>`;
 }
+
+export function formatMoney(amountTotal: number | null, currency: string | null) {
+  if (amountTotal == null || !currency) return null;
+  try {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(
+      amountTotal / 100
+    );
+  } catch {
+    return null;
+  }
+}
+
+/** Sent once, the first time an entitlement is granted for a purchase —
+ * see grant-entitlement.ts for the dedup guard that keeps a webhook retry
+ * or a success-page refresh from sending this twice. */
+export function renderPurchaseConfirmationEmail(order: {
+  productLabel: string;
+  amountTotal: number | null;
+  currency: string | null;
+}) {
+  const price = formatMoney(order.amountTotal, order.currency);
+  return `
+  <div style="${EMAIL_WRAP_STYLE}">
+    <div style="${HEADER_STYLE}"><strong style="font-size:18px;">Orchemet</strong></div>
+    <div style="${BODY_STYLE}">
+      <h1 style="font-size:22px;margin:0 0 16px;">Order confirmed.</h1>
+      <div style="background:#fff;border:1px solid #E1DACB;border-radius:6px;padding:18px 20px;margin-bottom:20px;">
+        <div style="font-size:16px;font-weight:600;margin-bottom:4px;">${order.productLabel}</div>
+        ${price ? `<div style="font-size:14px;color:#5C6F72;">${price}</div>` : ''}
+      </div>
+      <p style="font-size:14px;line-height:1.6;color:#5C6F72;">This is now on your account's order history. Sign in any time to view it.</p>
+    </div>
+  </div>`;
+}
+
+export const CONTACT_REASON_LABELS: Record<string, string> = {
+  general: 'General question',
+  account_access: "Can't access my account",
+  order_purchase: 'Order / purchase issue',
+  masterclass_schedule: 'Masterclass schedule question',
+  other: 'Other',
+};
+
+/** Notifies the admin inbox (site_settings.contact_email) the moment a
+ * visitor submits the contact form — reply_to is set to the visitor's own
+ * address so replying from a normal inbox goes straight back to them. */
+export function renderContactNotificationEmail(msg: { name: string; email: string; reason: string; message: string }) {
+  return `
+  <div style="${EMAIL_WRAP_STYLE}">
+    <div style="${HEADER_STYLE}"><strong style="font-size:18px;">New contact message</strong></div>
+    <div style="${BODY_STYLE}">
+      <p style="font-size:14px;color:#5C6F72;margin:0 0 4px;">${CONTACT_REASON_LABELS[msg.reason] ?? msg.reason}</p>
+      <p style="font-size:16px;font-weight:600;margin:0 0 16px;">${msg.name} — ${msg.email}</p>
+      <div style="background:#fff;border:1px solid #E1DACB;border-radius:6px;padding:18px 20px;white-space:pre-line;font-size:14.5px;line-height:1.6;">${msg.message}</div>
+    </div>
+  </div>`;
+}
+
+/** Auto-acknowledgment so a visitor isn't left wondering whether the form
+ * actually went anywhere — no promise of a specific response time, since
+ * that's not something the code can guarantee. */
+export function renderContactAckEmail(msg: { name: string }) {
+  return `
+  <div style="${EMAIL_WRAP_STYLE}">
+    <div style="${HEADER_STYLE}"><strong style="font-size:18px;">Orchemet</strong></div>
+    <div style="${BODY_STYLE}">
+      <h1 style="font-size:22px;margin:0 0 16px;">Got it, ${msg.name.split(' ')[0] || 'thanks'}.</h1>
+      <p style="font-size:15px;line-height:1.6;margin:0;">Your message came through — someone will get back to you personally.</p>
+    </div>
+  </div>`;
+}

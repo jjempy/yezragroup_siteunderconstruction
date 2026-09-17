@@ -1,5 +1,7 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sendEmail, renderPurchaseConfirmationEmail } from '@/lib/email';
+import { PRODUCT_LABELS } from '@/lib/entitlements';
 
 /** Writes (or reactivates) one entitlement row. Used by both the Stripe
  * webhook and the checkout success page's same-request self-heal — same
@@ -13,8 +15,25 @@ export async function grantEntitlement(params: {
   amountTotal: number | null;
   currency: string | null;
   source: string;
+  // Optional: sends a one-time purchase confirmation email the first time
+  // this (user, product) pair is granted. Omitted by callers that don't
+  // have an email handy — that's fine, it just skips the send rather than
+  // ever blocking the grant itself over it.
+  email?: string | null;
 }): Promise<{ error: string | null }> {
   const supabase = createAdminClient();
+
+  // Both the webhook and the success-page self-heal can call this more
+  // than once for the same purchase (Stripe retries, a page refresh) —
+  // checking for a pre-existing row first is what keeps the confirmation
+  // email a one-time send instead of firing on every duplicate call.
+  const { data: existing } = await supabase
+    .from('entitlements')
+    .select('id')
+    .eq('user_id', params.userId)
+    .eq('product', params.product)
+    .maybeSingle();
+
   const grant: Record<string, unknown> = {
     user_id: params.userId,
     product: params.product,
@@ -34,6 +53,18 @@ export async function grantEntitlement(params: {
     delete grant.amount_total;
     delete grant.currency;
     ({ error } = await supabase.from('entitlements').upsert(grant, { onConflict: 'user_id,product' }));
+  }
+
+  if (!error && !existing && params.email) {
+    await sendEmail({
+      to: params.email,
+      subject: `Order confirmed: ${PRODUCT_LABELS[params.product] ?? params.product}`,
+      html: renderPurchaseConfirmationEmail({
+        productLabel: PRODUCT_LABELS[params.product] ?? params.product,
+        amountTotal: params.amountTotal,
+        currency: params.currency,
+      }),
+    });
   }
 
   return { error: error?.message ?? null };

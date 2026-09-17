@@ -15,12 +15,11 @@ export default async function TermsPage() {
   const supabase = createClient();
   const { data: settings } = await supabase
     .from('site_settings')
-    .select('brand_name, contact_email, logo_url')
+    .select('brand_name, logo_url')
     .eq('id', 'default')
     .maybeSingle();
 
   const brand = settings?.brand_name || 'Orchemet';
-  const email = settings?.contact_email || '';
   const updated = 'September 2026';
 
   return (
@@ -55,8 +54,8 @@ export default async function TermsPage() {
             <p>
               The Workshop Library is sold as a digital product with immediate access on purchase. Because
               of that immediate access, purchases are generally final — but if something&apos;s genuinely
-              wrong (a technical issue, a billing error, a duplicate charge), reach out
-              {email ? <> at <a href={`mailto:${email}`}>{email}</a></> : ''} and we&apos;ll sort it out.
+              wrong (a technical issue, a billing error, a duplicate charge),{' '}
+              <a href="/contact?context=order_purchase">reach out</a> and we&apos;ll sort it out.
               Refund terms for the higher-touch engagements (the Audit Room, Scoped Engagements, VIP) are
               set individually as part of that engagement.
             </p>
@@ -96,8 +95,7 @@ export default async function TermsPage() {
 
             <h2>Contact</h2>
             <p>
-              Questions about these terms:{' '}
-              {email ? <a href={`mailto:${email}`}>{email}</a> : 'use the contact information on the homepage'}.
+              Questions about these terms: <a href="/contact">contact us</a>.
             </p>
           </div>
         </div>

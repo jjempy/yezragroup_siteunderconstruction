@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { CalendarSession, SiteSettings } from '@/types/database';
 import { CalendarCard } from './CalendarCard';
 
@@ -23,6 +24,13 @@ export function Calendar({
             <CalendarCard session={s} rsvpCount={rsvpCounts[s.id] ?? 0} key={s.id} />
           ))}
         </div>
+        <p style={{ marginTop: 20, fontSize: 13.5, color: 'var(--muted-d)' }}>
+          Don&apos;t see a date that works, or looking for a specific month?{' '}
+          <Link href="/contact?context=masterclass_schedule" style={{ textDecoration: 'underline' }}>
+            Ask us
+          </Link>
+          .
+        </p>
       </div>
     </section>
   );
