@@ -1,6 +1,6 @@
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { sendTestEmail } from './actions';
+import { SendTestEmailButton } from '@/components/admin/SendTestEmailButton';
 
 const BUTTONS: { type: string; label: string; hint: string }[] = [
   { type: 'rsvp_confirmation', label: 'RSVP Confirmation', hint: 'Sent instantly when someone reserves a free masterclass seat.' },
@@ -10,11 +10,7 @@ const BUTTONS: { type: string; label: string; hint: string }[] = [
   { type: 'contact_ack', label: 'Contact Form — Auto-Reply to Visitor', hint: 'What the visitor gets back immediately after submitting.' },
 ];
 
-export default async function EmailPreviewsPage({
-  searchParams,
-}: {
-  searchParams: { sent?: string; error?: string };
-}) {
+export default async function EmailPreviewsPage() {
   await requireAdmin();
   const supabase = createClient();
   const { data: settings } = await supabase
@@ -28,14 +24,13 @@ export default async function EmailPreviewsPage({
       <h1>Email Previews</h1>
       <p className="sub">
         Sends a real email — using sample data, subject line prefixed &quot;TEST&quot; — to{' '}
-        <strong>{settings?.contact_email || '(no admin email on file yet — set it in Hero & About)'}</strong>. Use
-        this to check a branding/design change in an actual inbox without waiting for a real RSVP, purchase, or
-        contact form submission.
+        <strong>{settings?.contact_email || '(no admin email on file yet — set it in Hero & About)'}</strong>{' '}
+        (Admin → Hero & About → Contact Email — change it there to change where these go). Use this to check a
+        branding/design change in an actual inbox without waiting for a real RSVP, purchase, or contact form
+        submission.
       </p>
-      {searchParams.sent && <p className="admin-toast ok">Sent — check your inbox (and spam, on a new domain).</p>}
-      {searchParams.error && <p className="admin-toast err">{searchParams.error}</p>}
       <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {BUTTONS.map((b) => (
+        {BUTTONS.map((b, i) => (
           <div
             key={b.type}
             style={{
@@ -44,19 +39,14 @@ export default async function EmailPreviewsPage({
               alignItems: 'center',
               gap: 16,
               paddingBottom: 14,
-              borderBottom: '1px solid var(--line-l)',
+              borderBottom: i < BUTTONS.length - 1 ? '1px solid var(--line-l)' : undefined,
             }}
           >
             <div>
               <div style={{ fontWeight: 600, fontSize: 14.5 }}>{b.label}</div>
               <div style={{ fontSize: 12.5, color: 'var(--muted-l)' }}>{b.hint}</div>
             </div>
-            <form action={sendTestEmail}>
-              <input type="hidden" name="type" value={b.type} />
-              <button className="admin-btn secondary" type="submit" style={{ whiteSpace: 'nowrap' }}>
-                Send Test
-              </button>
-            </form>
+            <SendTestEmailButton type={b.type} />
           </div>
         ))}
       </div>

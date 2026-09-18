@@ -45,6 +45,7 @@ export interface SiteSettings {
   heading_font: string;
   body_font: string;
   heading_font_file_url: string;
+  email_logo_url: string;
   founder_photo_url: string;
   ga4_measurement_id: string;
   youtube_channel_url: string;

@@ -1,6 +1,5 @@
 'use server';
 
-import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -14,9 +13,9 @@ import {
 } from '@/lib/email';
 
 const SAMPLE_SESSION = {
-  topic: 'Sample: The 5 Blind Spots That Are Quietly Costing You the Business You’re Building',
-  date_text: 'Sample Date — 10:00 AM – 12:00 PM',
-  location: '123 Sample Street, Sample City',
+  topic: 'SAMPLE DATA — The 5 Blind Spots That Are Quietly Costing You the Business You’re Building',
+  date_text: 'SAMPLE DATE — Not a real session',
+  location: 'SAMPLE ADDRESS — 123 Placeholder St, Placeholder City',
 };
 
 const SAMPLE_CONTACT_MSG = {
@@ -59,16 +58,22 @@ function isEmailType(value: string): value is EmailType {
   return value in EMAIL_TYPES;
 }
 
+export type SendTestEmailState = { ok: boolean; message: string } | null;
+
 /** Sends one real email — using sample data, clearly marked TEST in the
  * subject — to the admin address on file (site_settings.contact_email),
  * so a design/branding tweak can be checked in a real inbox without
  * waiting for a real RSVP, purchase, or contact submission to trigger it
- * naturally. Admin-only; never touches real data. */
-export async function sendTestEmail(formData: FormData) {
+ * naturally. Admin-only; never touches real data.
+ *
+ * Returns a result instead of redirecting (used with useFormState) so
+ * the button can show an inline "Sent" confirmation without a full page
+ * navigation resetting every other button's state. */
+export async function sendTestEmail(_prev: SendTestEmailState, formData: FormData): Promise<SendTestEmailState> {
   await requireAdmin();
   const type = formData.get('type') as string;
   if (!isEmailType(type)) {
-    redirect('/admin/email-previews?error=Unknown+email+type');
+    return { ok: false, message: 'Unknown email type.' };
   }
 
   const supabase = createClient();
@@ -79,10 +84,7 @@ export async function sendTestEmail(formData: FormData) {
     .maybeSingle();
   const to = settings?.contact_email;
   if (!to) {
-    redirect(
-      '/admin/email-previews?error=' +
-        encodeURIComponent('No admin email on file — set Contact Email in Admin → Hero & About first.')
-    );
+    return { ok: false, message: 'No admin email on file — set Contact Email in Admin → Hero & About first.' };
   }
 
   const branding = await getEmailBranding();
@@ -90,11 +92,8 @@ export async function sendTestEmail(formData: FormData) {
   const { sent } = await sendEmail({ to, subject, html: render(branding) });
 
   if (!sent) {
-    redirect(
-      '/admin/email-previews?error=' +
-        encodeURIComponent('Send failed — check RESEND_API_KEY/RESEND_FROM_EMAIL are set and redeployed.')
-    );
+    return { ok: false, message: 'Send failed — check RESEND_API_KEY/RESEND_FROM_EMAIL are set and redeployed.' };
   }
 
-  redirect(`/admin/email-previews?sent=${type}`);
+  return { ok: true, message: 'Sent!' };
 }

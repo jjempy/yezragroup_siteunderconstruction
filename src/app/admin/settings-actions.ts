@@ -10,6 +10,7 @@ import { updateDroppingMissingColumns } from '@/lib/safe-update';
 const BRAND_TEXT_FIELDS = [
   'brand_name',
   'logo_url',
+  'email_logo_url',
   'color_gold',
   'color_gold_deep',
   'color_ink',
@@ -93,6 +94,15 @@ export async function updateBrandSettings(formData: FormData) {
   // font, say) — the "Heading Font" text field still names it (used as
   // the CSS font-family), but the actual glyphs come from this file
   // instead of a fonts.googleapis.com request. See layout.tsx.
+  const emailLogoFile = formData.get('email_logo_file') as File | null;
+  const { url: uploadedEmailLogoUrl, error: emailLogoUploadError } = await uploadPublicImage(
+    supabase,
+    emailLogoFile,
+    'email-logo'
+  );
+  if (emailLogoUploadError) failure('/admin/brand', `Email logo upload failed: ${emailLogoUploadError}`);
+  if (uploadedEmailLogoUrl) update.email_logo_url = uploadedEmailLogoUrl;
+
   const headingFontFile = formData.get('heading_font_file') as File | null;
   const { url: uploadedHeadingFontUrl, error: headingFontUploadError } = await uploadPublicFontFile(
     supabase,

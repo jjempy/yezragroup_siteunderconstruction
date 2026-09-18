@@ -44,6 +44,16 @@ export default async function BrandAdminPage({
           previewHeight={40}
         />
         <ImageUploadPreview
+          label="Email Header Logo"
+          fileName="email_logo_file"
+          urlName="email_logo_url"
+          currentUrl={settings.email_logo_url}
+          hint="A separate, larger logo used only in the header of emails (RSVP/purchase confirmations, contact replies) — the business-card/flyer version with a tagline works well here. Leave empty to use the small site icon above instead."
+          urlPlaceholder="https://…/email-logo.png"
+          urlHint="Only used if you don't upload a file above. Leave blank to fall back to the Logo field above."
+          previewHeight={48}
+        />
+        <ImageUploadPreview
           label="Hero Background Mark"
           fileName="hero_mark_file"
           urlName="hero_mark_url"
@@ -53,6 +63,8 @@ export default async function BrandAdminPage({
           urlHint="Only used if you don't upload a file above. Leave blank to use the default mark."
           previewHeight={80}
           detectContrastBg
+          inkColor={settings.color_ink}
+          creamColor={settings.color_cream}
         />
         <HeroMarkOpacityField opacity={settings.hero_mark_opacity} markUrl={settings.hero_mark_url} />
         <BrandColorFields

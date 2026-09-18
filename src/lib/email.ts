@@ -48,14 +48,18 @@ export async function sendEmail({
 export interface EmailBranding {
   brandName: string;
   logoUrl: string | null;
+  emailLogoUrl: string | null;
   ink: string;
   cream: string;
   gold: string;
 }
 
+const SITE_URL = 'https://orchemet.com';
+
 const DEFAULT_BRANDING: EmailBranding = {
   brandName: 'Orchemet',
   logoUrl: null,
+  emailLogoUrl: null,
   ink: '#0F1416',
   cream: '#F3EEE3',
   gold: '#C6A045',
@@ -71,13 +75,14 @@ export async function getEmailBranding(): Promise<EmailBranding> {
     const supabase = createClient();
     const { data } = await supabase
       .from('site_settings')
-      .select('brand_name, logo_url, color_ink, color_cream, color_gold')
+      .select('brand_name, logo_url, email_logo_url, color_ink, color_cream, color_gold')
       .eq('id', 'default')
       .maybeSingle();
     if (!data) return DEFAULT_BRANDING;
     return {
       brandName: data.brand_name || DEFAULT_BRANDING.brandName,
       logoUrl: data.logo_url || null,
+      emailLogoUrl: data.email_logo_url || null,
       ink: data.color_ink || DEFAULT_BRANDING.ink,
       cream: data.color_cream || DEFAULT_BRANDING.cream,
       gold: data.color_gold || DEFAULT_BRANDING.gold,
@@ -102,15 +107,24 @@ function buttonStyle(b: EmailBranding) {
   return `display:inline-block;background:${b.gold};color:${b.ink};padding:13px 24px;border-radius:2px;font-weight:600;text-decoration:none;margin-top:16px;`;
 }
 
+// A dedicated, larger email lockup (business-card/flyer logo, tagline and
+// all) if one's set — it's already a full brand mark, so no redundant
+// "Orchemet" text alongside it. Otherwise falls back to the small site
+// icon + brand name, same as before. Either way the whole header links
+// back to the site, like every other page's logo already does.
 function emailHeader(b: EmailBranding) {
-  return `
-    <div style="background:${b.ink};color:${b.cream};padding:22px 32px;display:flex;align-items:center;gap:10px;">
-      ${
+  const inner = b.emailLogoUrl
+    ? `<img src="${b.emailLogoUrl}" height="48" style="display:block;object-fit:contain;max-width:100%;" alt="${b.brandName}" />`
+    : `${
         b.logoUrl
           ? `<img src="${b.logoUrl}" width="28" height="28" style="display:block;object-fit:contain;border-radius:4px;" alt="" />`
           : ''
-      }
-      <strong style="font-size:18px;">${b.brandName}</strong>
+      }<strong style="font-size:18px;">${b.brandName}</strong>`;
+  return `
+    <div style="background:${b.ink};color:${b.cream};padding:22px 32px;">
+      <a href="${SITE_URL}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:${b.cream};">
+        ${inner}
+      </a>
     </div>`;
 }
 
