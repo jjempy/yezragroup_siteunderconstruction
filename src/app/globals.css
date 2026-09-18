@@ -558,6 +558,7 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
     background:var(--ink); color:var(--cream); border:none; padding:16px 20px;
     font-size:14px; font-weight:600; font-family:inherit; cursor:pointer;
   }
+  .admin-nav-toggle-arrow{font-size:22px; line-height:1;}
   .admin-nav-list{display:none; padding:8px 0 16px;}
   .admin-nav-list.open{display:block;}
 }
@@ -710,6 +711,8 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 .agenda-jump-pill span{color:var(--muted-l); font-weight:500;}
 .agenda-add-summary{cursor:pointer; font-weight:600; color:var(--gold-deep); font-size:14px; list-style:none;}
 .agenda-add-summary::-webkit-details-marker{display:none;}
+.agenda-add-summary::before{content:'▸'; display:inline-block; font-size:20px; color:var(--gold-deep); margin-right:6px; vertical-align:-2px;}
+details[open] > .agenda-add-summary::before{content:'▾';}
 .agenda-group{margin-bottom:36px; scroll-margin-top:20px;}
 .agenda-group-title{
   font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
@@ -728,7 +731,11 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
   gap:16px; flex-wrap:wrap; font-size:14px;
 }
 .agenda-item summary::-webkit-details-marker{display:none;}
-.agenda-item summary::before{content:'▸'; color:var(--muted-l); font-size:11px; margin-right:2px;}
+/* Was 11px — practically invisible, and easy to miss as the thing that
+   tells you this whole row expands. */
+.agenda-item summary::before{
+  content:'▸'; display:inline-block; color:var(--gold-deep); font-size:22px; margin-right:6px; vertical-align:-3px;
+}
 .agenda-item[open] summary::before{content:'▾';}
 .agenda-item-date{font-weight:700; color:var(--charcoal); min-width:150px;}
 .agenda-item-topic{color:var(--muted-l); flex:1; min-width:140px;}

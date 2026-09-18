@@ -64,7 +64,7 @@ export function AdminNav() {
         aria-expanded={open}
       >
         <span>{current?.label ?? 'Menu'}</span>
-        <span aria-hidden="true">{open ? '▲' : '▾'}</span>
+        <span aria-hidden="true" className="admin-nav-toggle-arrow">{open ? '▲' : '▾'}</span>
       </button>
       <nav className={`admin-nav-list${open ? ' open' : ''}`}>
         {NAV.map((entry) =>
