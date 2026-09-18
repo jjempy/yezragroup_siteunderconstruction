@@ -1,6 +1,6 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { sendEmail, renderPurchaseConfirmationEmail } from '@/lib/email';
+import { sendEmail, renderPurchaseConfirmationEmail, getEmailBranding } from '@/lib/email';
 import { PRODUCT_LABELS } from '@/lib/entitlements';
 
 /** Writes (or reactivates) one entitlement row. Used by both the Stripe
@@ -56,14 +56,18 @@ export async function grantEntitlement(params: {
   }
 
   if (!error && !existing && params.email) {
+    const branding = await getEmailBranding();
     await sendEmail({
       to: params.email,
       subject: `Order confirmed: ${PRODUCT_LABELS[params.product] ?? params.product}`,
-      html: renderPurchaseConfirmationEmail({
-        productLabel: PRODUCT_LABELS[params.product] ?? params.product,
-        amountTotal: params.amountTotal,
-        currency: params.currency,
-      }),
+      html: renderPurchaseConfirmationEmail(
+        {
+          productLabel: PRODUCT_LABELS[params.product] ?? params.product,
+          amountTotal: params.amountTotal,
+          currency: params.currency,
+        },
+        branding
+      ),
     });
   }
 

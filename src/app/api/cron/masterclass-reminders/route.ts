@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { sendEmail, renderRsvpReminderEmail } from '@/lib/email';
+import { sendEmail, renderRsvpReminderEmail, getEmailBranding } from '@/lib/email';
 import type { CalendarSession, MasterclassRsvp } from '@/types/database';
 
 export const runtime = 'nodejs';
@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = createAdminClient();
+  const branding = await getEmailBranding();
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
       const { sent: ok } = await sendEmail({
         to: rsvp.email,
         subject: `Tomorrow: ${session.topic}`,
-        html: renderRsvpReminderEmail(session),
+        html: renderRsvpReminderEmail(session, branding),
       });
       if (ok) {
         await admin

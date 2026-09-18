@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { sendEmail, renderContactNotificationEmail, renderContactAckEmail } from '@/lib/email';
+import { sendEmail, renderContactNotificationEmail, renderContactAckEmail, getEmailBranding } from '@/lib/email';
 
 function failure(message: string): never {
   redirect(`/contact?error=${encodeURIComponent(message)}`);
@@ -41,18 +41,19 @@ export async function submitContactMessage(formData: FormData) {
 
   // Best-effort — never fail the submission itself over an email hiccup;
   // it's already safely recorded in contact_messages either way.
+  const branding = await getEmailBranding();
   if (settings?.contact_email) {
     await sendEmail({
       to: settings.contact_email,
       subject: `New contact message — ${name}`,
-      html: renderContactNotificationEmail({ name, email, reason, message }),
+      html: renderContactNotificationEmail({ name, email, reason, message }, branding),
       replyTo: email,
     });
   }
   await sendEmail({
     to: email,
     subject: "We've got your message",
-    html: renderContactAckEmail({ name }),
+    html: renderContactAckEmail({ name }, branding),
   });
 
   redirect('/contact?sent=1');
