@@ -64,6 +64,9 @@ function ConfirmationFooter({
           Please save this for your records{!isActive ? ' — mention it if you reach out' : ''}.
         </p>
       )}
+      <p style={{ marginTop: 8, fontSize: 12.5, color: 'var(--muted-d)' }}>
+        A confirmation email is on its way — check spam if it doesn&apos;t show up in a few minutes.
+      </p>
       {!isActive && (
         <p style={{ marginTop: 8, fontSize: 12.5, color: 'var(--muted-d)' }}>
           Questions in the meantime?{' '}

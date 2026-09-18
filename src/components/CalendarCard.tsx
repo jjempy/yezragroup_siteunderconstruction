@@ -62,7 +62,9 @@ export function CalendarCard({ session, rsvpCount }: { session: CalendarSession;
 
       {status === 'done' ? (
         <div className="cal-rsvp-note" style={{ color: 'var(--gold-bright)' }}>
-          You&apos;re on the list — check your email for confirmation. See you there.
+          You&apos;re on the list — check your email for confirmation (it can land in spam the first time,
+          especially from a brand-new address — worth checking there if it doesn&apos;t show up). See you
+          there.
         </div>
       ) : isFull ? (
         <div className="cal-rsvp-full">
