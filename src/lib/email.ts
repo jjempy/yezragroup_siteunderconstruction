@@ -148,21 +148,36 @@ function locationLine(location: string) {
   return `<a href="${url}" style="font-size:14px;color:#5C6F72;text-decoration:underline;">${location}</a>`;
 }
 
-function calendarButtonsBlock(session: CalendarInviteInput, b: EmailBranding, ctaLabel: string) {
+function calendarButtonsBlock(session: CalendarInviteInput, b: EmailBranding, sectionHeading: string) {
   const invite = buildCalendarInvite(session);
   if (!invite) return '';
   const ghostBtn =
     `display:inline-block;border:1px solid #C9BEA2;color:#3A3F33;padding:10px 18px;` +
     `border-radius:2px;font-weight:600;text-decoration:none;font-size:13.5px;margin-top:10px;margin-right:8px;`;
+  // The .ics attachment on this email is the smoothest path for anyone on
+  // an iPhone/Apple Calendar — including Gmail's own iOS app, where
+  // Google Calendar's web link opens Google's own (often desktop-styled)
+  // web app in a browser rather than adding anything locally. Leading
+  // with that instead of burying it under the web links as an
+  // afterthought, since it's the best experience for the largest chunk
+  // of people opening this on a phone.
   return `
     <div style="margin-top:20px;">
-      <div style="font-size:13px;font-weight:600;color:#3A3F33;margin-bottom:2px;">${ctaLabel}</div>
+      <div style="font-size:13px;font-weight:600;color:#3A3F33;margin-bottom:8px;">${sectionHeading}</div>
+      <div
+        style="background:#fff;border:1px solid #C9BEA2;border-radius:6px;padding:14px 16px;margin-bottom:12px;"
+      >
+        <div style="font-size:13.5px;font-weight:600;color:#3A3F33;margin-bottom:2px;">
+          📅 On iPhone or use Apple Calendar?
+        </div>
+        <div style="font-size:13px;color:#5C6F72;line-height:1.5;">
+          Tap the calendar invite attached to this email (<strong>invite.ics</strong>) — it adds the event
+          directly, including a reminder 1 hour before, right on your device.
+        </div>
+      </div>
+      <div style="font-size:12.5px;color:#8a9598;margin-bottom:2px;">Or from the web:</div>
       <a href="${invite.googleUrl}" style="${ghostBtn}">Google Calendar</a>
       <a href="${invite.outlookUrl}" style="${ghostBtn}">Outlook</a>
-      <div style="font-size:12px;color:#8a9598;margin-top:6px;">
-        Apple Calendar or another app? Use the attached calendar invite (.ics) on this email — it also sets
-        a reminder 1 hour before, right on your device.
-      </div>
     </div>`;
 }
 
