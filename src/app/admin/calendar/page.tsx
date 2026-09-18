@@ -108,12 +108,12 @@ export default async function CalendarAdminPage({
           <div className="admin-row">
             <div className="admin-field">
               <label htmlFor="start_time">Start Time (for calendar invites)</label>
-              <input id="start_time" name="start_time" type="time" />
+              <input id="start_time" name="start_time" type="time" step="900" />
               <div className="hint">Powers the &quot;Add to Calendar&quot; buttons in the RSVP emails — separate from Date/Time above, which is just display text. Eastern time. Leave blank to skip those buttons for this session.</div>
             </div>
             <div className="admin-field">
               <label htmlFor="end_time">End Time (for calendar invites)</label>
-              <input id="end_time" name="end_time" type="time" />
+              <input id="end_time" name="end_time" type="time" step="900" />
             </div>
           </div>
           <div className="admin-row">
@@ -223,6 +223,7 @@ export default async function CalendarAdminPage({
                             id={`start_time-${session.id}`}
                             name="start_time"
                             type="time"
+                            step="900"
                             defaultValue={session.start_time ?? ''}
                           />
                           <div className="hint">Powers &quot;Add to Calendar&quot; in the RSVP emails. Eastern time. Blank skips those buttons.</div>
@@ -233,6 +234,7 @@ export default async function CalendarAdminPage({
                             id={`end_time-${session.id}`}
                             name="end_time"
                             type="time"
+                            step="900"
                             defaultValue={session.end_time ?? ''}
                           />
                         </div>
