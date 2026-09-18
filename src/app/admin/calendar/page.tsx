@@ -121,9 +121,9 @@ export default async function CalendarAdminPage({
               <label htmlFor="status">Status</label>
               <input id="status" name="status" type="text" defaultValue="Open" placeholder="Open, Full, VIP Only…" />
               <div className="hint">
-                Only shown on the site as-typed when there&apos;s no RSVP Cap below (e.g. &quot;VIP Only&quot;).
-                With a cap set, the site shows &quot;Seats Available&quot; or &quot;Full&quot; automatically instead — this
-                field just still counts as full if you type &quot;Full&quot; here directly.
+                With an RSVP Cap set below, the site ignores this and shows &quot;Seats Available&quot; or
+                &quot;Full&quot; automatically — except typing &quot;Full&quot; here always marks it full, cap or not.
+                Without a cap, this text shows exactly as typed (e.g. &quot;VIP Only&quot;).
               </div>
             </div>
             <div className="admin-field">
