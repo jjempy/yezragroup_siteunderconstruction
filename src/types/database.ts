@@ -136,6 +136,11 @@ export interface CalendarSession {
   session_date: string | null;
   // Optional RSVP cap — null means unlimited. See 0015 migration.
   capacity: number | null;
+  // HH:MM 24h, America/New_York — for calendar-invite generation only;
+  // date_text stays the source of truth for what's shown on the site.
+  // See 0022 migration.
+  start_time: string | null;
+  end_time: string | null;
 }
 
 export interface MasterclassRsvp {

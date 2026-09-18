@@ -165,6 +165,8 @@ const FALLBACK_CALENDAR_SESSIONS: CalendarSession[] = [
     created_at: '',
     session_date: null,
     capacity: null,
+    start_time: null,
+    end_time: null,
   },
 ];
 

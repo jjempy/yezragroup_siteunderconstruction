@@ -53,6 +53,8 @@ export async function addSession(formData: FormData) {
     location: (formData.get('location') as string) ?? '',
     date_text: (formData.get('date_text') as string) ?? '',
     session_date: (formData.get('session_date') as string) || null,
+    start_time: (formData.get('start_time') as string) || null,
+    end_time: (formData.get('end_time') as string) || null,
     capacity: parseCapacity(formData),
     status: (formData.get('status') as string) || 'Open',
     sort_order: nextOrder,
@@ -62,6 +64,11 @@ export async function addSession(formData: FormData) {
   let { error } = await supabase.from('calendar_sessions').insert(row);
   if (error && isMissingColumn(error.message, 'session_date')) {
     delete row.session_date;
+    ({ error } = await supabase.from('calendar_sessions').insert(row));
+  }
+  if (error && (isMissingColumn(error.message, 'start_time') || isMissingColumn(error.message, 'end_time'))) {
+    delete row.start_time;
+    delete row.end_time;
     ({ error } = await supabase.from('calendar_sessions').insert(row));
   }
   if (error && isMissingColumn(error.message, 'capacity')) {
@@ -82,6 +89,8 @@ export async function updateSession(sessionId: string, formData: FormData) {
     location: (formData.get('location') as string) ?? '',
     date_text: (formData.get('date_text') as string) ?? '',
     session_date: (formData.get('session_date') as string) || null,
+    start_time: (formData.get('start_time') as string) || null,
+    end_time: (formData.get('end_time') as string) || null,
     capacity: parseCapacity(formData),
     status: (formData.get('status') as string) || 'Open',
     is_visible: formData.get('is_visible') === 'on',
@@ -90,6 +99,11 @@ export async function updateSession(sessionId: string, formData: FormData) {
   let { error } = await supabase.from('calendar_sessions').update(row).eq('id', sessionId);
   if (error && isMissingColumn(error.message, 'session_date')) {
     delete row.session_date;
+    ({ error } = await supabase.from('calendar_sessions').update(row).eq('id', sessionId));
+  }
+  if (error && (isMissingColumn(error.message, 'start_time') || isMissingColumn(error.message, 'end_time'))) {
+    delete row.start_time;
+    delete row.end_time;
     ({ error } = await supabase.from('calendar_sessions').update(row).eq('id', sessionId));
   }
   if (error && isMissingColumn(error.message, 'capacity')) {

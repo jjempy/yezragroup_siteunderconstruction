@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { buildCalendarInvite, type CalendarInviteInput } from '@/lib/calendar-invite';
 
 /**
  * Thin wrapper over Resend's REST API (no SDK — one fetch call, no new
@@ -14,11 +15,13 @@ export async function sendEmail({
   subject,
   html,
   replyTo,
+  attachments,
 }: {
   to: string;
   subject: string;
   html: string;
   replyTo?: string;
+  attachments?: { filename: string; content: string }[];
 }): Promise<{ sent: boolean }> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
@@ -32,7 +35,14 @@ export async function sendEmail({
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from, to, subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
+      body: JSON.stringify({
+        from,
+        to,
+        subject,
+        html,
+        ...(replyTo ? { reply_to: replyTo } : {}),
+        ...(attachments?.length ? { attachments } : {}),
+      }),
     });
     if (!res.ok) {
       console.error('[email] send failed:', res.status, await res.text());
@@ -138,7 +148,27 @@ function locationLine(location: string) {
   return `<a href="${url}" style="font-size:14px;color:#5C6F72;text-decoration:underline;">${location}</a>`;
 }
 
-export function renderRsvpConfirmationEmail(session: { topic: string; date_text: string; location: string }, b: EmailBranding) {
+function calendarButtonsBlock(session: CalendarInviteInput, b: EmailBranding, ctaLabel: string) {
+  const invite = buildCalendarInvite(session);
+  if (!invite) return '';
+  const ghostBtn =
+    `display:inline-block;border:1px solid #C9BEA2;color:#3A3F33;padding:10px 18px;` +
+    `border-radius:2px;font-weight:600;text-decoration:none;font-size:13.5px;margin-top:10px;margin-right:8px;`;
+  return `
+    <div style="margin-top:20px;">
+      <div style="font-size:13px;font-weight:600;color:#3A3F33;margin-bottom:2px;">${ctaLabel}</div>
+      <a href="${invite.googleUrl}" style="${ghostBtn}">Google Calendar</a>
+      <a href="${invite.outlookUrl}" style="${ghostBtn}">Outlook</a>
+      <div style="font-size:12px;color:#8a9598;margin-top:6px;">
+        Apple Calendar or another app? Use the attached calendar invite (.ics) on this email — it also sets
+        a reminder 1 hour before, right on your device.
+      </div>
+    </div>`;
+}
+
+type RsvpSession = { topic: string; date_text: string; location: string } & CalendarInviteInput;
+
+export function renderRsvpConfirmationEmail(session: RsvpSession, b: EmailBranding) {
   return `
   <div style="${wrapStyle()}">
     ${emailHeader(b)}
@@ -151,12 +181,13 @@ export function renderRsvpConfirmationEmail(session: { topic: string; date_text:
         ${locationLine(session.location)}
       </div>
       ${session.location ? `<a href="${mapsUrlFor(session.location)}" style="${buttonStyle(b)}">Get Directions</a>` : ''}
+      ${calendarButtonsBlock(session, b, 'Add to Calendar:')}
       <p style="font-size:14px;line-height:1.6;color:#5C6F72;margin-top:20px;">We'll send a reminder the day before. See you there.</p>
     </div>
   </div>`;
 }
 
-export function renderRsvpReminderEmail(session: { topic: string; date_text: string; location: string }, b: EmailBranding) {
+export function renderRsvpReminderEmail(session: RsvpSession, b: EmailBranding) {
   return `
   <div style="${wrapStyle()}">
     ${emailHeader(b)}
@@ -169,6 +200,7 @@ export function renderRsvpReminderEmail(session: { topic: string; date_text: str
         ${locationLine(session.location)}
       </div>
       ${session.location ? `<a href="${mapsUrlFor(session.location)}" style="${buttonStyle(b)}">Get Directions</a>` : ''}
+      ${calendarButtonsBlock(session, b, "Haven't added it to your calendar yet? Add it now:")}
     </div>
   </div>`;
 }

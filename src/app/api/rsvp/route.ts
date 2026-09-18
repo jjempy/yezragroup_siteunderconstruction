@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendEmail, renderRsvpConfirmationEmail, getEmailBranding } from '@/lib/email';
+import { buildCalendarInvite } from '@/lib/calendar-invite';
 import type { CalendarSession } from '@/types/database';
 
 /**
@@ -49,10 +50,12 @@ export async function POST(req: NextRequest) {
 
   // Best-effort — never fail the RSVP itself over an email hiccup.
   const branding = await getEmailBranding();
+  const invite = buildCalendarInvite(session);
   await sendEmail({
     to: email,
     subject: `You're confirmed: ${session.topic}`,
     html: renderRsvpConfirmationEmail(session, branding),
+    attachments: invite ? [{ filename: 'invite.ics', content: invite.icsBase64 }] : undefined,
   });
 
   return NextResponse.json({ ok: true });

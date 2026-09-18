@@ -107,6 +107,17 @@ export default async function CalendarAdminPage({
           </div>
           <div className="admin-row">
             <div className="admin-field">
+              <label htmlFor="start_time">Start Time (for calendar invites)</label>
+              <input id="start_time" name="start_time" type="time" />
+              <div className="hint">Powers the &quot;Add to Calendar&quot; buttons in the RSVP emails — separate from Date/Time above, which is just display text. Eastern time. Leave blank to skip those buttons for this session.</div>
+            </div>
+            <div className="admin-field">
+              <label htmlFor="end_time">End Time (for calendar invites)</label>
+              <input id="end_time" name="end_time" type="time" />
+            </div>
+          </div>
+          <div className="admin-row">
+            <div className="admin-field">
               <label htmlFor="status">Status</label>
               <input id="status" name="status" type="text" defaultValue="Open" placeholder="Open, Full, VIP Only…" />
             </div>
@@ -203,6 +214,27 @@ export default async function CalendarAdminPage({
                         <div className="admin-field">
                           <label htmlFor={`date_text-${session.id}`}>Date/Time (shown on the site)</label>
                           <input id={`date_text-${session.id}`} name="date_text" type="text" defaultValue={session.date_text} />
+                        </div>
+                      </div>
+                      <div className="admin-row">
+                        <div className="admin-field">
+                          <label htmlFor={`start_time-${session.id}`}>Start Time (for calendar invites)</label>
+                          <input
+                            id={`start_time-${session.id}`}
+                            name="start_time"
+                            type="time"
+                            defaultValue={session.start_time ?? ''}
+                          />
+                          <div className="hint">Powers &quot;Add to Calendar&quot; in the RSVP emails. Eastern time. Blank skips those buttons.</div>
+                        </div>
+                        <div className="admin-field">
+                          <label htmlFor={`end_time-${session.id}`}>End Time (for calendar invites)</label>
+                          <input
+                            id={`end_time-${session.id}`}
+                            name="end_time"
+                            type="time"
+                            defaultValue={session.end_time ?? ''}
+                          />
                         </div>
                       </div>
                       <div className="admin-row">

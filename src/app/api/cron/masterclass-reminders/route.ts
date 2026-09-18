@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmail, renderRsvpReminderEmail, getEmailBranding } from '@/lib/email';
+import { buildCalendarInvite } from '@/lib/calendar-invite';
 import type { CalendarSession, MasterclassRsvp } from '@/types/database';
 
 export const runtime = 'nodejs';
@@ -54,11 +55,13 @@ export async function GET(req: NextRequest) {
       .eq('calendar_session_id', session.id)
       .is('reminder_sent_at', null);
 
+    const invite = buildCalendarInvite(session);
     for (const rsvp of (rsvps as MasterclassRsvp[]) ?? []) {
       const { sent: ok } = await sendEmail({
         to: rsvp.email,
         subject: `Tomorrow: ${session.topic}`,
         html: renderRsvpReminderEmail(session, branding),
+        attachments: invite ? [{ filename: 'invite.ics', content: invite.icsBase64 }] : undefined,
       });
       if (ok) {
         await admin
