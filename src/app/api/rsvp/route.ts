@@ -35,6 +35,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 });
   }
 
+  // The homepage card already hides the RSVP form once a session hits
+  // capacity, but that's UI-only — nothing stopped a direct POST here
+  // (or two people submitting the very last seat at the same moment)
+  // from still getting in. This is the actual enforcement. Someone who
+  // already has a seat can still "re-RSVP" past capacity (matches them,
+  // not a new seat) — only a genuinely new signup is capacity-checked.
+  if (session.capacity != null) {
+    const [{ count }, { data: existing }] = await Promise.all([
+      supabase
+        .from('masterclass_rsvps')
+        .select('id', { count: 'exact', head: true })
+        .eq('calendar_session_id', sessionId),
+      supabase.from('masterclass_rsvps').select('id').eq('calendar_session_id', sessionId).eq('email', email).maybeSingle(),
+    ]);
+    if (!existing && (count ?? 0) >= session.capacity) {
+      return NextResponse.json({ error: 'full' }, { status: 409 });
+    }
+  }
+
   const { error } = await supabase.from('masterclass_rsvps').insert({
     calendar_session_id: sessionId,
     full_name: fullName,

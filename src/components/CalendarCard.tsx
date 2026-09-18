@@ -18,7 +18,7 @@ export function CalendarCard({ session, rsvpCount }: { session: CalendarSession;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error' | 'full'>('idle');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,6 +29,10 @@ export function CalendarCard({ session, rsvpCount }: { session: CalendarSession;
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: session.id, fullName: name, email, phone }),
       });
+      if (res.status === 409) {
+        setStatus('full');
+        return;
+      }
       if (!res.ok) throw new Error('RSVP failed');
       setStatus('done');
     } catch {
@@ -37,8 +41,17 @@ export function CalendarCard({ session, rsvpCount }: { session: CalendarSession;
   }
 
   const atCapacity = session.capacity != null && rsvpCount >= session.capacity;
-  const isFull = atCapacity || session.status.toLowerCase() === 'full';
+  const isFull = status === 'full' || atCapacity || session.status.toLowerCase() === 'full';
   const spotsLeft = session.capacity != null ? Math.max(0, session.capacity - rsvpCount) : null;
+  // The badge used to just echo whatever an admin last typed into Status
+  // (free text, "Open, Full, VIP Only…") — easy for it to drift out of
+  // sync with reality, like showing "Open" on a session that's actually
+  // full because nobody remembered to update it after the last seat
+  // filled. When capacity tracking is on, this derives the label from
+  // the real RSVP count instead; the free-text field still applies as-is
+  // for sessions that don't use capacity (VIP Only, etc.) or an
+  // explicit manual "Full".
+  const statusLabel = isFull ? 'Full' : session.capacity != null ? 'Seats Available' : session.status;
 
   return (
     <div className="cal-card reveal in">
@@ -58,7 +71,7 @@ export function CalendarCard({ session, rsvpCount }: { session: CalendarSession;
       <div className="cal-meta" style={{ marginTop: 2 }}>
         {session.date_text}
       </div>
-      <div className="cal-status">{session.status}</div>
+      <div className={`cal-status${isFull ? ' full' : ''}`}>{statusLabel}</div>
 
       {status === 'done' ? (
         <div className="cal-rsvp-note" style={{ color: 'var(--gold-bright)' }}>

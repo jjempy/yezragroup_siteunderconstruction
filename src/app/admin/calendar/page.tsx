@@ -120,11 +120,16 @@ export default async function CalendarAdminPage({
             <div className="admin-field">
               <label htmlFor="status">Status</label>
               <input id="status" name="status" type="text" defaultValue="Open" placeholder="Open, Full, VIP Only…" />
+              <div className="hint">
+                Only shown on the site as-typed when there&apos;s no RSVP Cap below (e.g. &quot;VIP Only&quot;).
+                With a cap set, the site shows &quot;Seats Available&quot; or &quot;Full&quot; automatically instead — this
+                field just still counts as full if you type &quot;Full&quot; here directly.
+              </div>
             </div>
             <div className="admin-field">
               <label htmlFor="capacity">RSVP Cap (optional)</label>
               <input id="capacity" name="capacity" type="number" min="1" placeholder="Unlimited" />
-              <div className="hint">Once RSVPs reach this number, the site shows it as full automatically.</div>
+              <div className="hint">Once RSVPs reach this number, the site shows it as full automatically — and stops accepting new RSVPs.</div>
             </div>
           </div>
           <button className="admin-btn" type="submit">
@@ -243,6 +248,7 @@ export default async function CalendarAdminPage({
                         <div className="admin-field">
                           <label htmlFor={`status-${session.id}`}>Status</label>
                           <input id={`status-${session.id}`} name="status" type="text" defaultValue={session.status} />
+                          <div className="hint">Only shown as-typed with no RSVP Cap set — a cap shows &quot;Seats Available&quot;/&quot;Full&quot; automatically instead.</div>
                         </div>
                         <div className="admin-field">
                           <label htmlFor={`capacity-${session.id}`}>RSVP Cap (optional)</label>
