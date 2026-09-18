@@ -13,16 +13,6 @@ import {
 } from '@/lib/email';
 import { buildCalendarInvite } from '@/lib/calendar-invite';
 
-const SAMPLE_SESSION = {
-  id: 'sample-session-id',
-  topic: 'SAMPLE DATA — The 5 Blind Spots That Are Quietly Costing You the Business You’re Building',
-  date_text: 'SAMPLE DATE — Not a real session',
-  location: 'SAMPLE ADDRESS — 123 Placeholder St, Placeholder City',
-  session_date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
-  start_time: '10:00',
-  end_time: '12:00',
-};
-
 const SAMPLE_CONTACT_MSG = {
   name: 'Sample Visitor',
   email: 'sample-visitor@example.com',
@@ -30,45 +20,61 @@ const SAMPLE_CONTACT_MSG = {
   message: 'This is a sample message body, sent to preview the real design and layout of this email.',
 };
 
-const SAMPLE_INVITE = buildCalendarInvite(SAMPLE_SESSION);
-const SAMPLE_ATTACHMENTS = SAMPLE_INVITE ? [{ filename: 'invite.ics', content: SAMPLE_INVITE.icsBase64 }] : undefined;
-
-const EMAIL_TYPES = {
-  rsvp_confirmation: {
-    subject: 'TEST — You’re confirmed',
-    render: (b: Awaited<ReturnType<typeof getEmailBranding>>) => renderRsvpConfirmationEmail(SAMPLE_SESSION, b),
-    attachments: SAMPLE_ATTACHMENTS,
-  },
-  rsvp_reminder: {
-    subject: 'TEST — Tomorrow reminder',
-    render: (b: Awaited<ReturnType<typeof getEmailBranding>>) => renderRsvpReminderEmail(SAMPLE_SESSION, b),
-    attachments: SAMPLE_ATTACHMENTS,
-  },
-  purchase_confirmation: {
-    subject: 'TEST — Order confirmed',
-    render: (b: Awaited<ReturnType<typeof getEmailBranding>>) =>
-      renderPurchaseConfirmationEmail(
-        { productLabel: 'Workshop Library — Lifetime Access', amountTotal: 14700, currency: 'usd' },
-        b
-      ),
-    attachments: undefined as { filename: string; content: string }[] | undefined,
-  },
-  contact_notification: {
-    subject: 'TEST — New contact message',
-    render: (b: Awaited<ReturnType<typeof getEmailBranding>>) => renderContactNotificationEmail(SAMPLE_CONTACT_MSG, b),
-    attachments: undefined as { filename: string; content: string }[] | undefined,
-  },
-  contact_ack: {
-    subject: 'TEST — We’ve got your message',
-    render: (b: Awaited<ReturnType<typeof getEmailBranding>>) => renderContactAckEmail(SAMPLE_CONTACT_MSG, b),
-    attachments: undefined as { filename: string; content: string }[] | undefined,
-  },
-} as const;
-
-type EmailType = keyof typeof EMAIL_TYPES;
+const EMAIL_TYPE_KEYS = ['rsvp_confirmation', 'rsvp_reminder', 'purchase_confirmation', 'contact_notification', 'contact_ack'] as const;
+type EmailType = (typeof EMAIL_TYPE_KEYS)[number];
 
 function isEmailType(value: string): value is EmailType {
-  return value in EMAIL_TYPES;
+  return (EMAIL_TYPE_KEYS as readonly string[]).includes(value);
+}
+
+// Built fresh on every send, not as a module-level constant — this ran
+// once at cold start and then got reused for however long that server
+// instance stayed warm (hours, sometimes), so "tomorrow" silently went
+// stale and a test invite could land on the wrong day depending purely
+// on when the server last restarted, not when the test was actually sent.
+function buildEmailTypes(branding: Awaited<ReturnType<typeof getEmailBranding>>) {
+  const sampleSession = {
+    id: 'sample-session-id',
+    topic: 'SAMPLE DATA — The 5 Blind Spots That Are Quietly Costing You the Business You’re Building',
+    date_text: 'SAMPLE DATE — Not a real session',
+    location: 'SAMPLE ADDRESS — 123 Placeholder St, Placeholder City',
+    session_date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+    start_time: '10:00',
+    end_time: '12:00',
+  };
+  const invite = buildCalendarInvite(sampleSession);
+  const sampleAttachments = invite ? [{ filename: 'invite.ics', content: invite.icsBase64 }] : undefined;
+
+  return {
+    rsvp_confirmation: {
+      subject: 'TEST — You’re confirmed',
+      html: renderRsvpConfirmationEmail(sampleSession, branding),
+      attachments: sampleAttachments,
+    },
+    rsvp_reminder: {
+      subject: 'TEST — Tomorrow reminder',
+      html: renderRsvpReminderEmail(sampleSession, branding),
+      attachments: sampleAttachments,
+    },
+    purchase_confirmation: {
+      subject: 'TEST — Order confirmed',
+      html: renderPurchaseConfirmationEmail(
+        { productLabel: 'Workshop Library — Lifetime Access', amountTotal: 14700, currency: 'usd' },
+        branding
+      ),
+      attachments: undefined as { filename: string; content: string }[] | undefined,
+    },
+    contact_notification: {
+      subject: 'TEST — New contact message',
+      html: renderContactNotificationEmail(SAMPLE_CONTACT_MSG, branding),
+      attachments: undefined as { filename: string; content: string }[] | undefined,
+    },
+    contact_ack: {
+      subject: 'TEST — We’ve got your message',
+      html: renderContactAckEmail(SAMPLE_CONTACT_MSG, branding),
+      attachments: undefined as { filename: string; content: string }[] | undefined,
+    },
+  } satisfies Record<EmailType, { subject: string; html: string; attachments?: { filename: string; content: string }[] }>;
 }
 
 export type SendTestEmailState = { ok: boolean; message: string } | null;
@@ -101,8 +107,8 @@ export async function sendTestEmail(_prev: SendTestEmailState, formData: FormDat
   }
 
   const branding = await getEmailBranding();
-  const { subject, render, attachments } = EMAIL_TYPES[type];
-  const { sent } = await sendEmail({ to, subject, html: render(branding), attachments });
+  const { subject, html, attachments } = buildEmailTypes(branding)[type];
+  const { sent } = await sendEmail({ to, subject, html, attachments });
 
   if (!sent) {
     return { ok: false, message: 'Send failed — check RESEND_API_KEY/RESEND_FROM_EMAIL are set and redeployed.' };
