@@ -52,13 +52,22 @@ export const metadata: Metadata = {
 
 async function getBrandSettings(): Promise<Pick<
   SiteSettings,
-  'brand_name' | 'color_gold' | 'color_gold_deep' | 'color_ink' | 'color_cream' | 'heading_font' | 'body_font'
+  | 'brand_name'
+  | 'color_gold'
+  | 'color_gold_deep'
+  | 'color_ink'
+  | 'color_cream'
+  | 'heading_font'
+  | 'body_font'
+  | 'heading_font_file_url'
 > | null> {
   try {
     const supabase = createClient();
     const { data } = await supabase
       .from('site_settings')
-      .select('brand_name, color_gold, color_gold_deep, color_ink, color_cream, heading_font, body_font')
+      .select(
+        'brand_name, color_gold, color_gold_deep, color_ink, color_cream, heading_font, body_font, heading_font_file_url'
+      )
       .eq('id', 'default')
       .maybeSingle();
     return data;
@@ -72,6 +81,13 @@ async function getBrandSettings(): Promise<Pick<
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const brand = await getBrandSettings();
 
+  // A heading font can come from Google Fonts (the common case — type a
+  // name, done) or from an uploaded file for anything Google doesn't
+  // carry (a purchased display font, say) — see Admin -> Brand. The
+  // uploaded file always wins when both happen to be present, same
+  // precedence as every other file-vs-URL field in this admin panel.
+  const hasCustomHeadingFont = Boolean(brand?.heading_font_file_url);
+
   const colorVars: string[] = [];
   if (brand?.color_gold) colorVars.push(`--gold:${brand.color_gold};`);
   if (brand?.color_gold_deep) colorVars.push(`--gold-deep:${brand.color_gold_deep};`);
@@ -80,7 +96,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   if (brand?.heading_font) colorVars.push(`--serif:'${brand.heading_font}', Georgia, serif;`);
   if (brand?.body_font) colorVars.push(`--sans:'${brand.body_font}', -apple-system, sans-serif;`);
 
-  const customFontFamilies = [brand?.heading_font, brand?.body_font].filter(
+  const googleFontFamilies = [brand?.body_font, hasCustomHeadingFont ? null : brand?.heading_font].filter(
     (f): f is string => Boolean(f)
   );
 
@@ -92,13 +108,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        {customFontFamilies.length > 0 && (
+        {googleFontFamilies.length > 0 && (
           <link
-            href={`https://fonts.googleapis.com/css2?family=${customFontFamilies
+            href={`https://fonts.googleapis.com/css2?family=${googleFontFamilies
               .map((f) => f.trim().replace(/\s+/g, '+') + ':wght@400;500;600;700')
               .join('&family=')}&display=swap`}
             rel="stylesheet"
           />
+        )}
+        {hasCustomHeadingFont && brand?.heading_font && (
+          <style>{`@font-face{font-family:'${brand.heading_font}';src:url('${brand.heading_font_file_url}');font-display:swap;}`}</style>
         )}
         {colorVars.length > 0 && <style>{`:root{${colorVars.join('')}}`}</style>}
       </head>

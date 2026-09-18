@@ -89,13 +89,45 @@ export default async function BrandAdminPage({
         />
         <div className="admin-row">
           <div className="admin-field">
-            <label htmlFor="heading_font">Heading Font (Google Fonts name)</label>
+            <label htmlFor="heading_font">Heading Font (name)</label>
             <input id="heading_font" name="heading_font" type="text" defaultValue={settings.heading_font} placeholder="Archivo" />
+            <div className="hint">
+              On Google Fonts (like Archivo or Montserrat)? Just type its name here — that&apos;s it.
+            </div>
           </div>
           <div className="admin-field">
             <label htmlFor="body_font">Body Font (Google Fonts name)</label>
             <input id="body_font" name="body_font" type="text" defaultValue={settings.body_font} placeholder="Inter" />
+            <div className="hint">Body text only supports Google Fonts — type any name from fonts.google.com.</div>
           </div>
+        </div>
+        <div className="admin-field" style={{ marginTop: 8 }}>
+          <label htmlFor="heading_font_file">Not on Google Fonts? Upload the heading font file</label>
+          <div className="hint" style={{ marginBottom: 8 }}>
+            For a purchased/custom display font (like a logo-adjacent typeface) that isn&apos;t on Google
+            Fonts at all. Upload the file here — it&apos;ll be used under whatever name is typed in{' '}
+            <strong>Heading Font</strong> above, and this takes over from the Google Fonts lookup entirely
+            once uploaded. Accepts .woff2, .woff, .ttf, or .otf — make sure you have a license that covers
+            using it on a live website, not just a personal-use download.
+          </div>
+          {settings.heading_font_file_url && (
+            <div style={{ fontSize: 13, marginBottom: 8 }}>
+              <span
+                style={{
+                  fontFamily: `'${settings.heading_font || 'inherit'}'`,
+                  fontSize: 28,
+                  display: 'block',
+                  marginBottom: 4,
+                }}
+              >
+                {settings.heading_font || 'Aa Preview'}
+              </span>
+              <a href={settings.heading_font_file_url} target="_blank" rel="noopener noreferrer">
+                Current font file
+              </a>
+            </div>
+          )}
+          <input id="heading_font_file" name="heading_font_file" type="file" accept=".woff2,.woff,.ttf,.otf" />
         </div>
         <button className="admin-btn" type="submit">
           Save Brand Settings

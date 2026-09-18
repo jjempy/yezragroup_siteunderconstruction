@@ -28,6 +28,7 @@ const FALLBACK_SETTINGS: SiteSettings = {
   color_cream: '',
   heading_font: '',
   body_font: '',
+  heading_font_file_url: '',
   founder_photo_url: '',
   ga4_measurement_id: '',
   youtube_channel_url: '',

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { uploadPublicImage } from '@/lib/storage';
+import { uploadPublicImage, uploadPublicFontFile } from '@/lib/storage';
 import { updateDroppingMissingColumns } from '@/lib/safe-update';
 
 const BRAND_TEXT_FIELDS = [
@@ -88,6 +88,19 @@ export async function updateBrandSettings(formData: FormData) {
   );
   if (heroMarkUploadError) failure('/admin/brand', `Hero mark upload failed: ${heroMarkUploadError}`);
   if (uploadedHeroMarkUrl) update.hero_mark_url = uploadedHeroMarkUrl;
+
+  // For a typeface that isn't on Google Fonts at all (a purchased display
+  // font, say) — the "Heading Font" text field still names it (used as
+  // the CSS font-family), but the actual glyphs come from this file
+  // instead of a fonts.googleapis.com request. See layout.tsx.
+  const headingFontFile = formData.get('heading_font_file') as File | null;
+  const { url: uploadedHeadingFontUrl, error: headingFontUploadError } = await uploadPublicFontFile(
+    supabase,
+    headingFontFile,
+    'fonts'
+  );
+  if (headingFontUploadError) failure('/admin/brand', `Heading font upload failed: ${headingFontUploadError}`);
+  if (uploadedHeadingFontUrl) update.heading_font_file_url = uploadedHeadingFontUrl;
 
   const { error, droppedColumns } = await updateDroppingMissingColumns(supabase, 'site_settings', { id: 'default' }, update);
   if (error) failure('/admin/brand', `Save failed: ${error}`);
