@@ -14,6 +14,7 @@ const NAV: NavEntry[] = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/analytics', label: 'Analytics' },
   { href: '/admin/messages', label: 'Messages' },
+  { href: '/admin/email-previews', label: 'Email Previews' },
   {
     group: 'Site',
     items: [

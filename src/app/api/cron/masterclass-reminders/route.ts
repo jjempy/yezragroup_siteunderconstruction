@@ -14,20 +14,24 @@ export const dynamic = 'force-dynamic';
  * (reminder_sent_at) so a double-fire or a re-run never double-sends.
  *
  * Vercel automatically sends `Authorization: Bearer $CRON_SECRET` on its
- * own scheduled invocations when CRON_SECRET is set in the environment —
- * checked here so this endpoint (otherwise a public GET route) can't be
- * triggered by anyone else. If CRON_SECRET isn't set yet, the check is
- * skipped with a warning rather than silently never sending reminders.
+ * own scheduled invocations, once an env var literally named CRON_SECRET
+ * exists in this project — that exact name is a Vercel platform
+ * convention, not something this code chose or can rename per-cron (a
+ * differently-named secret would never get sent automatically, silently
+ * breaking the real daily run). Checked here so this otherwise-public GET
+ * route can't be triggered or scraped by anyone else. Required, not
+ * optional: a missing secret fails closed (401/500) instead of quietly
+ * running unauthenticated.
  */
 export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const auth = req.headers.get('authorization');
-    if (auth !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-  } else {
-    console.warn('[cron:masterclass-reminders] CRON_SECRET not set — endpoint is unauthenticated');
+  if (!cronSecret) {
+    console.error('[cron:masterclass-reminders] CRON_SECRET not set — refusing to run');
+    return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+  }
+  const auth = req.headers.get('authorization');
+  if (auth !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const admin = createAdminClient();

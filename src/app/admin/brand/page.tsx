@@ -5,6 +5,7 @@ import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
 import { BrandColorFields } from '@/components/admin/BrandColorFields';
 import { HeroMarkOpacityField } from '@/components/admin/HeroMarkOpacityField';
+import { ImageUploadPreview } from '@/components/admin/ImageUploadPreview';
 
 export default async function BrandAdminPage({
   searchParams,
@@ -33,53 +34,26 @@ export default async function BrandAdminPage({
           <label htmlFor="brand_name">Brand Name</label>
           <input id="brand_name" name="brand_name" type="text" defaultValue={settings.brand_name} required />
         </div>
-        <div className="admin-field">
-          <label htmlFor="logo_file">Logo</label>
-          {settings.logo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={settings.logo_url}
-              alt="Current logo"
-              style={{ height: 40, marginBottom: 10, display: 'block' }}
-            />
-          )}
-          <input id="logo_file" name="logo_file" type="file" accept="image/*" />
-          <div className="hint">Replaces the small circle icon in the nav (top-left) and footer.</div>
-        </div>
-        <div className="admin-field">
-          <label htmlFor="logo_url">Or paste an image URL instead</label>
-          <input id="logo_url" name="logo_url" type="url" defaultValue={settings.logo_url} placeholder="https://…/logo.svg" />
-          <div className="hint">Only used if you don&apos;t upload a file above. Leave as-is otherwise.</div>
-        </div>
-        <div className="admin-field" style={{ marginTop: 8 }}>
-          <label htmlFor="hero_mark_file">Hero Background Mark</label>
-          <div className="hint" style={{ marginBottom: 8 }}>
-            A separate image from the logo above — the large, faded decorative element behind the
-            homepage headline. Leave empty to keep the default abstract mark. Works best with a
-            transparent background (a real vector/SVG or a PNG with no background) — a detailed or
-            opaque image will show as a hard box when faded large behind text.
-          </div>
-          {settings.hero_mark_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={settings.hero_mark_url}
-              alt="Current hero background mark"
-              style={{ height: 80, marginBottom: 10, display: 'block', background: '#0F1416', padding: 8 }}
-            />
-          )}
-          <input id="hero_mark_file" name="hero_mark_file" type="file" accept="image/*" />
-        </div>
-        <div className="admin-field">
-          <label htmlFor="hero_mark_url">Or paste an image URL instead</label>
-          <input
-            id="hero_mark_url"
-            name="hero_mark_url"
-            type="url"
-            defaultValue={settings.hero_mark_url}
-            placeholder="https://…/mark.svg"
-          />
-          <div className="hint">Only used if you don&apos;t upload a file above. Leave blank to use the default mark.</div>
-        </div>
+        <ImageUploadPreview
+          label="Logo"
+          fileName="logo_file"
+          urlName="logo_url"
+          currentUrl={settings.logo_url}
+          hint="Replaces the small circle icon in the nav (top-left) and footer."
+          urlPlaceholder="https://…/logo.svg"
+          previewHeight={40}
+        />
+        <ImageUploadPreview
+          label="Hero Background Mark"
+          fileName="hero_mark_file"
+          urlName="hero_mark_url"
+          currentUrl={settings.hero_mark_url}
+          hint="A separate image from the logo above — the large, faded decorative element behind the homepage headline. Leave empty to keep the default abstract mark. Works best with a transparent background (a real vector/SVG or a PNG with no background) — a detailed or opaque image will show as a hard box when faded large behind text."
+          urlPlaceholder="https://…/mark.svg"
+          urlHint="Only used if you don't upload a file above. Leave blank to use the default mark."
+          previewHeight={80}
+          detectContrastBg
+        />
         <HeroMarkOpacityField opacity={settings.hero_mark_opacity} markUrl={settings.hero_mark_url} />
         <BrandColorFields
           colorGold={settings.color_gold}
