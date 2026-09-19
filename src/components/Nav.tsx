@@ -7,10 +7,16 @@ export function Nav({
   settings,
   isSignedIn,
   isAdmin,
+  hasLibrary,
 }: {
   settings: SiteSettings;
   isSignedIn: boolean;
   isAdmin: boolean;
+  // The Library section on the homepage already hides itself when there
+  // are no visible videos (see Library.tsx) — this nav link used to stay
+  // up regardless, pointing at a page/section that no longer exists on
+  // the page, a dead link with no visible section to land on.
+  hasLibrary: boolean;
 }) {
   return (
     <header>
@@ -38,7 +44,7 @@ export function Nav({
               <MobileNavToggle>
                 <Link href="/#ladder">Ways to Work Together</Link>
                 <Link href="/#calendar">Masterclasses</Link>
-                <Link href="/#library">Workshop Library</Link>
+                {hasLibrary && <Link href="/#library">Workshop Library</Link>}
                 <Link href="/#about">About</Link>
                 <Link href="/login" className="nav-links-signin">
                   Sign In

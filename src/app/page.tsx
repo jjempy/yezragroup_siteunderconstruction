@@ -45,7 +45,12 @@ export default async function HomePage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
-      <Nav settings={settings} isSignedIn={Boolean(session)} isAdmin={session?.profile?.role === 'admin'} />
+      <Nav
+        settings={settings}
+        isSignedIn={Boolean(session)}
+        isAdmin={session?.profile?.role === 'admin'}
+        hasLibrary={videos.length > 0}
+      />
       <Hero settings={settings} />
       <Ladder tiers={tiers} settings={settings} userId={session?.user.id ?? null} />
       <Calendar sessions={calendarSessions} settings={settings} rsvpCounts={rsvpCounts} />
