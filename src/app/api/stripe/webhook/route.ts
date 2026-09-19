@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import { PRICE_TO_PRODUCT } from '@/lib/stripe-products';
 import { grantEntitlement } from '@/lib/grant-entitlement';
+import { sendAdminAlert } from '@/lib/email';
 
 // Stripe webhooks must read the raw request body to verify the signature —
 // don't let Next parse it as JSON.
@@ -45,8 +46,15 @@ export async function POST(req: NextRequest) {
     const userId = session.client_reference_id;
     if (!userId) {
       // No signed-in user was attached to this checkout (shouldn't happen via
-      // our own /api/checkout/* routes, but guard anyway).
+      // our own /api/checkout/* routes, but guard anyway). Money changed
+      // hands with nobody to grant access to — worth a human looking at
+      // this Stripe session directly, not just a log line.
       console.warn('[stripe webhook] checkout.session.completed with no client_reference_id', session.id);
+      await sendAdminAlert('Paid checkout with no linked account', {
+        'Stripe session': session.id,
+        'Amount': session.amount_total != null ? `${(session.amount_total / 100).toFixed(2)} ${session.currency ?? ''}` : null,
+        'Customer email': session.customer_details?.email ?? null,
+      });
       return NextResponse.json({ received: true, skipped: 'no client_reference_id' });
     }
 
@@ -60,7 +68,14 @@ export async function POST(req: NextRequest) {
     const product = matchedPriceId ? PRICE_TO_PRODUCT[matchedPriceId] : null;
 
     if (!product) {
+      // Paid, but the price on the line item doesn't match any tier we
+      // know about — someone was charged and got nothing granted.
       console.warn('[stripe webhook] checkout.session.completed for an unrecognized price', session.id);
+      await sendAdminAlert('Paid checkout for an unrecognized price', {
+        'Stripe session': session.id,
+        'User ID': userId,
+        'Amount': session.amount_total != null ? `${(session.amount_total / 100).toFixed(2)} ${session.currency ?? ''}` : null,
+      });
       return NextResponse.json({ received: true, skipped: 'price not recognized' });
     }
 
@@ -76,7 +91,17 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
+      // The single worst case: paid, product identified, and the database
+      // write itself still failed. Stripe will retry this webhook, but a
+      // human should know now rather than find out when the customer
+      // emails asking where their access is.
       console.error('[stripe webhook] failed to write entitlement:', error);
+      await sendAdminAlert('Entitlement write failed after payment', {
+        'Stripe session': session.id,
+        'User ID': userId,
+        'Product': product,
+        'Error': error,
+      });
       return NextResponse.json({ error: 'Failed to record entitlement' }, { status: 500 });
     }
   }

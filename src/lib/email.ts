@@ -55,6 +55,36 @@ export async function sendEmail({
   }
 }
 
+/** Fire-and-forget alert to the admin contact address for the handful of
+ * failure states where Stripe has already taken someone's money but our
+ * own bookkeeping didn't happen (entitlement write failed, or a paid
+ * checkout couldn't be matched to a known product/account) — the one
+ * category of bug that costs real revenue if it goes unnoticed, and
+ * previously only surfaced as a console.error nobody was watching. Reuses
+ * the existing Resend setup rather than adding a new monitoring service —
+ * never throws, since a failed alert must never mask the original error. */
+export async function sendAdminAlert(subject: string, details: Record<string, string | null>): Promise<void> {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase.from('site_settings').select('contact_email').eq('id', 'default').maybeSingle();
+    const to = data?.contact_email;
+    if (!to) {
+      console.warn('[alert] site_settings.contact_email is empty — cannot send alert:', subject);
+      return;
+    }
+    const rows = Object.entries(details)
+      .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#666;">${k}</td><td>${v ?? '—'}</td></tr>`)
+      .join('');
+    await sendEmail({
+      to,
+      subject: `[Orchemet Alert] ${subject}`,
+      html: `<div style="font-family:-apple-system,Helvetica,Arial,sans-serif;"><h2 style="margin:0 0 12px;">${subject}</h2><table>${rows}</table></div>`,
+    });
+  } catch (err) {
+    console.error('[alert] sendAdminAlert threw:', err);
+  }
+}
+
 export interface EmailBranding {
   brandName: string;
   logoUrl: string | null;
