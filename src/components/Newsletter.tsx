@@ -1,28 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 
-// Lean, temporary capture straight into Supabase (newsletter_signups) —
-// meant to be replaced by a real ESP embed (Beehiiv) later. Keeping this
-// intentionally simple: no double opt-in, no unsubscribe flow, nothing
-// that would need to be un-migrated. Admin -> exports a CSV to move this
-// list into a real ESP whenever one exists.
+// Lean, temporary capture — meant to be replaced by a real ESP embed
+// (Beehiiv) later. Keeping this intentionally simple: no double opt-in,
+// no unsubscribe flow, nothing that would need to be un-migrated. Admin
+// -> exports a CSV to move this list into a real ESP whenever one
+// exists. Posts to /api/newsletter (not a direct client-side Supabase
+// insert, like this used to be) so the honeypot field below is actually
+// enforced server-side instead of only in JS a bot can ignore.
 export function Newsletter() {
   const [email, setEmail] = useState('');
+  const [company, setCompany] = useState(''); // honeypot — see the hidden field below
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus('loading');
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from('newsletter_signups').insert({ email, source: 'homepage' });
-      // A duplicate email (already signed up) isn't a real error from the
-      // visitor's point of view — treat it the same as success.
-      if (error && !/duplicate|unique/i.test(error.message)) {
-        throw error;
-      }
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, company }),
+      });
+      if (!res.ok) throw new Error('Newsletter signup failed');
       setStatus('done');
     } catch {
       setStatus('error');
@@ -51,6 +52,17 @@ export function Newsletter() {
             ) : (
               <>
                 <form className="newsletter-form" onSubmit={handleSubmit}>
+                  <div style={{ position: 'absolute', left: -9999, top: -9999 }} aria-hidden="true">
+                    <label htmlFor="newsletter-company">Company</label>
+                    <input
+                      id="newsletter-company"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                    />
+                  </div>
                   <input
                     type="email"
                     placeholder="you@business.com"

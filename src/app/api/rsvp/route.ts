@@ -19,9 +19,17 @@ export async function POST(req: NextRequest) {
   const fullName = ((body?.fullName as string) ?? '').trim();
   const email = ((body?.email as string) ?? '').trim();
   const phone = ((body?.phone as string) ?? '').trim();
+  const honeypot = ((body?.company as string) ?? '').trim();
 
   if (!sessionId || !email) {
     return NextResponse.json({ error: 'Missing sessionId/email' }, { status: 400 });
+  }
+
+  // Same honeypot posture as /contact: a bot that fills the hidden
+  // "company" field gets a fake success instead of an error that would
+  // just teach it to leave the field alone next time.
+  if (honeypot) {
+    return NextResponse.json({ ok: true });
   }
 
   const supabase = createClient();

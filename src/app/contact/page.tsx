@@ -27,28 +27,6 @@ export default async function ContactPage({
     getSessionUser(),
   ]);
 
-  // Admin-only — same pattern as the checkout success page's Stripe
-  // diagnostics. sendEmail() never throws (an email hiccup must never
-  // block the form itself), so "message sent" on screen and "nothing in
-  // Resend's Logs" can both be true at once — this surfaces the exact
-  // env state that decides whether a send is even attempted, instead of
-  // guessing again.
-  const diagnostics: string[] = [];
-  if (session?.profile?.role === 'admin') {
-    const keyPrefix = process.env.RESEND_API_KEY?.slice(0, 6) ?? null;
-    diagnostics.push(keyPrefix ? `RESEND_API_KEY is set (starts "${keyPrefix}").` : 'RESEND_API_KEY is NOT set.');
-    diagnostics.push(
-      process.env.RESEND_FROM_EMAIL
-        ? `RESEND_FROM_EMAIL = ${process.env.RESEND_FROM_EMAIL}`
-        : 'RESEND_FROM_EMAIL is NOT set.'
-    );
-    diagnostics.push(
-      settings?.contact_email
-        ? `Admin notifications go to: ${settings.contact_email}`
-        : 'site_settings.contact_email is EMPTY — admin notification has nowhere to send (auto-ack to the visitor is unaffected).'
-    );
-  }
-
   // "Smart" prefill: whichever page linked here can pass ?context= to
   // preselect the right subject (a broken-order link from checkout ->
   // order_purchase, an "I can't access my account" link -> account_access,
@@ -118,26 +96,6 @@ export default async function ContactPage({
                 Send Message
               </button>
             </form>
-          )}
-
-          {diagnostics.length > 0 && (
-            <div
-              style={{
-                marginTop: 24,
-                textAlign: 'left',
-                fontSize: 11.5,
-                fontFamily: 'monospace',
-                color: 'var(--muted-d)',
-                background: 'rgba(0,0,0,.2)',
-                border: '1px solid var(--line-d)',
-                borderRadius: 4,
-                padding: '10px 12px',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              <div style={{ marginBottom: 6, color: 'var(--muted-l)' }}>Admin-only diagnostics</div>
-              {diagnostics.join('\n')}
-            </div>
           )}
         </div>
       </div>

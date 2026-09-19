@@ -18,6 +18,7 @@ export function CalendarCard({ session, rsvpCount }: { session: CalendarSession;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [company, setCompany] = useState(''); // honeypot — see the hidden field below
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error' | 'full'>('idle');
 
   async function handleSubmit(e: React.FormEvent) {
@@ -27,7 +28,7 @@ export function CalendarCard({ session, rsvpCount }: { session: CalendarSession;
       const res = await fetch('/api/rsvp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: session.id, fullName: name, email, phone }),
+        body: JSON.stringify({ sessionId: session.id, fullName: name, email, phone, company }),
       });
       if (res.status === 409) {
         setStatus('full');
@@ -93,6 +94,20 @@ export function CalendarCard({ session, rsvpCount }: { session: CalendarSession;
         </div>
       ) : open ? (
         <form className="cal-rsvp-form" onSubmit={handleSubmit}>
+          {/* Honeypot — invisible to real visitors; anything that fills it
+              in gets silently treated as a bot server-side. Same pattern
+              as the /contact form. */}
+          <div style={{ position: 'absolute', left: -9999, top: -9999 }} aria-hidden="true">
+            <label htmlFor={`company-${session.id}`}>Company</label>
+            <input
+              id={`company-${session.id}`}
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+            />
+          </div>
           <input
             type="text"
             placeholder="Name"

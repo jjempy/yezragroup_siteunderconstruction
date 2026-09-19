@@ -19,6 +19,24 @@ export default async function EmailPreviewsPage() {
     .eq('id', 'default')
     .maybeSingle();
 
+  // Moved here from the public /contact page — it was admin-gated there
+  // too (never sent to a real visitor), but debug scaffolding has no
+  // business living in a public page's code path when there's already a
+  // dedicated admin tool for exactly this kind of email-sending check.
+  const diagnostics: string[] = [];
+  const keyPrefix = process.env.RESEND_API_KEY?.slice(0, 6) ?? null;
+  diagnostics.push(keyPrefix ? `RESEND_API_KEY is set (starts "${keyPrefix}").` : 'RESEND_API_KEY is NOT set.');
+  diagnostics.push(
+    process.env.RESEND_FROM_EMAIL
+      ? `RESEND_FROM_EMAIL = ${process.env.RESEND_FROM_EMAIL}`
+      : 'RESEND_FROM_EMAIL is NOT set.'
+  );
+  diagnostics.push(
+    settings?.contact_email
+      ? `Admin notifications (contact form, purchase/entitlement alerts) go to: ${settings.contact_email}`
+      : 'site_settings.contact_email is EMPTY — admin notifications have nowhere to send.'
+  );
+
   return (
     <>
       <h1>Email Previews</h1>
@@ -29,6 +47,21 @@ export default async function EmailPreviewsPage() {
         branding/design change in an actual inbox without waiting for a real RSVP, purchase, or contact form
         submission.
       </p>
+      <div
+        className="admin-card"
+        style={{
+          marginBottom: 20,
+          fontSize: 12.5,
+          fontFamily: 'monospace',
+          color: 'var(--muted-l)',
+          whiteSpace: 'pre-wrap',
+        }}
+      >
+        <div style={{ marginBottom: 6, fontFamily: 'inherit', fontWeight: 600, color: 'var(--charcoal)' }}>
+          Email sending diagnostics
+        </div>
+        {diagnostics.join('\n')}
+      </div>
       <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {BUTTONS.map((b, i) => (
           <div
