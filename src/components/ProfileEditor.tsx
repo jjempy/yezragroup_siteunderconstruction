@@ -4,26 +4,37 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { updateProfileAction } from '@/app/account/actions';
 
-/** Name/phone used to be permanently-open <input> fields sitting in
- * default browser chrome — every visit read like an unfinished form
- * waiting to be submitted, on the one page that's actually the user's
- * own space. This shows plain text by default (name bold and
- * prominent, since it's literally the one thing on this page that's
- * theirs) and only becomes an editable form after an explicit Edit
- * click, with a Cancel back to the display state. */
+function initialsFor(fullName: string, email: string): string {
+  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (email[0] ?? '?').toUpperCase();
+}
+
+/** The account page's identity hero — replaces both the old standalone
+ * "Your Account" heading and the separate Profile module below it with
+ * one moment: an avatar, the user's name (bold — it's the one thing on
+ * this page that's actually theirs), and how to reach them. Name/phone
+ * stay out of permanently-open <input> fields (that read like an
+ * unfinished form) until an explicit Edit click swaps in the editable
+ * form, with Cancel back to the display state. */
 export function ProfileEditor({
   fullName,
+  email,
   phoneDisplay,
+  memberSince,
   hasStripeCustomer,
 }: {
   fullName: string;
+  email: string;
   phoneDisplay: string;
+  memberSince: string;
   hasStripeCustomer: boolean;
 }) {
   const [editing, setEditing] = useState(false);
 
-  const billingLink = (
-    <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgba(243,238,227,.1)' }}>
+  const secondaryLinks = (
+    <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgb(from var(--cream) r g b / .1)' }}>
       <Link href="/forgot-password" style={{ fontSize: 13, color: 'var(--muted-d)', textDecoration: 'underline' }}>
         Change password
       </Link>
@@ -52,13 +63,16 @@ export function ProfileEditor({
   if (!editing) {
     return (
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: 21, fontWeight: 700, color: 'var(--cream)', lineHeight: 1.3 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+          <div className="profile-avatar">{initialsFor(fullName, email)}</div>
+          <div style={{ flexGrow: 1, minWidth: 180 }}>
+            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--cream)', lineHeight: 1.25 }}>
               {fullName || <span style={{ color: 'var(--muted-d)', fontWeight: 500 }}>Add your name</span>}
             </div>
-            <div style={{ fontSize: 14, color: 'var(--muted-d)', marginTop: 4 }}>
-              {phoneDisplay || 'Add a phone number'}
+            <div style={{ fontSize: 13.5, color: 'var(--muted-d)', marginTop: 3 }}>
+              {memberSince ? `Member since ${memberSince} · ` : ''}
+              {email}
+              {phoneDisplay ? ` · ${phoneDisplay}` : ''}
             </div>
           </div>
           <button
@@ -70,7 +84,7 @@ export function ProfileEditor({
             Edit
           </button>
         </div>
-        {billingLink}
+        {secondaryLinks}
       </div>
     );
   }
@@ -96,7 +110,7 @@ export function ProfileEditor({
           Cancel
         </button>
       </div>
-      {billingLink}
+      {secondaryLinks}
     </form>
   );
 }

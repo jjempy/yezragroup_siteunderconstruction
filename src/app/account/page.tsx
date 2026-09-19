@@ -76,91 +76,139 @@ export default async function AccountPage({
     return ageMs < 1000 * 60 * 60 * 24 * 30;
   });
 
+  const memberSince = user.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    : '';
+
+  // Tappable shortcuts to what someone actually came here to do —
+  // replaces the old standalone "Quick Links" text-link module.
+  // Billing isn't here: it's a POST-form action (the Stripe portal
+  // redirect), not a plain link, so it stays as the "Manage billing"
+  // text link under the profile hero instead of an awkward form-in-a-
+  // grid-tile.
+  const tiles: { href: string; label: string; icon: React.ReactNode }[] = [];
+  if (workshopEntitlement) {
+    tiles.push({
+      href: '/library',
+      label: 'Library',
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      ),
+    });
+  }
+  tiles.push({
+    href: '/#calendar',
+    label: 'Masterclasses',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <path d="M16 2v4M8 2v4M3 10h18" />
+      </svg>
+    ),
+  });
+  tiles.push({
+    href: '/#ladder',
+    label: 'Work Together',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2">
+        <path d="M12 2 3 7l9 5 9-5-9-5z" />
+        <path d="M3 12l9 5 9-5M3 17l9 5 9-5" />
+      </svg>
+    ),
+  });
+
   return (
     <>
       <AuthHeader logoUrl={settings?.logo_url} />
       <div className="account-shell">
         <div className="account-content">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 12 }}>
-            <div>
-              <h1>Your Account</h1>
-              <p className="sub" style={{ margin: 0 }}>{user.email}</p>
-            </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {/* Account is the landing page after sign-in for everyone,
-                  admins included — without this, reaching the admin
-                  panel meant going all the way back to the homepage
-                  first just to click its nav link. */}
-              {profile?.role === 'admin' && (
-                <Link href="/admin" className="btn-ghost" style={{ padding: '10px 18px' }}>
-                  Admin Panel
-                </Link>
-              )}
-              <form action={signOutAction}>
-                <button className="btn-ghost" type="submit" style={{ cursor: 'pointer', padding: '10px 18px' }}>
-                  Sign Out
-                </button>
-              </form>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginBottom: 8 }}>
+            {/* Account is the landing page after sign-in for everyone,
+                admins included — without this, reaching the admin
+                panel meant going all the way back to the homepage
+                first just to click its nav link. */}
+            {profile?.role === 'admin' && (
+              <Link href="/admin" className="btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                Admin Panel
+              </Link>
+            )}
+            <form action={signOutAction}>
+              <button className="btn-ghost" type="submit" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: 13 }}>
+                Sign Out
+              </button>
+            </form>
           </div>
 
-          {searchParams.saved && <p className="admin-toast ok" style={{ marginTop: 20 }}>Saved</p>}
-          {searchParams.error && <p className="admin-toast err" style={{ marginTop: 20 }}>{searchParams.error}</p>}
+          {searchParams.saved && <p className="admin-toast ok" style={{ marginBottom: 20 }}>Saved</p>}
+          {searchParams.error && <p className="admin-toast err" style={{ marginBottom: 20 }}>{searchParams.error}</p>}
 
-          {/* ---------- Profile ---------- */}
-          <div className="account-module" style={{ marginTop: 28 }}>
-            <h2>Profile</h2>
+          {/* ---------- Identity + shortcuts ---------- */}
+          <div className="account-module" style={{ marginTop: 0 }}>
             <ProfileEditor
               fullName={profile?.full_name ?? ''}
+              email={user.email ?? ''}
               phoneDisplay={formatPhoneDisplay(profile?.phone) || ''}
+              memberSince={memberSince}
               hasStripeCustomer={Boolean(workshopEntitlement?.stripe_customer_id)}
             />
+            <div className="account-tiles">
+              {tiles.map((tile) => (
+                <Link key={tile.label} href={tile.href} className="account-tile">
+                  <div className="account-tile-icon primary">{tile.icon}</div>
+                  <span className="account-tile-label">{tile.label}</span>
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* ---------- Workshop Library ---------- */}
-          <div className="account-module">
-            <h2>Workshop Library</h2>
-            {workshopEntitlement ? (
-              <>
-                <p className="sub" style={{ marginBottom: 6 }}>
-                  {videoList.length > 0
-                    ? `${viewedCount} of ${videoList.length} sessions viewed.`
-                    : 'Full access — episodes are added regularly.'}
+          {workshopEntitlement ? (
+            <div className="account-module">
+              <h2>Workshop Library</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--cream)' }}>
+                  {videoList.length > 0 ? `${viewedCount} of ${videoList.length} sessions viewed` : 'Full access'}
+                </span>
+                <span className="status-pill active">Active</span>
+              </div>
+              {videoList.length > 0 && (
+                <div className="progress-track" style={{ marginBottom: 10 }}>
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${Math.min(100, Math.round((viewedCount / videoList.length) * 100))}%` }}
+                  />
+                </div>
+              )}
+              {newVideos.length > 0 && (
+                <p className="sub" style={{ margin: 0 }}>
+                  {newVideos.length} new session{newVideos.length === 1 ? '' : 's'} added in the last 30 days.
                 </p>
-                {newVideos.length > 0 && (
-                  <p className="sub" style={{ marginBottom: 16 }}>
-                    {newVideos.length} new session{newVideos.length === 1 ? '' : 's'} added in the last 30 days.
-                  </p>
-                )}
-                <Link href="/library" className="btn-primary" style={{ display: 'inline-block' }}>
-                  Go to the Library
-                </Link>
-                {auditRoomTier?.is_visible && (
-                  <p style={{ marginTop: 18, fontSize: 13.5, color: 'var(--muted-d)' }}>
-                    Next step, when you&apos;re ready:{' '}
-                    <Link href={auditRoomTier.cta_href || '/#ladder'} style={{ color: 'var(--gold-bright)', textDecoration: 'underline' }}>
-                      {auditRoomTier.title || 'The Audit Room'}
-                    </Link>
-                    .
-                  </p>
-                )}
-              </>
-            ) : workshopTier?.is_visible ? (
-              <>
-                <p className="sub">
-                  The full, uncut version of every session — longer than the free edit, with the parts that
-                  didn&apos;t make the public cut.
+              )}
+              {auditRoomTier?.is_visible && (
+                <p style={{ marginTop: 14, fontSize: 13.5, color: 'var(--muted-d)' }}>
+                  Next step, when you&apos;re ready:{' '}
+                  <Link href={auditRoomTier.cta_href || '/#ladder'} style={{ color: 'var(--gold-bright)', textDecoration: 'underline' }}>
+                    {auditRoomTier.title || 'The Audit Room'}
+                  </Link>
+                  .
                 </p>
-                <a href="/api/checkout/workshop-library" className="btn-primary" style={{ display: 'inline-block' }}>
-                  {workshopTier.cta_label || 'Get Access'} — {workshopTier.price_label}
-                </a>
-              </>
-            ) : (
-              <Link href="/#ladder" className="btn-ghost" style={{ display: 'inline-block' }}>
-                See Ways to Work Together
-              </Link>
-            )}
-          </div>
+              )}
+            </div>
+          ) : workshopTier?.is_visible ? (
+            <div className="account-module">
+              <h2>Workshop Library</h2>
+              <p className="sub">
+                The full, uncut version of every session — longer than the free edit, with the parts that
+                didn&apos;t make the public cut.
+              </p>
+              <a href="/api/checkout/workshop-library" className="btn-primary" style={{ display: 'inline-block' }}>
+                {workshopTier.cta_label || 'Get Access'} — {workshopTier.price_label}
+              </a>
+            </div>
+          ) : null}
 
           {/* ---------- Audit Room / Scoped Engagement / VIP ----------
               These tiers don't have self-serve purchase/registration flows
@@ -213,47 +261,16 @@ export default async function AccountPage({
             );
           })}
 
-          {/* ---------- Quick Links ---------- */}
-          <div className="account-module">
-            <h2>Quick Links</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {workshopEntitlement && (
-                <Link href="/library" style={{ color: 'var(--gold-bright)', fontSize: 14 }}>
-                  Workshop Library →
-                </Link>
-              )}
-              <Link href="/#calendar" style={{ color: 'var(--cream)', fontSize: 14 }}>
-                Upcoming Free Masterclasses →
-              </Link>
-              <Link href="/#ladder" style={{ color: 'var(--cream)', fontSize: 14 }}>
-                Ways to Work Together →
-              </Link>
-            </div>
-          </div>
-
           {/* ---------- Order History ---------- */}
           <div className="account-module" id="orders">
             <h2>Order History</h2>
             {orderList.length === 0 ? (
               <p className="sub" style={{ margin: 0 }}>No purchases yet.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ margin: '0 -30px' }}>
                 {orderList.map((order) => (
-                  <div
-                    key={order.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: 12,
-                      padding: '12px 14px',
-                      background: 'rgba(243,238,227,.05)',
-                      border: '1px solid rgba(243,238,227,.1)',
-                      borderRadius: 4,
-                      opacity: isActive(order) ? 1 : 0.55,
-                    }}
-                  >
-                    <div>
+                  <div key={order.id} className="order-row" style={{ opacity: isActive(order) ? 1 : 0.55 }}>
+                    <div style={{ flexGrow: 1 }}>
                       <div style={{ color: 'var(--cream)', fontSize: 14, fontWeight: 600 }}>
                         {PRODUCT_LABELS[order.product] ?? order.product}
                         {!isActive(order) && (
