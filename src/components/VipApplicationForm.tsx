@@ -18,6 +18,7 @@ export function VipApplicationForm({
   prefillEmail: string;
 }) {
   const [referralSource, setReferralSource] = useState('other');
+  const [company, setCompany] = useState('');
 
   return (
     <form action={submitVipApplication}>
@@ -43,8 +44,28 @@ export function VipApplicationForm({
       </div>
       <div className="field">
         <label htmlFor="company">Company (optional)</label>
-        <input id="company" name="company" type="text" autoComplete="organization" />
+        <input
+          id="company"
+          name="company"
+          type="text"
+          autoComplete="organization"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+        />
       </div>
+      {company.trim() !== '' && (
+        <div className="field">
+          <label htmlFor="company_url">Company Website</label>
+          <input
+            id="company_url"
+            name="company_url"
+            type="url"
+            required
+            autoComplete="url"
+            placeholder="https://"
+          />
+        </div>
+      )}
       <div className="field">
         <label htmlFor="annual_revenue">Annual Revenue</label>
         <select id="annual_revenue" name="annual_revenue" required defaultValue="">

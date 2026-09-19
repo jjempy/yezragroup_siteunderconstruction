@@ -14,3 +14,18 @@ export async function updateVipApplicationStatus(formData: FormData) {
 
   revalidatePath('/admin/vip-applications');
 }
+
+/** A running internal log — meant to be appended to by hand over time
+ * (dated entries the admin types themselves), not a structured
+ * activity feed. Stands in for a real CRM (Airtable) until that's set
+ * up; text has no length limit at the database level. */
+export async function updateVipApplicationNotes(formData: FormData) {
+  await requireAdmin();
+  const id = formData.get('id') as string;
+  const notes = (formData.get('notes') as string) ?? '';
+
+  const supabase = createClient();
+  await supabase.from('vip_applications').update({ notes }).eq('id', id);
+
+  revalidatePath('/admin/vip-applications');
+}

@@ -1,4 +1,5 @@
 import 'server-only';
+import { zonedWallClockToUtc } from '@/lib/timezone';
 
 /**
  * Builds "Add to Calendar" options for a masterclass session — a Google
@@ -18,40 +19,14 @@ import 'server-only';
  * safely parsed into an actual start/end time.
  */
 
-const TIMEZONE = 'America/New_York';
-
-function toUtcParts(dateStr: string, timeStr: string): { y: number; mo: number; d: number; h: number; mi: number } {
+// The DST-aware "zoned wall clock -> UTC" conversion this needs now
+// lives in lib/timezone.ts (shared with Analytics' day/week/month range
+// boundaries, which had the same underlying need) — this just adapts
+// this file's "YYYY-MM-DD" + "HH:MM" string inputs to it.
+function zonedTimeToUtc(dateStr: string, timeStr: string): Date {
   const [y, mo, d] = dateStr.split('-').map(Number);
   const [h, mi] = timeStr.split(':').map(Number);
-  return { y, mo, d, h, mi };
-}
-
-// Converts a wall-clock time in TIMEZONE to a UTC Date, accounting for
-// DST — there's no Intl-based direct "zoned time -> UTC" conversion, so
-// this uses the standard trick: format a UTC guess in the target zone,
-// compare, and correct by the offset difference.
-function zonedTimeToUtc(dateStr: string, timeStr: string): Date {
-  const { y, mo, d, h, mi } = toUtcParts(dateStr, timeStr);
-  const guessUtc = new Date(Date.UTC(y, mo - 1, d, h, mi));
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  const parts = Object.fromEntries(formatter.formatToParts(guessUtc).map((p) => [p.type, p.value]));
-  const asIfUtc = Date.UTC(
-    Number(parts.year),
-    Number(parts.month) - 1,
-    Number(parts.day),
-    Number(parts.hour === '24' ? '0' : parts.hour),
-    Number(parts.minute)
-  );
-  const offsetMs = guessUtc.getTime() - asIfUtc;
-  return new Date(guessUtc.getTime() + offsetMs);
+  return zonedWallClockToUtc(y, mo, d, h, mi);
 }
 
 function toIcsUtc(date: Date): string {

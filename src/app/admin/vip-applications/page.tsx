@@ -3,16 +3,9 @@ import { createClient } from '@/lib/supabase/server';
 import type { VipApplication } from '@/types/database';
 import { VIP_REFERRAL_LABELS, VIP_ANNUAL_REVENUE_LABELS } from '@/lib/vip';
 import { formatPhoneDisplay } from '@/lib/phone';
-import { updateVipApplicationStatus } from './actions';
-
-function formatWhen(iso: string) {
-  return new Date(iso).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
+import { LocalTimestamp } from '@/components/LocalTimestamp';
+import { VipStatusSelect } from '@/components/admin/VipStatusSelect';
+import { updateVipApplicationNotes } from './actions';
 
 export default async function VipApplicationsAdminPage() {
   await requireAdmin();
@@ -26,7 +19,8 @@ export default async function VipApplicationsAdminPage() {
       <h1>VIP Applications</h1>
       <p className="sub">
         {applications.length} total{newCount > 0 ? ` · ${newCount} new` : ''} — submitted through
-        &quot;Request an Application&quot; / &quot;Apply for VIP&quot; on the homepage.
+        &quot;Request an Application&quot; / &quot;Apply for VIP&quot; on the homepage. This is a stand-in
+        for a real CRM until Airtable is set up — the Status and Notes below are the running record.
       </p>
 
       {applications.length === 0 ? (
@@ -34,7 +28,11 @@ export default async function VipApplicationsAdminPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {applications.map((a) => (
-            <div key={a.id} className="admin-card" style={{ opacity: a.status === 'resolved' ? 0.6 : 1 }}>
+            <div
+              key={a.id}
+              className="admin-card"
+              style={{ opacity: a.status === 'sale' || a.status === 'no_sale' ? 0.7 : 1 }}
+            >
               <div
                 style={{
                   display: 'flex',
@@ -53,55 +51,46 @@ export default async function VipApplicationsAdminPage() {
                     </span>
                   )}
                   <div style={{ fontSize: 12.5, color: 'var(--muted-l)', marginTop: 2 }}>
-                    {a.company ? `${a.company} · ` : ''}
+                    {a.company ? (
+                      <>
+                        {a.company_url ? (
+                          <a href={a.company_url} target="_blank" rel="noopener noreferrer">
+                            {a.company}
+                          </a>
+                        ) : (
+                          a.company
+                        )}{' '}
+                        ·{' '}
+                      </>
+                    ) : (
+                      ''
+                    )}
                     {VIP_ANNUAL_REVENUE_LABELS[a.annual_revenue] ?? a.annual_revenue} annual revenue ·{' '}
                     {VIP_REFERRAL_LABELS[a.referral_source] ?? a.referral_source}
                     {a.referral_source === 'referred' && a.referred_by ? ` (${a.referred_by})` : ''} ·{' '}
-                    {formatWhen(a.created_at)}
+                    <LocalTimestamp iso={a.created_at} variant="when" />
                   </div>
                 </div>
-                <span
-                  style={{
-                    fontSize: 11,
-                    textTransform: 'uppercase',
-                    letterSpacing: '.05em',
-                    fontWeight: 700,
-                    color: a.status === 'new' ? 'var(--gold-deep)' : 'var(--muted-l)',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {a.status}
-                </span>
+                <VipStatusSelect id={a.id} status={a.status} />
               </div>
               <p style={{ fontSize: 14.5, lineHeight: 1.7, whiteSpace: 'pre-line', marginBottom: 14 }}>{a.message}</p>
-              <div style={{ display: 'flex', gap: 10 }}>
-                {a.status !== 'reviewed' && (
-                  <form action={updateVipApplicationStatus}>
-                    <input type="hidden" name="id" value={a.id} />
-                    <input type="hidden" name="status" value="reviewed" />
-                    <button className="admin-btn secondary" style={{ padding: '6px 14px', fontSize: 12.5 }} type="submit">
-                      Mark Reviewed
-                    </button>
-                  </form>
-                )}
-                {a.status !== 'resolved' ? (
-                  <form action={updateVipApplicationStatus}>
-                    <input type="hidden" name="id" value={a.id} />
-                    <input type="hidden" name="status" value="resolved" />
-                    <button className="admin-btn" style={{ padding: '6px 14px', fontSize: 12.5 }} type="submit">
-                      Resolve
-                    </button>
-                  </form>
-                ) : (
-                  <form action={updateVipApplicationStatus}>
-                    <input type="hidden" name="id" value={a.id} />
-                    <input type="hidden" name="status" value="new" />
-                    <button className="admin-btn secondary" style={{ padding: '6px 14px', fontSize: 12.5 }} type="submit">
-                      Reopen
-                    </button>
-                  </form>
-                )}
-              </div>
+
+              <form action={updateVipApplicationNotes}>
+                <input type="hidden" name="id" value={a.id} />
+                <div className="admin-field" style={{ marginBottom: 8 }}>
+                  <label htmlFor={`notes-${a.id}`}>Notes</label>
+                  <textarea
+                    id={`notes-${a.id}`}
+                    name="notes"
+                    defaultValue={a.notes}
+                    rows={4}
+                    placeholder="Running notes — call summaries, next steps, anything worth remembering. No length limit."
+                  />
+                </div>
+                <button className="admin-btn secondary" type="submit" style={{ padding: '6px 14px', fontSize: 12.5 }}>
+                  Save Notes
+                </button>
+              </form>
             </div>
           ))}
         </div>

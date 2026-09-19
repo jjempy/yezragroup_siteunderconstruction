@@ -171,6 +171,7 @@ export interface ContactMessage {
 }
 
 export type VipAnnualRevenue = 'under_500k' | '500k_1m' | '1m_3m' | '3m_5m' | '5m_10m' | 'over_10m';
+export type VipStatus = 'new' | 'discovery_scheduled' | 'close_scheduled' | 'sale' | 'no_sale';
 
 export interface VipApplication {
   id: string;
@@ -178,11 +179,13 @@ export interface VipApplication {
   email: string;
   phone: string;
   company: string;
+  company_url: string;
   message: string;
   referral_source: 'scoped_engagement' | 'masterclass' | 'referred' | 'other';
   referred_by: string;
   annual_revenue: VipAnnualRevenue;
-  status: 'new' | 'reviewed' | 'resolved';
+  status: VipStatus;
+  notes: string;
   created_at: string;
 }
 

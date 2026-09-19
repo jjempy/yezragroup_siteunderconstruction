@@ -347,6 +347,7 @@ export interface VipApplicationInput {
   email: string;
   phone: string;
   company: string;
+  companyUrl: string;
   referralSource: string;
   referredBy: string;
   annualRevenue: string;
@@ -372,7 +373,21 @@ export function renderVipApplicationNotificationEmail(app: VipApplicationInput, 
       <p style="font-size:14px;color:#5C6F72;margin:0 0 16px;">${escapeHtml(VIP_ANNUAL_REVENUE_LABELS[app.annualRevenue] ?? app.annualRevenue)} annual revenue</p>
       <p style="font-size:16px;font-weight:600;margin:0 0 4px;">${escapeHtml(app.name)} — ${escapeHtml(app.email)}</p>
       <p style="font-size:14px;color:#5C6F72;margin:0 0 4px;">${escapeHtml(app.phone)}</p>
-      ${app.company ? `<p style="font-size:14px;color:#5C6F72;margin:0 0 16px;">${escapeHtml(app.company)}</p>` : ''}
+      ${
+        app.company
+          ? `<p style="font-size:14px;color:#5C6F72;margin:0 0 16px;">${escapeHtml(app.company)}${
+              // Only ever rendered as a link when it's already a safe
+              // http(s) URL — server-validated in apply-vip/actions.ts,
+              // checked again here since this is still anonymous public
+              // input reaching an <a href>.
+              /^https?:\/\//i.test(app.companyUrl)
+                ? ` — <a href="${escapeHtml(app.companyUrl)}">${escapeHtml(app.companyUrl)}</a>`
+                : app.companyUrl
+                  ? ` — ${escapeHtml(app.companyUrl)}`
+                  : ''
+            }</p>`
+          : ''
+      }
       <div style="background:#fff;border:1px solid #E1DACB;border-radius:6px;padding:18px 20px;white-space:pre-line;font-size:14.5px;line-height:1.6;">${escapeHtml(app.message)}</div>
       <p style="font-size:12.5px;color:#8a9598;margin:16px 0 0;">Hit reply — it goes straight to ${escapeHtml(app.email)}, not back to this notification.</p>
     </div>

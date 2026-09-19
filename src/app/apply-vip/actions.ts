@@ -34,6 +34,7 @@ export async function submitVipApplication(formData: FormData) {
   const referralSource = VALID_REFERRAL_SOURCES.has(referralSourceRaw) ? referralSourceRaw : 'other';
   const referredBy = ((formData.get('referred_by') as string) ?? '').trim();
   const annualRevenueRaw = ((formData.get('annual_revenue') as string) ?? '').trim();
+  let companyUrl = ((formData.get('company_url') as string) ?? '').trim();
 
   if (honeypot) {
     redirect('/apply-vip?sent=1');
@@ -54,6 +55,22 @@ export async function submitVipApplication(formData: FormData) {
   if (referralSource === 'referred' && !referredBy) {
     failure('Please tell us who referred you.');
   }
+  if (company) {
+    if (!companyUrl) {
+      failure("Please include a website for your company (or leave the company field blank if there isn't one).");
+    }
+    // Forgiving of "example.com" with no scheme typed — anything that
+    // still doesn't parse as an absolute URL after that is rejected
+    // rather than silently stored broken.
+    if (!/^https?:\/\//i.test(companyUrl)) companyUrl = `https://${companyUrl}`;
+    try {
+      new URL(companyUrl);
+    } catch {
+      failure("That company website doesn't look like a valid URL.");
+    }
+  } else {
+    companyUrl = '';
+  }
 
   const supabase = createClient();
   const { error } = await supabase.from('vip_applications').insert({
@@ -61,6 +78,7 @@ export async function submitVipApplication(formData: FormData) {
     email,
     phone,
     company,
+    company_url: companyUrl,
     message,
     referral_source: referralSource,
     referred_by: referralSource === 'referred' ? referredBy : '',
@@ -84,7 +102,17 @@ export async function submitVipApplication(formData: FormData) {
       to: settings.contact_email,
       subject: `New VIP application — ${name}`,
       html: renderVipApplicationNotificationEmail(
-        { name, email, phone, company, message, referralSource, referredBy, annualRevenue: annualRevenueRaw },
+        {
+          name,
+          email,
+          phone,
+          company,
+          companyUrl,
+          message,
+          referralSource,
+          referredBy,
+          annualRevenue: annualRevenueRaw,
+        },
         branding
       ),
       replyTo: email,

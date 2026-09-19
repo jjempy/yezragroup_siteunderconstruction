@@ -6,6 +6,7 @@ import { signOutAction, updateProfileAction, updateRosterOptIn } from './actions
 import type { Entitlement, LadderTier, PaidVideoRow } from '@/types/database';
 import { formatPhoneDisplay } from '@/lib/phone';
 import { PRODUCT_LABELS } from '@/lib/entitlements';
+import { LocalTimestamp } from '@/components/LocalTimestamp';
 
 // The old default copy ("Details from your engagement will show up here")
 // read the same whether someone had paid a full deposit or nothing at
@@ -22,10 +23,6 @@ const ENTITLEMENT_STATUS_COPY: Record<string, string> = {
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
-
-function formatOrderDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 function formatMoney(amountTotal: number | null, currency: string | null) {
   if (amountTotal == null || !currency) return 'Free / comped';
@@ -216,7 +213,7 @@ export default async function AccountPage({
               <div className="account-module" key={product}>
                 <h2>{PRODUCT_LABELS[product]}</h2>
                 <p className="sub" style={{ marginBottom: e.note ? 12 : 0 }}>
-                  Since {formatOrderDate(e.granted_at)}.
+                  Since <LocalTimestamp iso={e.granted_at} variant="date" />.
                 </p>
                 {e.note ? (
                   <p style={{ color: 'var(--cream)', fontSize: 14.5, lineHeight: 1.7, whiteSpace: 'pre-line' }}>
@@ -303,7 +300,7 @@ export default async function AccountPage({
                         )}
                       </div>
                       <div style={{ color: 'var(--muted-d)', fontSize: 12.5, marginTop: 2 }}>
-                        {formatOrderDate(order.granted_at)}
+                        <LocalTimestamp iso={order.granted_at} variant="date" />
                         {order.source === 'manual_admin' ? ' · Manual' : ' · Stripe'}
                       </div>
                     </div>

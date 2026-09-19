@@ -2,16 +2,8 @@ import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import type { ContactMessage } from '@/types/database';
 import { CONTACT_REASON_LABELS } from '@/lib/email';
+import { LocalTimestamp } from '@/components/LocalTimestamp';
 import { updateMessageStatus } from './actions';
-
-function formatWhen(iso: string) {
-  return new Date(iso).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
 
 export default async function AdminMessagesPage() {
   await requireAdmin();
@@ -46,7 +38,7 @@ export default async function AdminMessagesPage() {
                 <div>
                   <strong>{m.name}</strong> — <a href={`mailto:${m.email}`}>{m.email}</a>
                   <div style={{ fontSize: 12.5, color: 'var(--muted-l)', marginTop: 2 }}>
-                    {CONTACT_REASON_LABELS[m.reason] ?? m.reason} · {formatWhen(m.created_at)}
+                    {CONTACT_REASON_LABELS[m.reason] ?? m.reason} · <LocalTimestamp iso={m.created_at} variant="when" />
                   </div>
                 </div>
                 <span

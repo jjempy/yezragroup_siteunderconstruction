@@ -18,3 +18,15 @@ export const VIP_ANNUAL_REVENUE_LABELS: Record<string, string> = {
   '5m_10m': '$5M – $10M',
   over_10m: 'More than $10M',
 };
+
+// A real sales pipeline (this table stands in for a CRM — Airtable —
+// until that's set up) rather than the generic new/reviewed/resolved
+// this started with. Order matters here: it's the order the admin's
+// status dropdown lists them in, roughly the order a deal moves through.
+export const VIP_STATUS_LABELS: Record<string, string> = {
+  new: 'New',
+  discovery_scheduled: 'Discovery Call Scheduled',
+  close_scheduled: 'Close Call Scheduled',
+  sale: 'Sale',
+  no_sale: 'No Sale',
+};
