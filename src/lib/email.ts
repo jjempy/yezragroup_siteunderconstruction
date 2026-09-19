@@ -1,6 +1,7 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { buildCalendarInvite, type CalendarInviteInput } from '@/lib/calendar-invite';
+import { VIP_REFERRAL_LABELS, VIP_ANNUAL_REVENUE_LABELS } from '@/lib/vip';
 
 /** Escapes text pulled from a public, no-login form (contact, VIP
  * application) before it's interpolated into an email's HTML — without
@@ -341,19 +342,14 @@ export function renderContactAckEmail(msg: { name: string }, b: EmailBranding) {
   </div>`;
 }
 
-export const VIP_REFERRAL_LABELS: Record<string, string> = {
-  scoped_engagement: 'Completed a Scoped Engagement',
-  masterclass: 'Attended a masterclass',
-  referred: 'Referred by someone',
-  other: 'Other',
-};
-
 export interface VipApplicationInput {
   name: string;
   email: string;
   phone: string;
   company: string;
   referralSource: string;
+  referredBy: string;
+  annualRevenue: string;
   message: string;
 }
 
@@ -363,14 +359,19 @@ export interface VipApplicationInput {
  * notes) with something that actually lands in our own database and
  * inbox. */
 export function renderVipApplicationNotificationEmail(app: VipApplicationInput, b: EmailBranding) {
+  const referralLine =
+    app.referralSource === 'referred' && app.referredBy
+      ? `${VIP_REFERRAL_LABELS[app.referralSource]} — ${escapeHtml(app.referredBy)}`
+      : escapeHtml(VIP_REFERRAL_LABELS[app.referralSource] ?? app.referralSource);
   return `
   <div style="${wrapStyle()}">
     ${emailHeader(b)}
     <div style="${bodyStyle(b)}">
       <h1 style="font-size:20px;margin:0 0 4px;">New VIP application</h1>
-      <p style="font-size:14px;color:#5C6F72;margin:0 0 16px;">${escapeHtml(VIP_REFERRAL_LABELS[app.referralSource] ?? app.referralSource)}</p>
+      <p style="font-size:14px;color:#5C6F72;margin:0 0 4px;">${referralLine}</p>
+      <p style="font-size:14px;color:#5C6F72;margin:0 0 16px;">${escapeHtml(VIP_ANNUAL_REVENUE_LABELS[app.annualRevenue] ?? app.annualRevenue)} annual revenue</p>
       <p style="font-size:16px;font-weight:600;margin:0 0 4px;">${escapeHtml(app.name)} — ${escapeHtml(app.email)}</p>
-      ${app.phone ? `<p style="font-size:14px;color:#5C6F72;margin:0 0 4px;">${escapeHtml(app.phone)}</p>` : ''}
+      <p style="font-size:14px;color:#5C6F72;margin:0 0 4px;">${escapeHtml(app.phone)}</p>
       ${app.company ? `<p style="font-size:14px;color:#5C6F72;margin:0 0 16px;">${escapeHtml(app.company)}</p>` : ''}
       <div style="background:#fff;border:1px solid #E1DACB;border-radius:6px;padding:18px 20px;white-space:pre-line;font-size:14.5px;line-height:1.6;">${escapeHtml(app.message)}</div>
       <p style="font-size:12.5px;color:#8a9598;margin:16px 0 0;">Hit reply — it goes straight to ${escapeHtml(app.email)}, not back to this notification.</p>

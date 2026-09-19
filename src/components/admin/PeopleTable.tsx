@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useTransition } from 'react';
 import type { AdminUserRow, NewsletterOnlyRow } from '@/lib/admin-users';
+import { formatPhoneDisplay } from '@/lib/phone';
 import { UserAccessPanel } from './UserAccessPanel';
 
 export function PeopleTable({
@@ -92,7 +93,17 @@ export function PeopleTable({
                 <tr>
                   <td>{user.full_name || '—'}</td>
                   <td>{user.email}</td>
-                  <td>{user.phone || '—'}</td>
+                  <td>
+                    {user.phone ? (
+                      // The raw stored value (E.164, "+18438043080") stays
+                      // in both the tel: link — for real click-to-call —
+                      // and every export path; only the on-screen text is
+                      // reformatted for readability.
+                      <a href={`tel:${user.phone}`}>{formatPhoneDisplay(user.phone)}</a>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                   <td>{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}</td>
                   <td>
                     <span className={`pill role-${user.role}`}>{user.role}</span>
@@ -164,7 +175,11 @@ export function PeopleTable({
               <span className={`pill role-${user.role}`}>{user.role}</span>
             </div>
             <div className="user-card-line">{user.email}</div>
-            {user.phone && <div className="user-card-line">{user.phone}</div>}
+            {user.phone && (
+              <div className="user-card-line">
+                <a href={`tel:${user.phone}`}>{formatPhoneDisplay(user.phone)}</a>
+              </div>
+            )}
             <div className="user-card-line">
               Last login: {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}
             </div>

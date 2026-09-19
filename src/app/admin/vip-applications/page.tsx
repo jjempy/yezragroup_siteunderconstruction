@@ -1,7 +1,8 @@
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import type { VipApplication } from '@/types/database';
-import { VIP_REFERRAL_LABELS } from '@/lib/email';
+import { VIP_REFERRAL_LABELS, VIP_ANNUAL_REVENUE_LABELS } from '@/lib/vip';
+import { formatPhoneDisplay } from '@/lib/phone';
 import { updateVipApplicationStatus } from './actions';
 
 function formatWhen(iso: string) {
@@ -45,10 +46,18 @@ export default async function VipApplicationsAdminPage() {
               >
                 <div>
                   <strong>{a.name}</strong> — <a href={`mailto:${a.email}`}>{a.email}</a>
-                  {a.phone && <span style={{ color: 'var(--muted-l)' }}> · {a.phone}</span>}
+                  {a.phone && (
+                    <span style={{ color: 'var(--muted-l)' }}>
+                      {' '}
+                      · <a href={`tel:${a.phone}`}>{formatPhoneDisplay(a.phone)}</a>
+                    </span>
+                  )}
                   <div style={{ fontSize: 12.5, color: 'var(--muted-l)', marginTop: 2 }}>
                     {a.company ? `${a.company} · ` : ''}
-                    {VIP_REFERRAL_LABELS[a.referral_source] ?? a.referral_source} · {formatWhen(a.created_at)}
+                    {VIP_ANNUAL_REVENUE_LABELS[a.annual_revenue] ?? a.annual_revenue} annual revenue ·{' '}
+                    {VIP_REFERRAL_LABELS[a.referral_source] ?? a.referral_source}
+                    {a.referral_source === 'referred' && a.referred_by ? ` (${a.referred_by})` : ''} ·{' '}
+                    {formatWhen(a.created_at)}
                   </div>
                 </div>
                 <span

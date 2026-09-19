@@ -170,6 +170,8 @@ export interface ContactMessage {
   created_at: string;
 }
 
+export type VipAnnualRevenue = 'under_500k' | '500k_1m' | '1m_3m' | '3m_5m' | '5m_10m' | 'over_10m';
+
 export interface VipApplication {
   id: string;
   name: string;
@@ -178,6 +180,8 @@ export interface VipApplication {
   company: string;
   message: string;
   referral_source: 'scoped_engagement' | 'masterclass' | 'referred' | 'other';
+  referred_by: string;
+  annual_revenue: VipAnnualRevenue;
   status: 'new' | 'reviewed' | 'resolved';
   created_at: string;
 }
