@@ -272,9 +272,14 @@ export function resolveTierHref(
         ? { href: '/api/checkout/scoped-engagement-deposit', configured: true }
         : { href: '#', configured: false };
     case 'vip':
-      return settings.vip_application_url
-        ? { href: settings.vip_application_url, configured: true }
-        : { href: '#', configured: false };
+      // Used to point at an external Tally/Google Form URL
+      // (settings.vip_application_url) — when that was never set, this
+      // fell back to '#', which just re-anchors the current page and
+      // reads as a broken looping link (exactly what got reported).
+      // Now a fixed in-house route: no configuration to forget, and
+      // applications land in our own database instead of a third-party
+      // tool. See /apply-vip and the 0023 migration.
+      return { href: '/apply-vip', configured: true };
     default:
       return { href: tier.cta_href || '#', configured: Boolean(tier.cta_href) };
   }

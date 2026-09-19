@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { EmphasisText } from './EmphasisText';
 import type { SiteSettings } from '@/types/database';
 
@@ -5,17 +6,22 @@ export function Hero({ settings }: { settings: SiteSettings }) {
   return (
     <section className="hero">
       {settings.hero_mark_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        // Above-the-fold and often the largest visible element on the
+        // page (the LCP candidate the audit flagged) — next/image gives
+        // it automatic format conversion (WebP/AVIF) and, with
+        // `priority`, preloads it instead of the default lazy-load,
+        // which would otherwise delay exactly the metric this is fixing.
+        <Image
           className="hero-mark orbit-spark"
           src={settings.hero_mark_url}
           alt=""
+          width={240}
+          height={240}
+          priority
           style={
             {
               opacity: settings.hero_mark_opacity / 100,
               '--hero-mark-opacity': settings.hero_mark_opacity / 100,
-              width: 240,
-              height: 240,
               objectFit: 'contain',
             } as React.CSSProperties
           }

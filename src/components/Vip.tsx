@@ -41,7 +41,9 @@ export function Vip({
                 </div>
               </div>
               <p style={{ fontSize: 13 }}>
-                Limited to a small number of days per year. Application review, not open checkout.
+                Limited to a small number of days per year. Application review, not open checkout —
+                typically the next step after a completed engagement or a masterclass, though every
+                application is read on its own.
               </p>
             </div>
             <div className="vip-side">
@@ -54,9 +56,7 @@ export function Vip({
               >
                 Request an Application
               </a>
-              <div className="fine">
-                Most applicants are referred from a completed scoped engagement or masterclass series.
-              </div>
+              <div className="fine">Every application gets a personal read — usually a reply within a few days.</div>
             </div>
           </div>
         </div>

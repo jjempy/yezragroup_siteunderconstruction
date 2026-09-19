@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { SiteSettings } from '@/types/database';
 
 export function About({ settings }: { settings: SiteSettings }) {
@@ -7,11 +8,16 @@ export function About({ settings }: { settings: SiteSettings }) {
         <div className="about-photo reveal" id="founder-photo">
           <div className="about-photo-fallback" />
           {settings.founder_photo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            // A real photograph, further down the page than the hero —
+            // next/image lazy-loads it by default (good; no `priority`
+            // here) and serves it resized/format-converted instead of
+            // the same full-resolution upload to every device.
+            <Image
               className="about-photo-img"
               src={settings.founder_photo_url}
               alt={`${settings.brand_name} — Founder`}
+              fill
+              sizes="(max-width: 800px) 100vw, 480px"
             />
           )}
         </div>

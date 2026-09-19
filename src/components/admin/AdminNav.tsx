@@ -27,6 +27,7 @@ const NAV: NavEntry[] = [
     items: [
       { href: '/admin/offers', label: 'Offers' },
       { href: '/admin/calendar', label: 'Calendar' },
+      { href: '/admin/vip-applications', label: 'VIP Applications' },
     ],
   },
   {

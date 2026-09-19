@@ -12,7 +12,7 @@ const LINK_FIELD: Partial<Record<LadderSlug, string>> = {
   workshop_library: 'stripe_workshop_library_url',
   audit_room: 'stripe_group_masterclass_url',
   scoped_engagement: 'scoped_engagement_url',
-  vip: 'vip_application_url',
+  // vip intentionally omitted — see the matching comment in page.tsx.
 };
 
 // A thrown error from a Server Action crashes to Next's generic error

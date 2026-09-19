@@ -2,6 +2,23 @@ import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { buildCalendarInvite, type CalendarInviteInput } from '@/lib/calendar-invite';
 
+/** Escapes text pulled from a public, no-login form (contact, VIP
+ * application) before it's interpolated into an email's HTML — without
+ * this, a visitor's own name or message field is raw HTML by the time it
+ * reaches whoever opens the notification email, letting a submission
+ * inject markup/links into what looks like our own email. Admin-authored
+ * content (session topics, brand settings) isn't run through this: that
+ * trust boundary already assumes DB access, this one is anonymous
+ * internet input. */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Thin wrapper over Resend's REST API (no SDK — one fetch call, no new
  * dependency to version-pin). Requires RESEND_API_KEY and
@@ -303,9 +320,9 @@ export function renderContactNotificationEmail(
     ${emailHeader(b)}
     <div style="${bodyStyle(b)}">
       <p style="font-size:14px;color:#5C6F72;margin:0 0 4px;">${CONTACT_REASON_LABELS[msg.reason] ?? msg.reason}</p>
-      <p style="font-size:16px;font-weight:600;margin:0 0 16px;">${msg.name} — ${msg.email}</p>
-      <div style="background:#fff;border:1px solid #E1DACB;border-radius:6px;padding:18px 20px;white-space:pre-line;font-size:14.5px;line-height:1.6;">${msg.message}</div>
-      <p style="font-size:12.5px;color:#8a9598;margin:16px 0 0;">Hit reply — it goes straight to ${msg.email}, not back to this notification.</p>
+      <p style="font-size:16px;font-weight:600;margin:0 0 16px;">${escapeHtml(msg.name)} — ${escapeHtml(msg.email)}</p>
+      <div style="background:#fff;border:1px solid #E1DACB;border-radius:6px;padding:18px 20px;white-space:pre-line;font-size:14.5px;line-height:1.6;">${escapeHtml(msg.message)}</div>
+      <p style="font-size:12.5px;color:#8a9598;margin:16px 0 0;">Hit reply — it goes straight to ${escapeHtml(msg.email)}, not back to this notification.</p>
     </div>
   </div>`;
 }
@@ -318,8 +335,56 @@ export function renderContactAckEmail(msg: { name: string }, b: EmailBranding) {
   <div style="${wrapStyle()}">
     ${emailHeader(b)}
     <div style="${bodyStyle(b)}">
-      <h1 style="font-size:22px;margin:0 0 16px;">Got it, ${msg.name.split(' ')[0] || 'thanks'}.</h1>
+      <h1 style="font-size:22px;margin:0 0 16px;">Got it, ${escapeHtml(msg.name.split(' ')[0] || 'thanks')}.</h1>
       <p style="font-size:15px;line-height:1.6;margin:0;">Your message came through — someone will get back to you personally.</p>
+    </div>
+  </div>`;
+}
+
+export const VIP_REFERRAL_LABELS: Record<string, string> = {
+  scoped_engagement: 'Completed a Scoped Engagement',
+  masterclass: 'Attended a masterclass',
+  referred: 'Referred by someone',
+  other: 'Other',
+};
+
+export interface VipApplicationInput {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  referralSource: string;
+  message: string;
+}
+
+/** Notifies the admin inbox the moment someone submits the in-house VIP
+ * application — replaces what used to be an external Tally/Google Form
+ * link (broken/looping on the live site — see the site-data.ts change
+ * notes) with something that actually lands in our own database and
+ * inbox. */
+export function renderVipApplicationNotificationEmail(app: VipApplicationInput, b: EmailBranding) {
+  return `
+  <div style="${wrapStyle()}">
+    ${emailHeader(b)}
+    <div style="${bodyStyle(b)}">
+      <h1 style="font-size:20px;margin:0 0 4px;">New VIP application</h1>
+      <p style="font-size:14px;color:#5C6F72;margin:0 0 16px;">${escapeHtml(VIP_REFERRAL_LABELS[app.referralSource] ?? app.referralSource)}</p>
+      <p style="font-size:16px;font-weight:600;margin:0 0 4px;">${escapeHtml(app.name)} — ${escapeHtml(app.email)}</p>
+      ${app.phone ? `<p style="font-size:14px;color:#5C6F72;margin:0 0 4px;">${escapeHtml(app.phone)}</p>` : ''}
+      ${app.company ? `<p style="font-size:14px;color:#5C6F72;margin:0 0 16px;">${escapeHtml(app.company)}</p>` : ''}
+      <div style="background:#fff;border:1px solid #E1DACB;border-radius:6px;padding:18px 20px;white-space:pre-line;font-size:14.5px;line-height:1.6;">${escapeHtml(app.message)}</div>
+      <p style="font-size:12.5px;color:#8a9598;margin:16px 0 0;">Hit reply — it goes straight to ${escapeHtml(app.email)}, not back to this notification.</p>
+    </div>
+  </div>`;
+}
+
+export function renderVipApplicationAckEmail(app: { name: string }, b: EmailBranding) {
+  return `
+  <div style="${wrapStyle()}">
+    ${emailHeader(b)}
+    <div style="${bodyStyle(b)}">
+      <h1 style="font-size:22px;margin:0 0 16px;">Got it, ${escapeHtml(app.name.split(' ')[0] || 'thanks')}.</h1>
+      <p style="font-size:15px;line-height:1.6;margin:0;">Your VIP application came through — applications are reviewed personally, not automatically approved, so it may take a few days to hear back.</p>
     </div>
   </div>`;
 }

@@ -23,12 +23,14 @@ export default async function AdminDashboard() {
   const startIso = weekRange.start.toISOString();
   const endIso = weekRange.end.toISOString();
 
-  const [{ count: newMessages }, { data: entitlements }, { data: sessions }, { data: rsvpRows }] = await Promise.all([
-    admin.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
-    admin.from('entitlements').select('*').gte('granted_at', startIso).lt('granted_at', endIso),
-    admin.from('calendar_sessions').select('*').eq('is_visible', true),
-    admin.from('masterclass_rsvps').select('calendar_session_id'),
-  ]);
+  const [{ count: newMessages }, { count: newVipApplications }, { data: entitlements }, { data: sessions }, { data: rsvpRows }] =
+    await Promise.all([
+      admin.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+      admin.from('vip_applications').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+      admin.from('entitlements').select('*').gte('granted_at', startIso).lt('granted_at', endIso),
+      admin.from('calendar_sessions').select('*').eq('is_visible', true),
+      admin.from('masterclass_rsvps').select('calendar_session_id'),
+    ]);
 
   const purchases =
     (entitlements as { product: string; amount_total: number | null; granted_at: string }[]) ?? [];
@@ -86,7 +88,7 @@ export default async function AdminDashboard() {
 
       <div className="admin-card" style={{ marginBottom: 20 }}>
         <h2>Needs Attention</h2>
-        {!newMessages && nearCapacity.length === 0 ? (
+        {!newMessages && !newVipApplications && nearCapacity.length === 0 ? (
           <p className="hint">Nothing needs you right now.</p>
         ) : (
           <div className="attention-list">
@@ -96,6 +98,14 @@ export default async function AdminDashboard() {
                   Unread contact message{newMessages === 1 ? '' : 's'}
                 </span>
                 <span className="attention-count">{newMessages}</span>
+              </Link>
+            )}
+            {Boolean(newVipApplications) && (
+              <Link href="/admin/vip-applications" className="attention-row" style={{ textDecoration: 'none' }}>
+                <span>
+                  New VIP application{newVipApplications === 1 ? '' : 's'}
+                </span>
+                <span className="attention-count">{newVipApplications}</span>
               </Link>
             )}
             {nearCapacity.map(({ session, count }) => (

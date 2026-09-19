@@ -19,11 +19,13 @@ const LINK_FIELD: Partial<Record<LadderSlug, { key: keyof SiteSettings; label: s
     label: 'Stripe Payment Link (Engagement Deposit)',
     hint: 'The $2,000 Engagement Deposit Payment Link from Stripe — credited toward the total project fee, not the full $25k+ (keeps card fees off a five-figure charge; the balance is arranged by wire/ACH once the engagement is scoped). Its "after payment" redirect should point to /checkout/success?product=scoped_engagement. After it clears, add the scope/next-steps details in Admin → Users → that client → Access, under the Scoped Engagement note — it shows up on their account page.',
   },
-  vip: {
-    key: 'vip_application_url',
-    label: 'Application Form URL',
-    hint: 'Tally/Google Forms share link. Keep payment off this form.',
-  },
+  // vip intentionally has no link field here — "Request an Application"
+  // now always goes to the in-house /apply-vip form (see
+  // site-data.ts's resolveTierHref). This used to point at an
+  // admin-set external Tally/Google Form URL; when that was never set,
+  // the button silently fell back to '#', which just re-anchored the
+  // homepage — a broken-looking loop with no obvious cause from this
+  // page. There's nothing left to configure here for VIP.
 };
 
 export default async function OffersAdminPage({

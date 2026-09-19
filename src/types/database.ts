@@ -170,6 +170,18 @@ export interface ContactMessage {
   created_at: string;
 }
 
+export interface VipApplication {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  message: string;
+  referral_source: 'scoped_engagement' | 'masterclass' | 'referred' | 'other';
+  status: 'new' | 'reviewed' | 'resolved';
+  created_at: string;
+}
+
 export interface Testimonial {
   id: string;
   sort_order: number;
@@ -192,6 +204,7 @@ export interface Database {
       calendar_sessions: { Row: CalendarSession; Insert: Partial<CalendarSession>; Update: Partial<CalendarSession> };
       masterclass_rsvps: { Row: MasterclassRsvp; Insert: Partial<MasterclassRsvp>; Update: Partial<MasterclassRsvp> };
       contact_messages: { Row: ContactMessage; Insert: Partial<ContactMessage>; Update: Partial<ContactMessage> };
+      vip_applications: { Row: VipApplication; Insert: Partial<VipApplication>; Update: Partial<VipApplication> };
     };
   };
 }
