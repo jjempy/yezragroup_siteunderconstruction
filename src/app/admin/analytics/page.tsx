@@ -118,6 +118,15 @@ export default async function AnalyticsAdminPage({
           <Link href={hrefFor(kind, offset - 1)} className="admin-btn secondary" style={{ padding: '6px 14px' }}>
             ← Previous
           </Link>
+          {offset !== 0 ? (
+            <Link href={hrefFor(kind, 0)} className="admin-btn secondary" style={{ padding: '6px 14px' }}>
+              Today
+            </Link>
+          ) : (
+            <span className="admin-btn secondary" style={{ padding: '6px 14px', opacity: 0.4, cursor: 'default' }}>
+              Today
+            </span>
+          )}
           {offset < 0 ? (
             <Link href={hrefFor(kind, offset + 1)} className="admin-btn secondary" style={{ padding: '6px 14px' }}>
               Next →

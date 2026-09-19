@@ -102,7 +102,12 @@ export function bucketsFor(kind: RangeKind, range: DateRange, minYear: number): 
       const bStart = new Date(cursor);
       const bEnd = new Date(cursor.getTime() + DAY_MS);
       buckets.push({
-        label: String(bStart.getDate()),
+        // A bare day-of-month number ("12") only made sense with the
+        // full date behind a hover tooltip — invisible on touch devices,
+        // and easy to misread as a count rather than a date even on
+        // desktop. Weekday + day ("Mon 12") reads as a date on sight,
+        // with no hover required.
+        label: bStart.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }),
         title: bStart.toLocaleDateString('en-US', SHORT_DATE),
         start: bStart,
         end: bEnd,

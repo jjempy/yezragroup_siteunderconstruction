@@ -103,27 +103,27 @@ export function PeopleTable({
                     </span>
                   </td>
                   <td>{user.on_newsletter ? 'Yes' : 'No'}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>
-                    <button
-                      className="admin-btn secondary"
-                      disabled={isPending || user.id === currentUserId}
-                      onClick={() => toggleRole(user)}
-                      style={{ marginRight: 8 }}
-                    >
-                      Make {user.role === 'admin' ? 'Standard' : 'Admin'}
-                    </button>
-                    <button
-                      className={`admin-btn ${user.blocked ? 'secondary' : 'danger'}`}
-                      disabled={isPending || user.id === currentUserId}
-                      onClick={() => toggleBlocked(user)}
-                      style={{ marginRight: 8 }}
-                    >
-                      {user.blocked ? 'Unblock' : 'Block'}
-                    </button>
-                    <button className="admin-btn secondary" onClick={() => toggleExpanded(user.id)}>
-                      {expanded.has(user.id) ? 'Hide Access' : 'Access'}
-                      {user.entitlements.some((e) => e.status === 'active') ? ' ●' : ''}
-                    </button>
+                  <td>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      <button
+                        className="admin-btn secondary"
+                        disabled={isPending || user.id === currentUserId}
+                        onClick={() => toggleRole(user)}
+                      >
+                        Make {user.role === 'admin' ? 'Standard' : 'Admin'}
+                      </button>
+                      <button
+                        className={`admin-btn ${user.blocked ? 'secondary' : 'danger'}`}
+                        disabled={isPending || user.id === currentUserId}
+                        onClick={() => toggleBlocked(user)}
+                      >
+                        {user.blocked ? 'Unblock' : 'Block'}
+                      </button>
+                      <button className="admin-btn secondary" onClick={() => toggleExpanded(user.id)}>
+                        {expanded.has(user.id) ? 'Hide Access' : 'Access'}
+                        {user.entitlements.some((e) => e.status === 'active') ? ' ●' : ''}
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 {expanded.has(user.id) && (
