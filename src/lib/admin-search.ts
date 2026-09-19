@@ -182,7 +182,10 @@ export async function searchAdminContent(rawQuery: string): Promise<AdminSearchM
   for (const v of (paidVideos as PaidVideoRow[] | null) ?? []) {
     if (matches(v.title, query)) {
       results.push({
-        page: '/admin/extended-videos',
+        // Extended Videos merged into the Videos page (see AdminNav) —
+        // pageLabel stays distinct so a result still says which section
+        // it came from, it just lands on /admin/videos now.
+        page: '/admin/videos',
         pageLabel: 'Extended Videos',
         fieldLabel: `${v.title} — Title`,
         fieldId: `title-${v.id}`,

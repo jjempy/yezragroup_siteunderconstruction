@@ -8,7 +8,7 @@ export default async function PeopleAdminPage() {
 
   return (
     <>
-      <h1>People</h1>
+      <h1>Accounts</h1>
       <p className="sub">
         {accounts.length} registered account{accounts.length === 1 ? '' : 's'}
         {newsletterOnly.length > 0 && (

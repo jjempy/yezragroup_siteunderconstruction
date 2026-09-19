@@ -7,10 +7,15 @@ import { createClient } from '@/lib/supabase/server';
 import type { PaidVideoRow } from '@/types/database';
 import { extractYouTubeId } from '@/lib/youtube';
 
+// Extended Videos merged into the Videos page (see AdminNav /
+// admin/videos/page.tsx) — this file stays at its original path since
+// server actions don't need to live next to the page that calls them,
+// but every redirect/revalidate target below now points at the merged
+// page instead of this now-retired route.
 function done() {
   revalidatePath('/library');
-  revalidatePath('/admin/extended-videos');
-  redirect('/admin/extended-videos?saved=1');
+  revalidatePath('/admin/videos');
+  redirect('/admin/videos?saved=1');
 }
 
 export async function addPaidVideo(formData: FormData) {

@@ -151,11 +151,11 @@ export default function PaymentsSetupPage() {
           intent. Once it clears:
         </p>
         <ol style={{ fontSize: 14, lineHeight: 1.9, color: 'var(--muted-l)', paddingLeft: 20 }}>
-          <li>You&apos;ll see it land in Admin → Analytics (Revenue by Source/Product) and on the client&apos;s row in Admin → Users → Access.</li>
+          <li>You&apos;ll see it land in Admin → Analytics (Revenue by Source/Product) and on the client&apos;s row in Admin → Accounts → Access.</li>
           <li>Reach out personally to scope the engagement — same as always.</li>
           <li>
             Add the scope summary and how the remaining balance will be paid (wire/ACH details,
-            invoice, etc.) as that client&apos;s Scoped Engagement note in Admin → Users → Access — it
+            invoice, etc.) as that client&apos;s Scoped Engagement note in Admin → Accounts → Access — it
             shows up directly on their account page, so they&apos;re not waiting on a separate email
             they might miss.
           </li>

@@ -10,16 +10,35 @@ type NavEntry = NavLink | { group: string; items: NavLink[] };
 // Grouped, not collapsed — every page is still one click away, the
 // grouping is just a visual sort so the sidebar reads as sections instead
 // of one long undifferentiated list.
+//
+// Reorganized from a flatter version per an explicit request to make
+// this read like a well-run SaaS admin panel: Dashboard/Analytics stay
+// top-level as the two most-visited pages; Messages + VIP Applications
+// (both "things people sent us") are now Inbox; Testimonials moved from
+// a general "Content" group into Site (it's a site-structure concern,
+// alongside Brand and Hero & About — same reasoning as moving it, not a
+// separate category); Workshop Videos and Extended Videos merged into
+// one "Videos" page (see admin/videos/page.tsx) instead of two nav
+// entries for what was one job; People is relabeled Accounts, the more
+// common term for this exact page in admin panels of this kind; and
+// Payments Setup + Email Previews — utility/setup pages rather than
+// day-to-day business content — are now grouped as Tools.
 const NAV: NavEntry[] = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/analytics', label: 'Analytics' },
-  { href: '/admin/messages', label: 'Messages' },
-  { href: '/admin/email-previews', label: 'Email Previews' },
+  {
+    group: 'Inbox',
+    items: [
+      { href: '/admin/messages', label: 'Messages' },
+      { href: '/admin/vip-applications', label: 'VIP Applications' },
+    ],
+  },
   {
     group: 'Site',
     items: [
       { href: '/admin/brand', label: 'Brand' },
       { href: '/admin/content', label: 'Hero & About' },
+      { href: '/admin/testimonials', label: 'Testimonials' },
     ],
   },
   {
@@ -27,19 +46,17 @@ const NAV: NavEntry[] = [
     items: [
       { href: '/admin/offers', label: 'Offers' },
       { href: '/admin/calendar', label: 'Calendar' },
-      { href: '/admin/vip-applications', label: 'VIP Applications' },
     ],
   },
+  { href: '/admin/videos', label: 'Videos' },
+  { href: '/admin/people', label: 'Accounts' },
   {
-    group: 'Content',
+    group: 'Tools',
     items: [
-      { href: '/admin/testimonials', label: 'Testimonials' },
-      { href: '/admin/videos', label: 'Workshop Videos' },
-      { href: '/admin/extended-videos', label: 'Extended Videos' },
+      { href: '/admin/payments-setup', label: 'Payments Setup' },
+      { href: '/admin/email-previews', label: 'Email Previews' },
     ],
   },
-  { href: '/admin/people', label: 'People' },
-  { href: '/admin/payments-setup', label: 'Payments Setup' },
 ];
 
 const ALL_LINKS: NavLink[] = NAV.flatMap((entry) => ('group' in entry ? entry.items : [entry]));
