@@ -675,10 +675,73 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
    reflows to 2-across on a phone instead of ever overflowing sideways. */
 .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
 .kpi-tile{text-align:center; padding:20px 12px;}
-.kpi-value{font-size:26px; font-weight:700; color:var(--charcoal); line-height:1.2;}
+.kpi-value{font-size:26px; font-weight:700; color:var(--charcoal); line-height:1.2; font-variant-numeric:proportional-nums;}
+/* Delta vs. the equivalent prior period — signed, and colored by
+   direction × whether up is good (every KPI here is "more is better",
+   so up is always the good color). These two exact hexes are the
+   dataviz skill's fixed status-text colors, not the brand palette —
+   status color is deliberately never themed, so "good" and "bad" read
+   the same on every page that ever adds one. */
+.kpi-delta{font-size:12px; font-weight:600; margin-top:4px;}
+.kpi-delta.up{color:#006300;}
+.kpi-delta.down{color:#d03b3b;}
+.kpi-delta.flat{color:var(--muted-l);}
 @media(max-width:700px){
   .kpi-grid{grid-template-columns:repeat(2,1fr); gap:10px;}
   .kpi-value{font-size:22px;}
+}
+
+/* ---------- Stacked bar chart (revenue by product) ----------
+   See src/components/admin/StackedBarChart.tsx for the structure this
+   styles; specs (2px surface gap, 4px rounded bar tops, hairline
+   gridlines, tooltip-on-hover-and-focus) follow the dataviz skill. */
+.chart-legend{display:flex; flex-wrap:wrap; gap:14px; margin-bottom:16px;}
+.chart-legend-item{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted-l);}
+.chart-legend-swatch{width:10px; height:10px; border-radius:2px; display:inline-block; flex-shrink:0;}
+.stacked-chart-body{display:flex; gap:10px;}
+.stacked-chart-axis{
+  display:flex; flex-direction:column; justify-content:space-between; text-align:right;
+  font-size:10.5px; color:var(--muted-l); flex-shrink:0; width:44px; padding-bottom:34px;
+}
+.stacked-chart-plot{position:relative; flex:1; min-width:0;}
+.stacked-chart-gridlines{position:absolute; left:0; right:0; top:0;}
+.stacked-gridline{position:absolute; left:0; right:0; border-top:1px solid var(--line-l);}
+.stacked-chart-bars{display:flex; align-items:flex-end; gap:6px; width:100%; position:relative;}
+.stacked-bar-col{flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center;}
+.stacked-bar-stack{position:relative; width:100%; max-width:36px; overflow:visible;}
+.stacked-bar-total{
+  position:absolute; left:50%; transform:translateX(-50%); margin-bottom:4px;
+  font-size:10.5px; color:var(--muted-l); white-space:nowrap; pointer-events:none;
+}
+.stacked-seg-wrap{position:absolute; left:0; right:0; outline:none; cursor:default;}
+.stacked-segment{width:100%; height:100%; transition:filter .1s;}
+.stacked-seg-wrap:hover .stacked-segment, .stacked-seg-wrap:focus-visible .stacked-segment{filter:brightness(1.12);}
+.stacked-tooltip{
+  position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:6px;
+  background:var(--ink); color:var(--cream); font-size:11px; padding:6px 9px; border-radius:4px;
+  white-space:nowrap; opacity:0; visibility:hidden; transition:opacity .12s; pointer-events:none; z-index:5;
+  display:flex; flex-direction:column; align-items:center; gap:1px; text-align:center;
+}
+.stacked-tooltip strong{font-size:12px;}
+.stacked-seg-wrap:hover .stacked-tooltip, .stacked-seg-wrap:focus-visible .stacked-tooltip{opacity:1; visibility:visible;}
+.stacked-bar-label{
+  font-size:10.5px; color:var(--muted-l); margin-top:6px; white-space:nowrap; overflow:hidden;
+  text-overflow:ellipsis; max-width:100%;
+}
+.stacked-chart-table{margin-top:18px;}
+.stacked-chart-table summary{font-size:12.5px; color:var(--gold-deep); cursor:pointer; text-decoration:underline;}
+.stacked-chart-table table{margin-top:12px;}
+
+/* ---------- Admin dashboard "Needs Attention" panel ---------- */
+.attention-list{display:flex; flex-direction:column; gap:2px;}
+.attention-row{
+  display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 4px;
+  border-bottom:1px solid var(--line-l); font-size:13.5px; color:var(--charcoal);
+}
+.attention-row:last-child{border-bottom:none;}
+.attention-count{
+  background:var(--gold); color:var(--ink); font-weight:700; font-size:12px; border-radius:12px;
+  padding:2px 9px; flex-shrink:0;
 }
 .admin-checkbox{display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--charcoal);}
 .admin-btn{

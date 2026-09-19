@@ -1,9 +1,19 @@
 import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/auth';
-import { computeRange, bucketsFor, bucketSums, hasTrendChart, type RangeKind } from '@/lib/analytics';
-import { PRODUCT_LABELS } from '@/lib/entitlements';
+import {
+  computeRange,
+  bucketsFor,
+  bucketSums,
+  bucketSumsByProduct,
+  hasTrendChart,
+  percentChange,
+  type RangeKind,
+  type DateRange,
+} from '@/lib/analytics';
+import { PRODUCT_LABELS, productChartColor } from '@/lib/entitlements';
 import { BarChart } from '@/components/admin/BarChart';
+import { StackedBarChart } from '@/components/admin/StackedBarChart';
 
 const RANGE_TABS: { kind: RangeKind; label: string }[] = [
   { kind: 'day', label: 'Day' },
@@ -13,12 +23,69 @@ const RANGE_TABS: { kind: RangeKind; label: string }[] = [
   { kind: 'all', label: 'All Time' },
 ];
 
+// Short "vs ___" label per range kind, for the KPI delta line.
+const COMPARISON_LABEL: Record<Exclude<RangeKind, 'all'>, string> = {
+  day: 'yesterday',
+  week: 'last week',
+  month: 'last month',
+  ytd: "last year's YTD",
+};
+
 function money(cents: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
 }
 
 function hrefFor(kind: RangeKind, offset: number) {
   return `/admin/analytics?range=${kind}&offset=${offset}`;
+}
+
+/** The window to compare the current period against. 'all' has no
+ * meaningful prior period. YTD compares against the same Jan-1-to-date
+ * window one year back (not the full previous year — that would compare
+ * a partial year to a complete one). Day/week/month reuse computeRange's
+ * own "one period back" math, which already lands on the right calendar
+ * boundaries. */
+function comparisonRangeFor(kind: RangeKind, offset: number, range: DateRange, minYear: number): DateRange | null {
+  if (kind === 'all') return null;
+  if (kind === 'ytd') {
+    const start = new Date(range.start);
+    start.setFullYear(start.getFullYear() - 1);
+    const end = new Date(range.end);
+    end.setFullYear(end.getFullYear() - 1);
+    return { start, end, label: '' };
+  }
+  return computeRange(kind, offset - 1, minYear);
+}
+
+async function fetchTotals(admin: ReturnType<typeof createAdminClient>, startIso: string, endIso: string) {
+  const [{ count: signups }, { count: newsletter }, { data: entitlements }] = await Promise.all([
+    admin.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', startIso).lt('created_at', endIso),
+    admin
+      .from('newsletter_signups')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', startIso)
+      .lt('created_at', endIso),
+    admin.from('entitlements').select('amount_total').gte('granted_at', startIso).lt('granted_at', endIso),
+  ]);
+  const rows = entitlements ?? [];
+  return {
+    signups: signups ?? 0,
+    newsletter: newsletter ?? 0,
+    purchases: rows.length,
+    revenueCents: rows.reduce((sum, r) => sum + (r.amount_total ?? 0), 0),
+  };
+}
+
+function Delta({ current, previous, label }: { current: number; previous: number; label: string }) {
+  const pct = percentChange(current, previous);
+  if (pct === null) return null;
+  const dir = pct > 0.5 ? 'up' : pct < -0.5 ? 'down' : 'flat';
+  const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '—';
+  return (
+    <div className={`kpi-delta ${dir}`}>
+      {arrow} {Math.abs(Math.round(pct))}% vs {label}
+    </div>
+  );
 }
 
 export default async function AnalyticsAdminPage({
@@ -49,22 +116,28 @@ export default async function AnalyticsAdminPage({
   const startIso = range.start.toISOString();
   const endIso = range.end.toISOString();
 
-  const [{ data: profiles }, { data: newsletter }, { data: entitlements }] = await Promise.all([
+  const comparisonRange = comparisonRangeFor(kind, offset, range, minYear);
+
+  const [{ data: profiles }, { data: newsletter }, { data: entitlements }, comparison] = await Promise.all([
     admin.from('profiles').select('created_at').gte('created_at', startIso).lt('created_at', endIso),
     admin.from('newsletter_signups').select('created_at').gte('created_at', startIso).lt('created_at', endIso),
     admin.from('entitlements').select('*').gte('granted_at', startIso).lt('granted_at', endIso),
+    comparisonRange
+      ? fetchTotals(admin, comparisonRange.start.toISOString(), comparisonRange.end.toISOString())
+      : Promise.resolve(null),
   ]);
 
   const signups = profiles ?? [];
   const newsletterSignups = newsletter ?? [];
-  const purchases = (entitlements as {
-    product: string;
-    amount_total: number | null;
-    currency: string | null;
-    source: string;
-    status?: string;
-    granted_at: string;
-  }[]) ?? [];
+  const purchases =
+    (entitlements as {
+      product: string;
+      amount_total: number | null;
+      currency: string | null;
+      source: string;
+      status?: string;
+      granted_at: string;
+    }[]) ?? [];
 
   const totalRevenueCents = purchases.reduce((sum, p) => sum + (p.amount_total ?? 0), 0);
   const stripeRevenueCents = purchases
@@ -83,9 +156,27 @@ export default async function AnalyticsAdminPage({
   }
 
   const signupSeries = bucketSums(signups, (r) => r.created_at, buckets);
-  const revenueSeries = bucketSums(purchases, (r) => r.granted_at, buckets, (r) => (r.amount_total ?? 0) / 100);
+
+  // Fixed product -> color/label list (see PRODUCT_CHART_COLORS) plus an
+  // "Other" catch-all only shown when a purchase exists for a product
+  // this list doesn't know about yet — so a future tier never breaks the
+  // chart before someone gets around to adding it above.
+  const knownProducts = new Set(Object.keys(PRODUCT_LABELS));
+  const hasOtherProduct = purchases.some((p) => !knownProducts.has(p.product));
+  const revenueSeries = [
+    ...Object.entries(PRODUCT_LABELS).map(([key, label]) => ({ key, label, color: productChartColor(key) })),
+    ...(hasOtherProduct ? [{ key: 'other', label: 'Other', color: productChartColor('other') }] : []),
+  ];
+  const revenueByProduct = bucketSumsByProduct(
+    purchases,
+    (r) => r.granted_at,
+    (r) => (knownProducts.has(r.product) ? r.product : 'other'),
+    buckets,
+    (r) => (r.amount_total ?? 0) / 100
+  );
 
   const conversionPct = signups.length > 0 ? Math.round((purchases.length / signups.length) * 100) : null;
+  const comparisonLabel = kind !== 'all' ? COMPARISON_LABEL[kind] : '';
 
   return (
     <>
@@ -144,19 +235,29 @@ export default async function AnalyticsAdminPage({
       <div className="kpi-grid" style={{ marginBottom: 20 }}>
         <div className="admin-card kpi-tile">
           <div className="kpi-value">{signups.length}</div>
-          <div className="hint">New Accounts</div>
+          <div className="hint">New accounts</div>
+          {comparison && <Delta current={signups.length} previous={comparison.signups} label={comparisonLabel} />}
         </div>
         <div className="admin-card kpi-tile">
           <div className="kpi-value">{newsletterSignups.length}</div>
-          <div className="hint">Newsletter Signups</div>
+          <div className="hint">Newsletter signups</div>
+          {comparison && (
+            <Delta current={newsletterSignups.length} previous={comparison.newsletter} label={comparisonLabel} />
+          )}
         </div>
         <div className="admin-card kpi-tile">
           <div className="kpi-value">{purchases.length}</div>
           <div className="hint">Purchases</div>
+          {comparison && <Delta current={purchases.length} previous={comparison.purchases} label={comparisonLabel} />}
         </div>
         <div className="admin-card kpi-tile">
-          <div className="kpi-value" style={{ color: 'var(--gold-deep)' }}>{money(totalRevenueCents)}</div>
-          <div className="hint">Total Revenue</div>
+          <div className="kpi-value" style={{ color: 'var(--gold-deep)' }}>
+            {money(totalRevenueCents)}
+          </div>
+          <div className="hint">Total revenue</div>
+          {comparison && (
+            <Delta current={totalRevenueCents} previous={comparison.revenueCents} label={comparisonLabel} />
+          )}
         </div>
       </div>
 
@@ -176,11 +277,12 @@ export default async function AnalyticsAdminPage({
           </div>
 
           <div className="admin-card">
-            <h2>Revenue {kind === 'week' ? '(by day)' : kind === 'ytd' ? '(by month)' : '(by year)'}</h2>
-            <BarChart
-              data={buckets.map((b, i) => ({ label: b.label, title: b.title, value: revenueSeries[i] }))}
+            <h2>Revenue by Product {kind === 'week' ? '(by day)' : kind === 'ytd' ? '(by month)' : '(by year)'}</h2>
+            <StackedBarChart
+              buckets={buckets}
+              series={revenueSeries}
+              data={revenueByProduct}
               formatValue={(v) => `$${v.toFixed(0)}`}
-              color="var(--gold-deep)"
             />
           </div>
         </>

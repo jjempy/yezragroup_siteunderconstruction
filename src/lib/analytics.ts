@@ -160,3 +160,46 @@ export function bucketSums<T>(rows: T[], getDate: (row: T) => string, buckets: B
   }
   return sums;
 }
+
+/** Same idea as bucketSums, but split by product per bucket instead of a
+ * single total — what the stacked revenue-by-product chart draws from.
+ * Returns one { product: value } map per bucket, in the same order. */
+export function bucketSumsByProduct<T>(
+  rows: T[],
+  getDate: (row: T) => string,
+  getProduct: (row: T) => string,
+  buckets: Bucket[],
+  value: (row: T) => number = () => 1
+): Record<string, number>[] {
+  const sums: Record<string, number>[] = buckets.map(() => ({}));
+  for (const row of rows) {
+    const t = new Date(getDate(row)).getTime();
+    for (let i = 0; i < buckets.length; i++) {
+      if (t >= buckets[i].start.getTime() && t < buckets[i].end.getTime()) {
+        const product = getProduct(row);
+        sums[i][product] = (sums[i][product] ?? 0) + value(row);
+        break;
+      }
+    }
+  }
+  return sums;
+}
+
+/** Rounds a chart's axis ceiling up to a "clean" number (1/2/5 x a power
+ * of ten) instead of the raw max value — so gridlines land on numbers a
+ * reader would actually round to, not something like "$1,847". */
+export function niceAxisMax(rawMax: number): number {
+  if (rawMax <= 0) return 1;
+  const magnitude = 10 ** Math.floor(Math.log10(rawMax));
+  const normalized = rawMax / magnitude;
+  const step = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  return step * magnitude;
+}
+
+/** Percent change from `previous` to `current`, or null when there's no
+ * meaningful baseline to compare against (previous period had nothing at
+ * all) — a "+∞%" delta is noise, not a number worth showing. */
+export function percentChange(current: number, previous: number): number | null {
+  if (previous === 0) return current === 0 ? 0 : null;
+  return ((current - previous) / previous) * 100;
+}
