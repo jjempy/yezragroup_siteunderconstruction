@@ -2,11 +2,12 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { AuthHeader } from '@/components/AuthHeader';
-import { signOutAction, updateProfileAction, updateRosterOptIn } from './actions';
+import { signOutAction, updateRosterOptIn } from './actions';
 import type { Entitlement, LadderTier, PaidVideoRow } from '@/types/database';
 import { formatPhoneDisplay } from '@/lib/phone';
 import { PRODUCT_LABELS } from '@/lib/entitlements';
 import { LocalTimestamp } from '@/components/LocalTimestamp';
+import { ProfileEditor } from '@/components/ProfileEditor';
 
 // The old default copy ("Details from your engagement will show up here")
 // read the same whether someone had paid a full deposit or nothing at
@@ -109,51 +110,11 @@ export default async function AccountPage({
           {/* ---------- Profile ---------- */}
           <div className="account-module" style={{ marginTop: 28 }}>
             <h2>Profile</h2>
-            <form action={updateProfileAction}>
-              <div className="admin-row">
-                <div className="admin-field">
-                  <label htmlFor="full_name">Name</label>
-                  <input id="full_name" name="full_name" type="text" defaultValue={profile?.full_name ?? ''} />
-                </div>
-                <div className="admin-field">
-                  <label htmlFor="phone">Phone</label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    defaultValue={formatPhoneDisplay(profile?.phone) || ''}
-                    placeholder="(843) 555-0123"
-                  />
-                </div>
-              </div>
-              <button className="admin-btn" type="submit">
-                Save Profile
-              </button>
-            </form>
-            <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgba(243,238,227,.1)' }}>
-              <Link href="/forgot-password" style={{ fontSize: 13, color: 'var(--muted-d)', textDecoration: 'underline' }}>
-                Change password
-              </Link>
-              {workshopEntitlement?.stripe_customer_id && (
-                <form action="/api/stripe/portal" method="POST" style={{ display: 'inline-block', marginLeft: 20 }}>
-                  <button
-                    type="submit"
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      padding: 0,
-                      fontSize: 13,
-                      color: 'var(--muted-d)',
-                      textDecoration: 'underline',
-                      cursor: 'pointer',
-                      font: 'inherit',
-                    }}
-                  >
-                    Manage billing
-                  </button>
-                </form>
-              )}
-            </div>
+            <ProfileEditor
+              fullName={profile?.full_name ?? ''}
+              phoneDisplay={formatPhoneDisplay(profile?.phone) || ''}
+              hasStripeCustomer={Boolean(workshopEntitlement?.stripe_customer_id)}
+            />
           </div>
 
           {/* ---------- Workshop Library ---------- */}

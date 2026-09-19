@@ -92,7 +92,9 @@ export function PeopleTable({
               <Fragment key={user.id}>
                 <tr>
                   <td>{user.full_name || '—'}</td>
-                  <td>{user.email}</td>
+                  <td>
+                    <a href={`mailto:${user.email}`}>{user.email}</a>
+                  </td>
                   <td>
                     {user.phone ? (
                       // The raw stored value (E.164, "+18438043080") stays
@@ -149,7 +151,9 @@ export function PeopleTable({
             {newsletterOnly.map((n) => (
               <tr key={n.id} style={{ opacity: 0.7 }}>
                 <td>—</td>
-                <td>{n.email}</td>
+                <td>
+                  <a href={`mailto:${n.email}`}>{n.email}</a>
+                </td>
                 <td>—</td>
                 <td>—</td>
                 <td>
@@ -174,7 +178,9 @@ export function PeopleTable({
               <strong>{user.full_name || '—'}</strong>
               <span className={`pill role-${user.role}`}>{user.role}</span>
             </div>
-            <div className="user-card-line">{user.email}</div>
+            <div className="user-card-line">
+              <a href={`mailto:${user.email}`}>{user.email}</a>
+            </div>
             {user.phone && (
               <div className="user-card-line">
                 <a href={`tel:${user.phone}`}>{formatPhoneDisplay(user.phone)}</a>
@@ -217,7 +223,9 @@ export function PeopleTable({
         {newsletterOnly.map((n) => (
           <div className="user-card" key={n.id} style={{ opacity: 0.7 }}>
             <div className="user-card-row">
-              <strong>{n.email}</strong>
+              <strong>
+                <a href={`mailto:${n.email}`}>{n.email}</a>
+              </strong>
               <span className="pill">no account</span>
             </div>
             <div className="user-card-line">
