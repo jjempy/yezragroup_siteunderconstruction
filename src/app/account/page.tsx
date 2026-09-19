@@ -88,11 +88,22 @@ export default async function AccountPage({
               <h1>Your Account</h1>
               <p className="sub" style={{ margin: 0 }}>{user.email}</p>
             </div>
-            <form action={signOutAction}>
-              <button className="btn-ghost" type="submit" style={{ cursor: 'pointer', padding: '10px 18px' }}>
-                Sign Out
-              </button>
-            </form>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {/* Account is the landing page after sign-in for everyone,
+                  admins included — without this, reaching the admin
+                  panel meant going all the way back to the homepage
+                  first just to click its nav link. */}
+              {profile?.role === 'admin' && (
+                <Link href="/admin" className="btn-ghost" style={{ padding: '10px 18px' }}>
+                  Admin Panel
+                </Link>
+              )}
+              <form action={signOutAction}>
+                <button className="btn-ghost" type="submit" style={{ cursor: 'pointer', padding: '10px 18px' }}>
+                  Sign Out
+                </button>
+              </form>
+            </div>
           </div>
 
           {searchParams.saved && <p className="admin-toast ok" style={{ marginTop: 20 }}>Saved</p>}
