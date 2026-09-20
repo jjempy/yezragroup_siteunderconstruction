@@ -765,7 +765,17 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
 }
 .stacked-chart-table{margin-top:18px;}
 .stacked-chart-table summary{font-size:12.5px; color:var(--gold-deep); cursor:pointer; text-decoration:underline;}
-.stacked-chart-table table{margin-top:12px;}
+/* This table can run to 7 columns (Period, four-plus products, Total)
+   with long headers ("Workshop Library", "Scoped Engagement") — with
+   the default table-layout:auto, a browser sizes columns to fit their
+   content's unwrapped width first and only wraps if it has to, which
+   on a narrow phone means the whole table (and the page around it,
+   since nothing here scrolls) just gets wider than the screen instead.
+   Fixed layout forces every column to share exactly 100% of the
+   container no matter how many there are, so long headers wrap instead
+   of pushing the table wider. */
+.stacked-chart-table table{margin-top:12px; table-layout:fixed; width:100%;}
+.stacked-chart-table th, .stacked-chart-table td{word-break:break-word; overflow-wrap:break-word;}
 
 /* ---------- Admin dashboard "Needs Attention" panel ---------- */
 .attention-list{display:flex; flex-direction:column; gap:2px;}
@@ -808,10 +818,31 @@ footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0
   background-size:40px 100%, 40px 100%, 14px 100%, 14px 100%;
   background-attachment:local, local, scroll, scroll;
 }
-.admin-table{width:100%; min-width:760px; border-collapse:collapse; font-size:13.5px;}
+/* min-width:760px used to sit directly on .admin-table itself — right
+   for the People table's 8 columns (which is why it exists at all,
+   paired with .users-table-wrap's own overflow-x:auto), but that's a
+   shared class every admin table uses, including simple 3-column ones
+   (Analytics' Revenue-by-Source/By-Product, Payments Setup, the chart's
+   "View as table"). Those had no scroll wrapper of their own, so the
+   760px floor just pushed the whole page wider than the viewport on
+   mobile — a page-level horizontal scroll, not a contained one. Scoping
+   the floor to where it's actually wrapped fixes that: every other
+   .admin-table now just shrinks to fit, which is genuinely fine at 3-4
+   columns. */
+.admin-table{width:100%; border-collapse:collapse; font-size:13.5px;}
 .admin-table th{text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-l); padding:10px 12px; border-bottom:1px solid var(--line-l);}
 .admin-table td{padding:12px; border-bottom:1px solid var(--line-l); vertical-align:middle;}
 .admin-table tr:last-child td{border-bottom:none;}
+.users-table-wrap .admin-table{min-width:760px;}
+/* A handful of columns (the stacked chart's "View as table" can have up
+   to 7 — Period, four-plus products, Total) still deserve a little more
+   breathing room than a phone's default table font/padding gives them,
+   without ever forcing a scrollbar — they just get denser, not wider
+   than the screen. */
+@media(max-width:480px){
+  .admin-table{font-size:11.5px;}
+  .admin-table th, .admin-table td{padding:7px 5px;}
+}
 .users-card-list{display:none;}
 @media(max-width:750px){
   .users-table-wrap{display:none;}
