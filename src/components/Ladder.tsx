@@ -5,10 +5,15 @@ export function Ladder({
   tiers,
   settings,
   userId,
+  masterclassAvailable,
 }: {
   tiers: LadderTier[];
   settings: SiteSettings;
   userId: string | null;
+  // Whether a real Calendar session is currently bookable — overrides the
+  // "Free Masterclass" rung's manual sold_out toggle so the two can't say
+  // different things (see lib/calendar-display.ts's isSessionBookable).
+  masterclassAvailable: boolean;
 }) {
   if (tiers.length === 0) return null;
 
@@ -24,6 +29,7 @@ export function Ladder({
           {tiers.map((tier, i) => {
             const { href, configured } = resolveTierHref(tier, settings, userId);
             const isGold = tier.slug === 'vip';
+            const soldOut = tier.slug === 'masterclass' ? !masterclassAvailable : tier.sold_out;
             return (
               <div key={tier.id} className={`rung reveal${tier.is_top ? ' top' : ''}`}>
                 <div className="rung-num">{String(i + 1).padStart(2, '0')}</div>
@@ -34,7 +40,7 @@ export function Ladder({
                 <div className="rung-price">
                   <span className="amt">{tier.price_label}</span>
                   <span className="fmt">{tier.price_sub_label}</span>
-                  {tier.sold_out ? (
+                  {soldOut ? (
                     <div className="rung-sold-out">
                       {tier.sold_out_message || 'Not available right now — check back soon.'}
                     </div>

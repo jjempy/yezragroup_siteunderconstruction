@@ -13,6 +13,7 @@ import { Newsletter } from '@/components/Newsletter';
 import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
+import { isSessionBookable } from '@/lib/calendar-display';
 import {
   organizationSchema,
   masterclassEventSchemas,
@@ -25,6 +26,16 @@ export default async function HomePage() {
   const { settings, tiers, videos, calendarSessions, testimonials, rsvpCounts } = site;
 
   const vipTier = tiers.find((t) => t.slug === 'vip');
+
+  // The Ladder's "Free Masterclass" rung used to rely on its own manual
+  // sold_out toggle — a third, independent field that drifted out of sync
+  // with whether a session was actually open on the Calendar below it.
+  // Deriving it from the real session data means there's nothing left to
+  // forget to update.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const masterclassAvailable = calendarSessions.some((s) =>
+    isSessionBookable(s, rsvpCounts[s.id] ?? 0, todayStr)
+  );
 
   // Structured data for search engines and AI answer engines — see
   // src/lib/structuredData.ts for what each schema is actually for.
@@ -52,7 +63,12 @@ export default async function HomePage() {
         hasLibrary={videos.length > 0}
       />
       <Hero settings={settings} />
-      <Ladder tiers={tiers} settings={settings} userId={session?.user.id ?? null} />
+      <Ladder
+        tiers={tiers}
+        settings={settings}
+        userId={session?.user.id ?? null}
+        masterclassAvailable={masterclassAvailable}
+      />
       <Calendar sessions={calendarSessions} settings={settings} rsvpCounts={rsvpCounts} />
       <Library videos={videos} settings={settings} />
       <Proof testimonials={testimonials} />

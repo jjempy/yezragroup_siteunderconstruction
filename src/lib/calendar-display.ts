@@ -2,6 +2,8 @@
 // and the auto-filled "Date/Time (shown on the site)" text — no
 // 'server-only' marker, since both usages run in the browser.
 
+import type { CalendarSession } from '@/types/database';
+
 export function to12Hour(time: string): string {
   if (!time) return '';
   const [h, m] = time.split(':').map(Number);
@@ -22,4 +24,18 @@ export function formatSessionDateText(sessionDate: string, startTime: string, en
   if (!startTime) return dateLabel;
   const timeLabel = endTime ? `${to12Hour(startTime)} – ${to12Hour(endTime)}` : to12Hour(startTime);
   return `${dateLabel}, ${timeLabel}`;
+}
+
+/** Whether a visitor could actually reserve a seat at this session right
+ * now — visible, not already past, and not full (by capacity or an
+ * explicit "Full" status). Used to derive the homepage Ladder's "Free
+ * Masterclass" availability from the real Calendar data instead of a
+ * separate manual sold_out toggle, which had drifted out of sync with an
+ * actual live, open session. */
+export function isSessionBookable(session: CalendarSession, rsvpCount: number, todayStr: string): boolean {
+  if (!session.is_visible) return false;
+  if (session.session_date && session.session_date < todayStr) return false;
+  if (session.status.toLowerCase() === 'full') return false;
+  if (session.capacity != null && rsvpCount >= session.capacity) return false;
+  return true;
 }
