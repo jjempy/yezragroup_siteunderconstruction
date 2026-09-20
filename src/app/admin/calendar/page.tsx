@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { CalendarSession, MasterclassRsvp } from '@/types/database';
 import { addSession, deleteSession, updateSession } from './actions';
 import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
+import { CalendarTimeFields } from '@/components/admin/CalendarTimeFields';
 
 type Bucket = 'today' | 'upcoming' | 'unscheduled' | 'past';
 
@@ -105,17 +106,7 @@ export default async function CalendarAdminPage({
               <input id="date_text" name="date_text" type="text" placeholder="Sept 21, 10:00 AM – 12:00 PM" />
             </div>
           </div>
-          <div className="admin-row">
-            <div className="admin-field">
-              <label htmlFor="start_time">Start Time (for calendar invites)</label>
-              <input id="start_time" name="start_time" type="time" step="900" />
-              <div className="hint">Powers the &quot;Add to Calendar&quot; buttons in the RSVP emails — separate from Date/Time above, which is just display text. Eastern time. Leave blank to skip those buttons for this session.</div>
-            </div>
-            <div className="admin-field">
-              <label htmlFor="end_time">End Time (for calendar invites)</label>
-              <input id="end_time" name="end_time" type="time" step="900" />
-            </div>
-          </div>
+          <CalendarTimeFields />
           <div className="admin-row">
             <div className="admin-field">
               <label htmlFor="status">Status</label>
@@ -221,29 +212,11 @@ export default async function CalendarAdminPage({
                           <input id={`date_text-${session.id}`} name="date_text" type="text" defaultValue={session.date_text} />
                         </div>
                       </div>
-                      <div className="admin-row">
-                        <div className="admin-field">
-                          <label htmlFor={`start_time-${session.id}`}>Start Time (for calendar invites)</label>
-                          <input
-                            id={`start_time-${session.id}`}
-                            name="start_time"
-                            type="time"
-                            step="900"
-                            defaultValue={session.start_time ?? ''}
-                          />
-                          <div className="hint">Powers &quot;Add to Calendar&quot; in the RSVP emails. Eastern time. Blank skips those buttons.</div>
-                        </div>
-                        <div className="admin-field">
-                          <label htmlFor={`end_time-${session.id}`}>End Time (for calendar invites)</label>
-                          <input
-                            id={`end_time-${session.id}`}
-                            name="end_time"
-                            type="time"
-                            step="900"
-                            defaultValue={session.end_time ?? ''}
-                          />
-                        </div>
-                      </div>
+                      <CalendarTimeFields
+                        idSuffix={`-${session.id}`}
+                        defaultStart={session.start_time ?? ''}
+                        defaultEnd={session.end_time ?? ''}
+                      />
                       <div className="admin-row">
                         <div className="admin-field">
                           <label htmlFor={`status-${session.id}`}>Status</label>
