@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { CalendarSession, MasterclassRsvp } from '@/types/database';
 import { addSession, deleteSession, updateSession } from './actions';
 import { AdminHighlightOnLoad } from '@/components/admin/AdminHighlightOnLoad';
-import { CalendarTimeFields } from '@/components/admin/CalendarTimeFields';
+import { CalendarScheduleFields } from '@/components/admin/CalendarScheduleFields';
 
 type Bucket = 'today' | 'upcoming' | 'unscheduled' | 'past';
 
@@ -88,25 +88,15 @@ export default async function CalendarAdminPage({
               <input id="label" name="label" type="text" required placeholder="September 2026" />
             </div>
             <div className="admin-field">
-              <label htmlFor="session_date">Date (for sorting/tracking)</label>
-              <input id="session_date" name="session_date" type="date" />
+              <label htmlFor="location">Location</label>
+              <input id="location" name="location" type="text" />
             </div>
           </div>
           <div className="admin-field">
             <label htmlFor="topic">Topic</label>
             <input id="topic" name="topic" type="text" required />
           </div>
-          <div className="admin-row">
-            <div className="admin-field">
-              <label htmlFor="location">Location</label>
-              <input id="location" name="location" type="text" />
-            </div>
-            <div className="admin-field">
-              <label htmlFor="date_text">Date/Time (shown on the site)</label>
-              <input id="date_text" name="date_text" type="text" placeholder="Sept 21, 10:00 AM – 12:00 PM" />
-            </div>
-          </div>
-          <CalendarTimeFields />
+          <CalendarScheduleFields />
           <div className="admin-row">
             <div className="admin-field">
               <label htmlFor="status">Status</label>
@@ -189,31 +179,18 @@ export default async function CalendarAdminPage({
                           <input id={`label-${session.id}`} name="label" type="text" defaultValue={session.label} required />
                         </div>
                         <div className="admin-field">
-                          <label htmlFor={`session_date-${session.id}`}>Date (for sorting/tracking)</label>
-                          <input
-                            id={`session_date-${session.id}`}
-                            name="session_date"
-                            type="date"
-                            defaultValue={session.session_date ?? ''}
-                          />
+                          <label htmlFor={`location-${session.id}`}>Location</label>
+                          <input id={`location-${session.id}`} name="location" type="text" defaultValue={session.location} />
                         </div>
                       </div>
                       <div className="admin-field">
                         <label htmlFor={`topic-${session.id}`}>Topic</label>
                         <input id={`topic-${session.id}`} name="topic" type="text" defaultValue={session.topic} required />
                       </div>
-                      <div className="admin-row">
-                        <div className="admin-field">
-                          <label htmlFor={`location-${session.id}`}>Location</label>
-                          <input id={`location-${session.id}`} name="location" type="text" defaultValue={session.location} />
-                        </div>
-                        <div className="admin-field">
-                          <label htmlFor={`date_text-${session.id}`}>Date/Time (shown on the site)</label>
-                          <input id={`date_text-${session.id}`} name="date_text" type="text" defaultValue={session.date_text} />
-                        </div>
-                      </div>
-                      <CalendarTimeFields
+                      <CalendarScheduleFields
                         idSuffix={`-${session.id}`}
+                        defaultSessionDate={session.session_date ?? ''}
+                        defaultDateText={session.date_text ?? ''}
                         defaultStart={session.start_time ?? ''}
                         defaultEnd={session.end_time ?? ''}
                       />
