@@ -121,7 +121,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         {colorVars.length > 0 && <style>{`:root{${colorVars.join('')}}`}</style>}
       </head>
-      <body>{children}</body>
+      <body>
+        <a href="#main" className="skip-link">
+          Skip to main content
+        </a>
+        <main id="main">{children}</main>
+      </body>
     </html>
   );
 }

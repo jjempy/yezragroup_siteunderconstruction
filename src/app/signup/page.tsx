@@ -15,7 +15,10 @@ function SignupForm() {
   const [email, setEmail] = useState(params.get('email') ?? '');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [marketingOptIn, setMarketingOptIn] = useState(true);
+  // Defaults off — a pre-checked marketing box is a weak consent pattern
+  // (flagged in the September 2026 site audit); a visitor who wants the
+  // emails can opt in themselves in two seconds.
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

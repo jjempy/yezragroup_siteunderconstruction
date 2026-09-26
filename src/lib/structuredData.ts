@@ -26,7 +26,10 @@ export function organizationSchema(settings: SiteSettings) {
  * structured data most likely to actually surface a specific session in
  * Google's rich results or get cited by an AI answering "free business
  * workshops near me" style queries. Undated sessions are skipped; a
- * schema.org Event needs a real startDate to be valid/useful. */
+ * schema.org Event needs a real startDate to be valid/useful. Callers are
+ * expected to pass already-past-filtered sessions (see page.tsx's
+ * publicSessions) — this only guards against a missing date, not a stale
+ * one. */
 export function masterclassEventSchemas(sessions: CalendarSession[], settings: SiteSettings) {
   return sessions
     .filter((s) => s.session_date)

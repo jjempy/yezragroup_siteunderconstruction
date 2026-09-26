@@ -30,6 +30,14 @@ export function Ladder({
             const { href, configured } = resolveTierHref(tier, settings, userId);
             const isGold = tier.slug === 'vip';
             const soldOut = tier.slug === 'masterclass' ? !masterclassAvailable : tier.sold_out;
+            // Paid tiers route through /api/checkout/*, which sends a
+            // signed-out visitor to /signup first — a real audit flagged
+            // that as a surprise, since the button itself reads like an
+            // instant checkout ("Get Access", "Claim Your Seat"). A signed-
+            // in visitor never sees this; it only exists to set the right
+            // expectation before the click.
+            const requiresAccount =
+              !userId && ['workshop_library', 'audit_room', 'scoped_engagement'].includes(tier.slug);
             return (
               <div key={tier.id} className={`rung reveal${tier.is_top ? ' top' : ''}`}>
                 <div className="rung-num">{String(i + 1).padStart(2, '0')}</div>
@@ -45,13 +53,16 @@ export function Ladder({
                       {tier.sold_out_message || 'Not available right now — check back soon.'}
                     </div>
                   ) : (
-                    <a
-                      href={href}
-                      className={`rung-btn${isGold ? ' gold' : ''}${!configured ? ' not-configured' : ''}`}
-                      title={configured ? undefined : 'Not connected yet — set the link in Admin → Ladder.'}
-                    >
-                      {tier.cta_label}
-                    </a>
+                    <>
+                      <a
+                        href={href}
+                        className={`rung-btn${isGold ? ' gold' : ''}${!configured ? ' not-configured' : ''}`}
+                        title={configured ? undefined : 'Not connected yet — set the link in Admin → Ladder.'}
+                      >
+                        {tier.cta_label}
+                      </a>
+                      {requiresAccount && <div className="rung-hint">Requires a free account to check out</div>}
+                    </>
                   )}
                 </div>
               </div>

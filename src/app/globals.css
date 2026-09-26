@@ -63,6 +63,20 @@ body{
   overflow-x:hidden;
 }
 a{color:inherit; text-decoration:none;}
+
+/* Skip link: off-screen until keyboard-focused, then pinned top-left so a
+   screen-reader/keyboard user can jump past the nav straight to content
+   instead of tabbing through every nav link on every single page. */
+.skip-link{
+  position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;
+  z-index:1000; background:var(--ink); color:var(--cream); padding:12px 20px;
+  border-radius:0 0 8px 0; font-size:14px; font-weight:600;
+}
+.skip-link:focus{
+  left:0; top:0; width:auto; height:auto; overflow:visible;
+}
+:focus-visible{outline:2px solid var(--gold-bright); outline-offset:2px;}
+
 .wrap{max-width:var(--max); margin:0 auto; padding:0 32px;}
 @media(max-width:700px){.wrap{padding:0 20px;}}
 
@@ -263,6 +277,9 @@ section{padding:100px 0;}
 }
 .rung.top .rung-sold-out{color:var(--muted-d);}
 @media(max-width:640px){.rung-sold-out{margin-left:0; max-width:none;}}
+.rung-hint{margin-top:6px; font-size:11px; color:var(--muted-l); text-align:right;}
+.rung.top .rung-hint{color:var(--muted-d);}
+@media(max-width:640px){.rung-hint{text-align:left;}}
 [data-checkout].not-configured{position:relative;}
 [data-checkout].not-configured:after{
   content:'not connected'; position:absolute; bottom:-16px; left:0; font-size:9px; color:#B4573F;
@@ -415,7 +432,7 @@ section{padding:100px 0;}
 footer{background:var(--ink); border-top:1px solid var(--line-d); padding:64px 0 32px; color:var(--muted-d);}
 .foot-top{display:flex; justify-content:space-between; flex-wrap:wrap; gap:40px; padding-bottom:44px; border-bottom:1px solid var(--line-d);}
 .foot-cols{display:flex; gap:64px; flex-wrap:wrap;}
-.foot-col h4{font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--cream); margin-bottom:16px;}
+.foot-col h3{font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--cream); margin-bottom:16px;}
 .foot-col a{display:block; font-size:13.5px; color:var(--muted-d); margin-bottom:10px; transition:color .2s;}
 .foot-col a:hover{color:var(--gold);}
 .foot-bottom{display:flex; justify-content:space-between; padding-top:24px; font-size:12px; flex-wrap:wrap; gap:10px;}

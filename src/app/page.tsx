@@ -37,11 +37,19 @@ export default async function HomePage() {
     isSessionBookable(s, rsvpCounts[s.id] ?? 0, todayStr)
   );
 
+  // A session with a real past date has nothing left to offer a visitor —
+  // no seats to reserve, no invite to send. Left in unfiltered, it kept
+  // showing up on the live Calendar (and in the Event structured data)
+  // with a stale "N seats left" long after the date had passed. Sessions
+  // with no date yet (unscheduled placeholders) still show — only ones
+  // that have actually happened get dropped from public view.
+  const publicSessions = calendarSessions.filter((s) => !s.session_date || s.session_date >= todayStr);
+
   // Structured data for search engines and AI answer engines — see
   // src/lib/structuredData.ts for what each schema is actually for.
   const jsonLd = [
     organizationSchema(settings),
-    ...masterclassEventSchemas(calendarSessions, settings),
+    ...masterclassEventSchemas(publicSessions, settings),
     workshopLibraryCourseSchema(settings),
     faqSchema(),
   ];
@@ -69,7 +77,7 @@ export default async function HomePage() {
         userId={session?.user.id ?? null}
         masterclassAvailable={masterclassAvailable}
       />
-      <Calendar sessions={calendarSessions} settings={settings} rsvpCounts={rsvpCounts} />
+      <Calendar sessions={publicSessions} settings={settings} rsvpCounts={rsvpCounts} />
       <Library videos={videos} settings={settings} />
       <Proof testimonials={testimonials} />
       <About settings={settings} />

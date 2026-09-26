@@ -11,7 +11,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
             <div className="brand" style={{ marginBottom: 12 }}>
               {settings.logo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img className="brand-logo-img" src={settings.logo_url} alt="" />
+                <img className="brand-logo-img" src={settings.logo_url} alt={settings.brand_name || 'Orchemet'} />
               ) : (
                 <Mark size={26} />
               )}
@@ -24,19 +24,19 @@ export function Footer({ settings }: { settings: SiteSettings }) {
           </div>
           <div className="foot-cols">
             <div className="foot-col">
-              <h4>Work Together</h4>
+              <h3>Work Together</h3>
               <a href="#ladder">Ways to Work Together</a>
               <a href="#calendar">Free Masterclasses</a>
               <a href="#vip">VIP Intensive</a>
             </div>
             <div className="foot-col">
-              <h4>Learn</h4>
+              <h3>Learn</h3>
               <a href="#library">Workshop Library</a>
               <a href="#about">About</a>
               <a href="#faq">FAQ</a>
             </div>
             <div className="foot-col">
-              <h4>Connect</h4>
+              <h3>Connect</h3>
               <Link href="/contact">Contact Us</Link>
               {settings.contact_phone && <a href={`tel:${settings.contact_phone}`}>{settings.contact_phone}</a>}
               {settings.youtube_channel_url && (
