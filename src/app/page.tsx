@@ -70,7 +70,7 @@ export default async function HomePage() {
         isAdmin={session?.profile?.role === 'admin'}
         hasLibrary={videos.length > 0}
       />
-      <Hero settings={settings} />
+      <Hero settings={settings} masterclassAvailable={masterclassAvailable} />
       <Ladder
         tiers={tiers}
         settings={settings}

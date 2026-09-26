@@ -50,7 +50,17 @@ export function Ladder({
                   <span className="fmt">{tier.price_sub_label}</span>
                   {soldOut ? (
                     <div className="rung-sold-out">
-                      {tier.sold_out_message || 'Not available right now — check back soon.'}
+                      {tier.slug === 'masterclass' ? (
+                        <>
+                          Next free date posting soon —{' '}
+                          <a href="#newsletter" style={{ textDecoration: 'underline' }}>
+                            get notified
+                          </a>
+                          .
+                        </>
+                      ) : (
+                        tier.sold_out_message || 'Not available right now — check back soon.'
+                      )}
                     </div>
                   ) : (
                     <>

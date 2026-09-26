@@ -8,10 +8,17 @@ import { submitContactMessage } from './actions';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
+const PAGE_URL = 'https://orchemet.com/contact';
+const PAGE_TITLE = 'Contact';
+const PAGE_DESCRIPTION = 'Get in touch — account access, orders, masterclass scheduling, or a general question.';
+
 export const metadata: Metadata = {
-  title: 'Contact',
-  description: 'Get in touch — account access, orders, masterclass scheduling, or a general question.',
+  title: PAGE_TITLE,
+  description: PAGE_DESCRIPTION,
   robots: { index: true, follow: true },
+  alternates: { canonical: PAGE_URL },
+  openGraph: { url: PAGE_URL, title: PAGE_TITLE, description: PAGE_DESCRIPTION },
+  twitter: { title: PAGE_TITLE, description: PAGE_DESCRIPTION },
 };
 
 const VALID_REASONS = new Set(Object.keys(CONTACT_REASON_LABELS));

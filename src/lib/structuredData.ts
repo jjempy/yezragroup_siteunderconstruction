@@ -15,6 +15,12 @@ export function organizationSchema(settings: SiteSettings) {
     ...(settings.logo_url ? { logo: settings.logo_url } : {}),
     description:
       "Free masterclasses, workshops, and advisory engagements for business owners working around a blind spot instead of through it.",
+    // The founder's name previously appeared nowhere machine-readable —
+    // an audit-flagged trust gap for search/AI answer engines specifically
+    // (a real Person behind the brand, not just an email in a contact
+    // point). Fixed name, not settings-driven: there's no admin field for
+    // this, and it isn't the kind of thing that changes.
+    founder: { '@type': 'Person', name: 'Joseph Jeffers' },
     ...(sameAs.length ? { sameAs } : {}),
     ...(settings.contact_email
       ? { contactPoint: { '@type': 'ContactPoint', email: settings.contact_email, contactType: 'customer support' } }

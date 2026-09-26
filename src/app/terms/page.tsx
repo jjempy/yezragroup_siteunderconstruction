@@ -5,10 +5,17 @@ import { AuthHeader } from '@/components/AuthHeader';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
+const PAGE_URL = 'https://orchemet.com/terms';
+const PAGE_TITLE = 'Terms of Service';
+const PAGE_DESCRIPTION = 'The terms covering Orchemet purchases and account use.';
+
 export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description: 'The terms covering Orchemet purchases and account use.',
+  title: PAGE_TITLE,
+  description: PAGE_DESCRIPTION,
   robots: { index: true, follow: true },
+  alternates: { canonical: PAGE_URL },
+  openGraph: { url: PAGE_URL, title: PAGE_TITLE, description: PAGE_DESCRIPTION },
+  twitter: { title: PAGE_TITLE, description: PAGE_DESCRIPTION },
 };
 
 export default async function TermsPage() {

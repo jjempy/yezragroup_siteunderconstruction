@@ -7,10 +7,17 @@ import { VipApplicationForm } from '@/components/VipApplicationForm';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
+const PAGE_URL = 'https://orchemet.com/apply-vip';
+const PAGE_TITLE = 'Apply for VIP';
+const PAGE_DESCRIPTION = 'Application for the VIP Intensive — reviewed personally, not open checkout.';
+
 export const metadata: Metadata = {
-  title: 'Apply for VIP',
-  description: 'Application for the VIP Intensive — reviewed personally, not open checkout.',
+  title: PAGE_TITLE,
+  description: PAGE_DESCRIPTION,
   robots: { index: false, follow: false },
+  alternates: { canonical: PAGE_URL },
+  openGraph: { url: PAGE_URL, title: PAGE_TITLE, description: PAGE_DESCRIPTION },
+  twitter: { title: PAGE_TITLE, description: PAGE_DESCRIPTION },
 };
 
 export default async function ApplyVipPage({

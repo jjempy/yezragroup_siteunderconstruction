@@ -25,11 +25,8 @@ export function Vip({
               <div className="vip-list">
                 <div>
                   <span className="dot" />
-                  2-hour private 1:1 working session
-                </div>
-                <div>
-                  <span className="dot" />
-                  1-hour recorded conversation for your own YouTube, podcast, or team
+                  A private working day, plus a recorded conversation for your own podcast, YouTube, or
+                  team
                 </div>
                 <div>
                   <span className="dot" />A follow-up scope document, not just notes

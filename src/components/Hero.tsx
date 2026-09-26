@@ -2,7 +2,19 @@ import Image from 'next/image';
 import { EmphasisText } from './EmphasisText';
 import type { SiteSettings } from '@/types/database';
 
-export function Hero({ settings }: { settings: SiteSettings }) {
+export function Hero({
+  settings,
+  masterclassAvailable,
+}: {
+  settings: SiteSettings;
+  // Whether a real Calendar session is currently bookable. "Reserve a
+  // Free Seat" only ever scrolled to #calendar — a real audit caught that
+  // reading like an instant booking even when there was nothing left to
+  // reserve (a past session, or none scheduled). When there's nothing
+  // live, this swaps to an honest CTA that routes to the newsletter
+  // instead of promising a seat that doesn't exist.
+  masterclassAvailable: boolean;
+}) {
   return (
     <section className="hero">
       {settings.hero_mark_url ? (
@@ -50,9 +62,15 @@ export function Hero({ settings }: { settings: SiteSettings }) {
         </h1>
         <p className="lede">{settings.hero_lede}</p>
         <div className="cta-row">
-          <a href="#calendar" className="btn-primary">
-            Reserve a Free Seat
-          </a>
+          {masterclassAvailable ? (
+            <a href="#calendar" className="btn-primary">
+              Reserve a Free Seat
+            </a>
+          ) : (
+            <a href="#newsletter" className="btn-primary">
+              Get Notified for the Next Date
+            </a>
+          )}
           <a href="#ladder" className="btn-ghost">
             See How We Work Together
           </a>
