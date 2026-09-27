@@ -1,8 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { createClient } from '@/lib/supabase/server';
 
-export const size = { width: 32, height: 32 };
-export const contentType = 'image/png';
+const SIZE = { width: 32, height: 32 };
 
 // Favicon — what shows up in the browser tab and next to the site in
 // Google search results. Uses the admin-uploaded logo (Admin -> Brand)
@@ -11,13 +10,19 @@ export const contentType = 'image/png';
 // mark if no logo is uploaded, or if fetching site_settings fails for any
 // reason — a favicon should never be the thing that breaks the page.
 //
-// This always paints its own solid background behind the logo (not a
-// transparent PNG) — a white logo mark stays visible whether the browser
-// tab strip itself is light or dark themed, since the tab never shows
-// through the icon. That background now uses the live brand navy
-// (color_ink) instead of the original pre-rebrand hardcoded color, so it
-// actually matches the site instead of a stale leftover shade.
-export default async function Icon() {
+// This used to be Next's file-convention `icon.tsx`, served at a URL
+// (`/icon?<hash>`) that Next appends a long-lived immutable cache header
+// to and that never changes just because the *admin-uploaded logo*
+// changes underneath it (the hash is tied to this route's code, not its
+// dynamic output) — so a rebrand never actually reached Google's or a
+// browser's cached favicon. This is now a plain route we control the URL
+// and cache lifetime for directly: `?v=` is a manual cache-buster to bump
+// whenever a real logo change needs to force a fresh fetch everywhere
+// (see layout.tsx's `icons` field and favicon.ico's redirect target —
+// bump both together), and the Cache-Control below is deliberately short
+// instead of "forever", so it also self-heals within an hour even
+// without a version bump.
+export async function GET() {
   let logoUrl: string | null = null;
   let ink = '#0F1416';
   try {
@@ -33,7 +38,7 @@ export default async function Icon() {
     // Supabase unreachable — fall through to the defaults above.
   }
 
-  return new ImageResponse(
+  const image = new ImageResponse(
     (
       <div
         style={{
@@ -56,6 +61,8 @@ export default async function Icon() {
         )}
       </div>
     ),
-    { ...size }
+    { ...SIZE }
   );
+  image.headers.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+  return image;
 }

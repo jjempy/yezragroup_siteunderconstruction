@@ -34,6 +34,15 @@ export const metadata: Metadata = {
     'business coaching alternative',
   ],
   alternates: { canonical: SITE_URL },
+  // Explicit and versioned, not Next's auto-detected icon.tsx convention
+  // — that route's URL never changed even when the admin-uploaded logo
+  // did (its hash is tied to the route's code, not its dynamic output),
+  // which is exactly why Google/browsers kept serving an old cached
+  // favicon. Bump `?v=` here (and in favicon.ico/route.ts's redirect
+  // target, kept in sync) whenever a real logo change needs to force a
+  // fresh fetch everywhere immediately, rather than waiting on the
+  // route's own 1-hour Cache-Control to expire.
+  icons: { icon: '/api/favicon?v=2' },
   openGraph: {
     type: 'website',
     url: SITE_URL,
